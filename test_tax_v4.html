@@ -1,0 +1,218 @@
+
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>換屋稅務計算器（舊換新成本分析）</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      background: #f4f4f9;
+      margin: 0;
+      padding: 16px;
+    }
+    .wrap {
+      max-width: 640px;
+      margin: auto;
+      background: #fff;
+      padding: 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    .row {
+      display: flex;
+      align-items: center;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+    }
+    .row label {
+      flex: 0 0 180px;
+      margin-bottom: 4px;
+    }
+    .row input[type="number"], .row select {
+      flex: 1;
+      padding: 6px;
+      min-width: 120px;
+      margin-right: 10px;
+    }
+    .dynamic-output {
+      color: #888;
+      font-size: 0.9em;
+    }
+    button {
+      margin-top: 16px;
+      width: 100%;
+      padding: 10px;
+      font-size: 1em;
+      background: #007bff;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+    button:hover { background: #0056b3; }
+    .output-col {
+      margin-top: 24px;
+      font-size: 1.1em;
+      color: #333;
+    }
+    .output-col span { color: #d33; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h2>換屋稅務計算器（舊換新成本分析）</h2>
+
+    <div class="row">
+      <label>舊屋買價（萬元）</label>
+      <input type="number" id="oldBuy" oninput="updateDisplay(this, 'oldBuyShow')" / oninput="updateDisplay(this, \'oldBuyShow\', \'萬元\')" /><span class="dynamic-output" id="oldBuyShow"></span>
+      <span class="dynamic-output" id="oldBuyShow"></span>
+    </div>
+
+    <div class="row">
+      <label>選擇頭期款方式</label>
+      <select id="dpMode" onchange="toggleDPInput()">
+        <option value="percent">貸款成數</option>
+        <option value="fixed">輸入頭期款</option>
+      </select>
+    </div>
+
+    <div class="row" id="dpPercentRow">
+      <label>舊屋貸款成數（%）</label>
+      <input type="number" id="loanPct" placeholder="80" oninput="updateDisplay(this, 'loanPctShow', '%')" / oninput="updateDisplay(this, \'loanPctShow\', \'%\')" /><span class="dynamic-output" id="loanPctShow"></span><span class="dynamic-output" id="loanPctShow"></span>
+    </div>
+
+    <div class="row" id="dpFixedRow" style="display:none;">
+      <label>舊屋頭期款（萬元）</label>
+    <input type="number" id="downPayment" oninput="updateDisplay(this, 'downPaymentShow', '萬元')" />
+    <span class="dynamic-output" id="downPaymentShow"></span><span class="dynamic-output" id="downPaymentShow"></span><span class="dynamic-output" id="downPaymentShow"></span><span class="dynamic-output" id="downPaymentShow"></span>
+    </div>
+
+    <div class="row">
+      <label>舊屋裝潢費用（萬元）</label>
+    <input type="number" id="decoration" oninput="updateDisplay(this, 'decorationShow', '萬元')" />
+    <span class="dynamic-output" id="decorationShow"></span><span class="dynamic-output" id="decorationShow"></span><span class="dynamic-output" id="decorationShow"></span><span class="dynamic-output" id="decorationShow"></span><span class="dynamic-output" id="decorationShow"></span>
+    </div>
+
+    <div class="row">
+      <label>舊屋賣價（萬元）</label>
+      <input type="number" id="oldSell" oninput="updateDisplay(this, 'oldSellShow')" / oninput="updateDisplay(this, \'oldSellShow\', \'萬元\')" /><span class="dynamic-output" id="oldSellShow"></span>
+      <span class="dynamic-output" id="oldSellShow"></span>
+    </div>
+
+    <div class="row">
+      <label>持有期間（年）</label>
+      <input type="number" step="0.1" id="holdYear" oninput="updateDisplay(this, 'holdShow', '年')" / oninput="updateDisplay(this, \'holdYearShow\', \'年\')" /><span class="dynamic-output" id="holdYearShow"></span>
+      <span class="dynamic-output" id="holdShow"></span>
+    </div>
+
+    <div class="row">
+      <label>新屋買價（萬元）</label>
+      <input type="number" id="newBuy" oninput="updateDisplay(this, 'newBuyShow')" / oninput="updateDisplay(this, \'newBuyShow\', \'萬元\')" /><span class="dynamic-output" id="newBuyShow"></span>
+      <span class="dynamic-output" id="newBuyShow"></span>
+    </div>
+
+    <div class="row">
+      <input type="checkbox" id="selfUse" />
+      <label for="selfUse">符合重購退稅條件（≤ 2 年、自住、不出租）</label>
+    </div>
+
+    <button onclick="calcTax()">計算稅務</button>
+
+    <div class="output-col">
+      <h2>稅務結果</h2>
+      <div id="taxResult">請輸入資料並點擊計算</div>
+    </div>
+  </div>
+
+  <script>
+function updateDisplay(input, targetId, unit = '萬元') {
+  const value = input.value;
+  document.getElementById(targetId).innerText = value ? `${value} ${unit}` : '';
+}
+</script>
+<script>
+    function updateDisplay(input, targetId, unit = '萬元') {
+      const value = input.value;
+      document.getElementById(targetId).innerText = value ? `${value} ${unit}` : '';
+    }
+
+    function toggleDPInput() {
+      const mode = document.getElementById("dpMode").value;
+      document.getElementById("dpPercentRow").style.display = mode === "percent" ? "flex" : "none";
+      document.getElementById("dpFixedRow").style.display = mode === "fixed" ? "flex" : "none";
+    }
+
+    function calcTax() {
+      const ob = +document.getElementById('oldBuy').value * 10000;
+      const os = +document.getElementById('oldSell').value * 10000;
+      const nbInput = document.getElementById('newBuy').value;
+      const nb = +nbInput * 10000;
+      const hy = +document.getElementById('holdYear').value;
+      const su = document.getElementById('selfUse').checked;
+      const dpMode = document.getElementById('dpMode').value;
+      const dp = +document.getElementById('downPayment').value * 10000;
+      const loanPct = +document.getElementById('loanPct').value;
+      const deco = +document.getElementById('decoration').value * 10000 || 0;
+      const out = document.getElementById('taxResult');
+
+      if (!ob || !os || hy <= 0) {
+        out.innerHTML = '🛑 請輸入舊屋買價、舊屋賣價與持有期間';
+        return;
+      }
+
+      const down = (dpMode === 'fixed') ? dp : (ob * (1 - loanPct / 100));
+      const gain = os - ob;
+      let rate = hy <= 2 ? 0.45 : hy < 5 ? 0.35 : hy < 10 ? 0.20 : 0.15;
+      const rawTax = gain * rate;
+
+      let refund = 0, refundMsg = '';
+      if (nbInput) {
+        if (su && hy > 2) {
+          out.innerHTML = '⚠️ 超過2年持有期間，不可申請重購退稅';
+          return;
+        }
+        if (su) {
+          refund = nb >= os ? rawTax : rawTax * (nb / os);
+          refundMsg = `<b>可退稅額：</b>${(refund / 10000).toFixed(1)} 萬元<br>`;
+        }
+      }
+
+      const finalTax = rawTax - refund;
+      const netProfit = gain - down - deco - finalTax;
+
+      out.innerHTML = `
+        <b>資本利得：</b>${(gain / 10000).toFixed(1)} 萬元<br>
+        <b>適用稅率：</b>${(rate * 100).toFixed(0)}%<br>
+        <b>原始應納房地合一稅：</b>${(rawTax / 10000).toFixed(1)} 萬元<br>
+        ${refundMsg}
+        <b><u>最終應繳稅額：</u></b><span>${(finalTax / 10000).toFixed(1)} 萬元</span><br>
+        <b>淨利（新舊價差 - 頭期成本 - 其他費用 - 稅）：</b><span>${(netProfit / 10000).toFixed(1)} 萬元</span>
+      `;
+    }
+  </script>
+
+    <hr style="margin-top:40px; margin-bottom:20px;">
+    <div class="output-col">
+      <h3>📌 備註說明</h3>
+      <p><b>1. 房屋合一稅公式：</b><br>
+        資本利得 × 適用稅率（依持有期間）<br>
+        ▸ 持有 ≦2 年：45%<br>
+        ▸ 2-5 年：35%<br>
+        ▸ 5-10 年：20%<br>
+        ▸ ≧10 年：15%</p>
+
+      <p><b>2. 重購退稅條件與公式：</b><br>
+        ✅ 原屋售出後，1 年內購買新屋（或新屋後 2 年內售出原屋）<br>
+        ✅ 必須為自住房屋（無出租紀錄）<br>
+        ✅ 必須持有 ≦2 年<br>
+        <br>
+        <b>退稅金額：</b><br>
+        ▸ 若新屋價格 ≧ 舊屋賣價 ➜ 退全部房地合一稅<br>
+        ▸ 若新屋價格 ＜ 舊屋賣價 ➜ 依比例退稅：<br>
+        （新屋買價 ÷ 舊屋賣價） × 原稅額
+      </p>
+    </div>
+  </div>
+</body>
+</html>
+
