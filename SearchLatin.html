@@ -121,6 +121,17 @@
         color: #fff;
       }
 
+      .btn-sm {
+        padding: 8px 10px;
+        font-size: 13px;
+        font-weight: 600;
+        border-radius: 10px;
+      }
+
+      .btn-subtle {
+        background: #f9fafb;
+      }
+
       .btn:disabled {
         opacity: 0.65;
         cursor: not-allowed;
@@ -275,6 +286,12 @@
         padding: 10px 14px 14px;
         border-top: 1px solid var(--border);
       }
+
+      .quick-actions {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+      }
     </style>
   </head>
   <body>
@@ -292,6 +309,11 @@
             <div class="controls-left">
               <input class="input" type="text" id="wordInput" placeholder="輸入拉丁文單字…" autocomplete="off" />
               <button class="btn btn-primary" id="lookupBtn" type="button">查詢</button>
+              <div class="quick-actions" aria-label="快速操作">
+                <button class="btn btn-sm btn-subtle" id="pasteBtn" type="button" title="清除後貼上剪貼簿內容">貼上</button>
+                <button class="btn btn-sm btn-subtle" id="clearInputBtn" type="button" title="清除搜尋框">清除</button>
+                <button class="btn btn-sm btn-subtle" id="jumpLatinBtn" type="button" title="跳到 Wiktionary 的 Latin 區塊">Latin</button>
+              </div>
             </div>
             <div class="status" id="status" data-variant="idle">
               <span class="spinner" id="spinner" hidden></span>
@@ -335,6 +357,9 @@
       const overlayText = document.getElementById("overlayText");
       const historyList = document.getElementById("historyList");
       const clearHistoryBtn = document.getElementById("clearHistoryBtn");
+      const pasteBtn = document.getElementById("pasteBtn");
+      const clearInputBtn = document.getElementById("clearInputBtn");
+      const jumpLatinBtn = document.getElementById("jumpLatinBtn");
 
       let pendingWord = null;
       let history = loadHistory();
@@ -343,6 +368,9 @@
       setStatus("idle", "待命");
 
       lookupBtn.addEventListener("click", () => lookup());
+      pasteBtn.addEventListener("click", () => pasteFromClipboard());
+      clearInputBtn.addEventListener("click", () => clearInput());
+      jumpLatinBtn.addEventListener("click", () => jumpToLatinSection());
 
       wordInput.addEventListener("keydown", (event) => {
         if (event.key === "Enter") {
@@ -363,6 +391,61 @@
         saveHistory(history);
         renderHistory();
       });
+
+      async function pasteFromClipboard() {
+        if (lookupBtn.disabled) return;
+        wordInput.value = "";
+        wordInput.focus();
+
+        if (!navigator.clipboard?.readText) {
+          setStatus("error", "此環境不支援剪貼簿讀取（請手動貼上）");
+          return;
+        }
+
+        try {
+          const text = await navigator.clipboard.readText();
+          wordInput.value = (text ?? "").trim();
+          if (!wordInput.value) {
+            setStatus("error", "剪貼簿沒有可用文字");
+            return;
+          }
+          setStatus("idle", "已貼上");
+        } catch {
+          setStatus("error", "無法讀取剪貼簿（可能需要權限或 https/localhost）");
+        }
+      }
+
+      function clearInput() {
+        if (lookupBtn.disabled) return;
+        wordInput.value = "";
+        wordInput.focus();
+        setStatus("idle", "已清除");
+      }
+
+      function jumpToLatinSection() {
+        const current = wikiFrame?.src ?? "";
+        if (!current || current === "about:blank") {
+          setStatus("error", "尚未載入任何頁面");
+          return;
+        }
+
+        try {
+          if (wikiFrame.contentWindow?.location) {
+            wikiFrame.contentWindow.location.hash = "Latin";
+            return;
+          }
+        } catch {
+          // Cross-origin: fall back to resetting src with #Latin
+        }
+
+        try {
+          const next = new URL(current);
+          next.hash = "Latin";
+          wikiFrame.src = next.toString();
+        } catch {
+          wikiFrame.src = `${current.split("#")[0]}#Latin`;
+        }
+      }
 
       function lookup(forcedWord) {
         const word = (forcedWord ?? wordInput.value).trim();
@@ -389,6 +472,9 @@
         overlayText.textContent = isLoading ? text : "查詢中…";
         lookupBtn.disabled = isLoading;
         wordInput.disabled = isLoading;
+        pasteBtn.disabled = isLoading;
+        clearInputBtn.disabled = isLoading;
+        jumpLatinBtn.disabled = isLoading;
       }
 
       function loadHistory() {
