@@ -292,6 +292,21 @@
         align-items: center;
         gap: 8px;
       }
+
+      @media (max-width: 720px) {
+        .controls-left {
+          flex-wrap: wrap;
+        }
+
+        .input {
+          flex: 1 1 100%;
+          min-width: 0;
+        }
+
+        .quick-actions {
+          flex-wrap: wrap;
+        }
+      }
     </style>
   </head>
   <body>
