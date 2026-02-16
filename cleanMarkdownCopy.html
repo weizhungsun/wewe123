@@ -1,0 +1,768 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <title>Markdown 清理工具</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      margin: 2rem;
+      background: #f2f2f2;
+    }
+    textarea {
+      width: 100%;
+      height: 300px;
+      font-family: monospace;
+      font-size: 14px;
+      padding: 1rem;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      resize: vertical;
+    }
+    .btn-group {
+      margin-bottom: 1rem;
+    }
+    .btn-group button {
+      padding: 0.5rem 1rem;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .btn-wrap {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin-right: 0.5rem;
+    }
+    .help-icon {
+      width: 18px;
+      height: 18px;
+      border-radius: 999px;
+      border: 1px solid #007bff;
+      background: #fff;
+      color: #007bff;
+      font-weight: 700;
+      font-size: 12px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: help;
+      position: relative;
+      user-select: none;
+    }
+    .help-icon::after {
+      content: attr(data-tooltip);
+      position: absolute;
+      top: calc(100% + 10px);
+      left: 50%;
+      transform: translateX(-50%);
+      background: #111;
+      color: #fff;
+      padding: 10px 12px;
+      border-radius: 8px;
+      font-weight: 400;
+      font-size: 12px;
+      line-height: 1.4;
+      width: 340px;
+      max-width: min(340px, 70vw);
+      white-space: normal;
+      opacity: 0;
+      pointer-events: none;
+      box-shadow: 0 10px 22px rgba(0,0,0,0.25);
+      transition: opacity 120ms ease;
+      z-index: 1000;
+    }
+    .help-icon::before {
+      content: "";
+      position: absolute;
+      top: calc(100% + 4px);
+      left: 50%;
+      transform: translateX(-50%);
+      border: 6px solid transparent;
+      border-bottom-color: #111;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 120ms ease;
+      z-index: 1000;
+    }
+    .help-icon:hover::after,
+    .help-icon:focus::after,
+    .help-icon:hover::before,
+    .help-icon:focus::before {
+      opacity: 1;
+    }
+    .btn-group button:hover {
+      background-color: #0056b3;
+    }
+    label {
+      font-weight: bold;
+    }
+    .section {
+      margin-bottom: 2rem;
+    }
+    .toast {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: #333;
+      color: #fff;
+      padding: 8px 12px;
+      border-radius: 4px;
+      opacity: 0.9;
+      font-size: 14px;
+      z-index: 9999;
+    }
+    /* Help panel on the right */
+    .help-toggle {
+      position: fixed;
+      right: 16px;
+      top: 16px;
+      background: #00aaff;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      padding: 8px 12px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+      cursor: pointer;
+      z-index: 120;
+    }
+    .options-toggle {
+      position: fixed;
+      right: 16px;
+      top: 56px;
+      background: #6c757d;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      padding: 8px 12px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+      cursor: pointer;
+      z-index: 120;
+    }
+    .help-panel {
+      position: fixed;
+      right: 16px;
+      top: 96px;
+      width: 360px;
+      max-height: 70vh;
+      overflow: auto;
+      background: white;
+      border-radius: 8px;
+      padding: 1rem;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+      z-index: 119;
+      display: none;
+    }
+    .help-panel.open { display: block; }
+    .help-panel h3 { margin-top: 0; }
+    .help-panel .section { margin-bottom: 8px; }
+    .help-panel button.close { position: absolute; right: 8px; top: 8px; background: #eee; border: none; padding: 6px 8px; border-radius: 4px; cursor: pointer; }
+
+    .options-panel {
+      position: fixed;
+      right: 16px;
+      top: 96px;
+      width: 360px;
+      max-height: 70vh;
+      overflow: auto;
+      background: white;
+      border-radius: 8px;
+      padding: 1rem;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+      z-index: 119;
+      display: none;
+    }
+    .options-panel.open { display: block; }
+    .options-panel h3 { margin-top: 0; }
+    .options-panel .row { display: flex; align-items: flex-start; gap: 10px; margin: 10px 0; }
+    .options-panel .row input { margin-top: 2px; }
+    .options-panel .summary { background: #f6f7f9; border: 1px solid #e6e8ee; border-radius: 8px; padding: 10px 12px; font-size: 13px; line-height: 1.5; }
+    .options-panel button.close { position: absolute; right: 8px; top: 8px; background: #eee; border: none; padding: 6px 8px; border-radius: 4px; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <!-- 按鈕放在最上方 -->
+  <div class="btn-group">
+    <span class="btn-wrap">
+      <button onclick="cleanText()">🧹 清理格式</button>
+      <span class="help-icon" tabindex="0" aria-label="清理格式 說明" id="tipClean1">?</span>
+    </span>
+    <span class="btn-wrap">
+      <button onclick="cleanText2()">🧹 清理格式2</button>
+      <span class="help-icon" tabindex="0" aria-label="清理格式2 說明" id="tipClean2">?</span>
+    </span>
+    <span class="btn-wrap">
+      <button onclick="cleanTextCpent()">🧹 CPENT</button>
+      <span class="help-icon" tabindex="0" aria-label="CPENT 清理 說明" id="tipCpent">?</span>
+    </span>
+    <button onclick="copyOutput()">📋 複製結果</button>
+  </div>
+
+  <!-- Help panel toggle on right -->
+  <button class="help-toggle" aria-expanded="false" id="helpToggle">❓ Help</button>
+  <button class="options-toggle" aria-expanded="false" id="optionsToggle">⚙ Options</button>
+  <aside class="help-panel" id="helpPanel" role="dialog" aria-modal="false" aria-labelledby="helpTitle">
+    <button class="close" aria-label="Close help" id="helpClose">✕</button>
+    <h3 id="helpTitle">Tool Help (說明)</h3>
+    <div class="section">
+      <strong>🧹 Clean 1: 清理格式</strong>
+      <p id="helpClean1"></p>
+    </div>
+    <div class="section">
+      <strong>🧹 Clean 2: 清理格式2</strong>
+      <p id="helpClean2"></p>
+    </div>
+    <div class="section">
+      <strong>🧹 CPENT</strong>
+      <p id="helpCpent"></p>
+    </div>
+    <div class="section">
+      <strong>⚙ Tips / 小提示</strong>
+      <ul>
+        <li>滑鼠移到按鈕旁的「?」可看提示；也可用 Tab 聚焦「?」顯示提示。</li>
+        <li>按右上角 Help 可打開/關閉說明面板（Esc 也可關閉）。</li>
+      </ul>
+    </div>
+  </aside>
+
+  <aside class="options-panel" id="optionsPanel" role="dialog" aria-modal="false" aria-labelledby="optionsTitle">
+    <button class="close" aria-label="Close options" id="optionsClose">✕</button>
+    <h3 id="optionsTitle">Options (清理格式選項)</h3>
+    <div class="summary" id="optionsModeLabel"></div>
+
+    <div id="optionsGroupClean1">
+      <div class="row">
+        <input type="checkbox" id="optPromoteHeadings" checked>
+        <label for="optPromoteHeadings">標題層級提升到 H1（例如 ##→#、###→##）</label>
+      </div>
+      <div class="row">
+        <input type="checkbox" id="optNormalizeLists" checked>
+        <label for="optNormalizeLists">列表縮排整理 + 符號統一（• / * / - → -）</label>
+      </div>
+      <div class="row">
+        <input type="checkbox" id="optTableSpacing" checked>
+        <label for="optTableSpacing">表格前自動補一行空白</label>
+      </div>
+      <div class="row">
+        <input type="checkbox" id="optHrSpacing" checked>
+        <label for="optHrSpacing">分隔線 <code>---</code>（非接標題）前自動補空白行</label>
+      </div>
+      <div class="row">
+        <input type="checkbox" id="optRemoveBold">
+        <label for="optRemoveBold">移除 <code>**</code>（粗體標記）</label>
+      </div>
+    </div>
+
+    <div id="optionsGroupClean2" style="display:none">
+      <div class="row">
+        <input type="checkbox" id="opt2NormalizeLists" checked>
+        <label for="opt2NormalizeLists">列表縮排整理 + 符號統一（• / * / - → -）</label>
+      </div>
+      <div class="row">
+        <input type="checkbox" id="opt2TableSpacing" checked>
+        <label for="opt2TableSpacing">表格前自動補一行空白</label>
+      </div>
+      <div class="row">
+        <input type="checkbox" id="opt2HrToSymbol" checked>
+        <label for="opt2HrToSymbol">將分隔線 <code>---</code> 轉為 <code>⸻</code></label>
+      </div>
+      <div class="row">
+        <input type="checkbox" id="opt2RemoveBold">
+        <label for="opt2RemoveBold">移除 <code>**</code>（粗體標記）</label>
+      </div>
+    </div>
+
+    <div id="optionsGroupCpent" style="display:none">
+      <div class="row">
+        <input type="checkbox" id="optCpentUnifyBullets" checked>
+        <label for="optCpentUnifyBullets">統一無序清單符號（• / * / - → -）</label>
+      </div>
+      <div class="row">
+        <input type="checkbox" id="optCpentMergeLines" checked>
+        <label for="optCpentMergeLines">合併條列項目下方多行文字成同一行</label>
+      </div>
+      <div class="row">
+        <input type="checkbox" id="optCpentRemoveBold">
+        <label for="optCpentRemoveBold">移除 <code>**</code>（粗體標記）</label>
+      </div>
+    </div>
+
+    <div class="summary" id="optionsSummary"></div>
+  </aside>
+
+  <div class="section">
+    <label for="inputText">輸入 Markdown 文字：</label>
+    <textarea id="inputText"></textarea>
+  </div>
+
+  <div class="section">
+    <label for="outputText">輸出清理後文字：</label>
+    <textarea id="outputText" readonly></textarea>
+  </div>
+
+  <script>
+    const HELP_TEXT = {
+      clean1: "保留表格與內容；自動把最小標題層級提升到 H1（例：##→#、###→##）；整理列表縮排（頂層不縮排，下一層 2 空白）。",
+      clean2: "移除 H1–H3 標頭；保留表格；整理列表縮排；將 --- 分隔線改成 ⸻。",
+      cpent: "CPENT 筆記用：移除空行；統一無序清單符號為 -；把條列項目下方的多行文字合併成同一行（不會改動 code fence 內容）。"
+    };
+
+    function syncHelpText() {
+      const tip1 = document.getElementById('tipClean1');
+      const tip2 = document.getElementById('tipClean2');
+      const tipCpent = document.getElementById('tipCpent');
+      const h1 = document.getElementById('helpClean1');
+      const h2 = document.getElementById('helpClean2');
+      const hCpent = document.getElementById('helpCpent');
+
+      if (tip1) tip1.dataset.tooltip = HELP_TEXT.clean1;
+      if (tip2) tip2.dataset.tooltip = HELP_TEXT.clean2;
+      if (tipCpent) tipCpent.dataset.tooltip = HELP_TEXT.cpent;
+      if (h1) h1.textContent = HELP_TEXT.clean1;
+      if (h2) h2.textContent = HELP_TEXT.clean2;
+      if (hCpent) hCpent.textContent = HELP_TEXT.cpent;
+    }
+    syncHelpText();
+
+    let activeFormat = 'clean1';
+
+    function getLeadingWhitespaceWidth(str) {
+      let width = 0;
+      for (let i = 0; i < str.length; i++) {
+        const ch = str[i];
+        if (ch === ' ') width += 1;
+        else if (ch === '\t') width += 2;
+        else break;
+      }
+      return width;
+    }
+
+    function isFenceLine(trimmedLine) {
+      return /^```/.test(trimmedLine);
+    }
+
+    function computeHeadingShift(lines) {
+      let inCodeFence = false;
+      const levels = [];
+      for (const rawLine of lines) {
+        const trimmed = rawLine.trim();
+        if (isFenceLine(trimmed)) {
+          inCodeFence = !inCodeFence;
+          continue;
+        }
+        if (inCodeFence) continue;
+        const m = trimmed.match(/^(#{1,6})\s+/);
+        if (m) levels.push(m[1].length);
+      }
+      if (!levels.length) return 0;
+      const minLevel = Math.min(...levels);
+      return Math.max(0, minLevel - 1);
+    }
+
+    function applyHeadingShift(line, headingShift) {
+      const trimmed = line.trim();
+      const m = trimmed.match(/^(#{1,6})\s+(.*)$/);
+      if (!m) return line;
+      const level = m[1].length;
+      const newLevel = Math.max(1, level - headingShift);
+      return '#'.repeat(newLevel) + ' ' + m[2];
+    }
+
+    function matchListLine(line) {
+      // Support common unordered markers: -, *, •
+      return line.match(/^(\s*)(\d+\.|[-\*\u2022])\s+(.*)$/);
+    }
+
+    function computeMinListIndent(lines) {
+      let inCodeFence = false;
+      const indents = [];
+      for (const rawLine of lines) {
+        const trimmed = rawLine.trim();
+        if (isFenceLine(trimmed)) {
+          inCodeFence = !inCodeFence;
+          continue;
+        }
+        if (inCodeFence) continue;
+        const m = matchListLine(rawLine);
+        if (!m) continue;
+        const width = getLeadingWhitespaceWidth(m[1]);
+        indents.push(width);
+      }
+      // If all list items are shifted right (e.g. every line starts with 2 spaces),
+      // remove that common base indent. If there is any truly top-level item (0),
+      // keep base indent at 0 so nested items stay nested.
+      return indents.length ? Math.min(...indents) : 0;
+    }
+
+    function normalizeListLine(line, prevOutputLine, minListIndent) {
+      const m = matchListLine(line);
+      if (!m) return line;
+
+      const leading = getLeadingWhitespaceWidth(m[1]);
+      const marker = m[2];
+      const content = m[3];
+
+      let spaces = Math.max(0, leading - minListIndent);
+
+      const indentUnit = 2;
+      spaces = Math.round(spaces / indentUnit) * indentUnit;
+
+      const indent = ' '.repeat(spaces);
+      if (/^\d+\.$/.test(marker)) return indent + marker + ' ' + content;
+      return indent + '- ' + content;
+    }
+
+    function findPrevNonEmptyLine(output) {
+      for (let k = output.length - 1; k >= 0; k--) {
+        if (output[k].trim() !== '') return output[k];
+      }
+      return null;
+    }
+
+    function cleanCore(options) {
+      const input = document.getElementById('inputText').value;
+      const lines = input.split(/\r?\n/);
+      const output = [];
+
+      const headingShift = options.promoteHeadings ? computeHeadingShift(lines) : 0;
+      const minListIndent = options.normalizeLists ? computeMinListIndent(lines) : 0;
+
+      let inTable = false;
+      let inCodeFence = false;
+      let fenceBuffer = [];
+
+      function pushCollapsedBlank() {
+        if (options.removeBlankLines) return;
+        if (output.length === 0) return;
+        if (output[output.length - 1] !== '') output.push('');
+      }
+
+      for (let i = 0; i < lines.length; i++) {
+        let line = lines[i].replace(/\s+$/g, '');
+        let trimmed = line.trim();
+
+        if (isFenceLine(trimmed)) {
+          if (options.removeEmptyCodeFences) {
+            if (!inCodeFence) {
+              inCodeFence = true;
+              fenceBuffer = [line];
+              continue;
+            }
+            fenceBuffer.push(line);
+            inCodeFence = false;
+            const contentLines = fenceBuffer.slice(1, -1).filter(l => l.trim() !== '');
+            if (contentLines.length > 0) output.push(...fenceBuffer);
+            fenceBuffer = [];
+            continue;
+          }
+
+          inCodeFence = !inCodeFence;
+          output.push(line);
+          continue;
+        }
+
+        if (inCodeFence) {
+          if (options.removeEmptyCodeFences) fenceBuffer.push(line);
+          else output.push(line);
+          continue;
+        }
+
+        if (trimmed === '') {
+          if (options.removeBlankLines) continue;
+          pushCollapsedBlank();
+          continue;
+        }
+
+        if (options.removeHeadingsUpTo && new RegExp(`^#{1,${options.removeHeadingsUpTo}}\\s+`).test(trimmed)) {
+          continue;
+        }
+
+        if (options.hrToSymbol && /^---+$/.test(trimmed)) {
+          output.push('⸻');
+          let j = i + 1;
+          while (j < lines.length && lines[j].trim() === "") j++;
+          if (j < lines.length && /^\|/.test(lines[j].trim())) pushCollapsedBlank();
+          continue;
+        }
+
+        if (options.hrAddSpacing && /^---+$/.test(trimmed)) {
+          const nextLine = lines[i + 1] ? lines[i + 1].trim() : '';
+          const nextIsHeading = /^#+\s*/.test(nextLine);
+          if (!nextIsHeading && output.length > 0 && output[output.length - 1].trim() !== '') {
+            output.push('');
+          }
+        }
+
+        if (options.promoteHeadings) {
+          const shiftedHeading = applyHeadingShift(line, headingShift);
+          if (shiftedHeading !== line) {
+            line = shiftedHeading;
+            trimmed = line.trim();
+          }
+        }
+
+        if (options.normalizeLists && matchListLine(line)) {
+          const prevOutput = findPrevNonEmptyLine(output);
+          line = normalizeListLine(line, prevOutput, minListIndent);
+          trimmed = line.trim();
+        }
+
+        if (options.removeBoldMarkers) {
+          line = line.replace(/\*\*/g, "");
+          trimmed = line.trim();
+        }
+
+        if (options.escapeAngles) {
+          line = line.replace(/([<>])/g, "\\$1");
+          trimmed = line.trim();
+        }
+
+        if (options.tableSpacing) {
+          if (/\|/.test(trimmed)) {
+            if (!inTable && output.length > 0 && output[output.length - 1].trim() !== '') {
+              output.push('');
+            }
+            inTable = true;
+          } else {
+            inTable = false;
+          }
+        }
+
+        output.push(line);
+      }
+
+      if (inCodeFence && options.removeEmptyCodeFences && fenceBuffer.length > 0) {
+        const contentLines = fenceBuffer.slice(1).filter(l => l.trim() !== '');
+        if (contentLines.length > 0) output.push(...fenceBuffer);
+      }
+
+      return output.join('\n');
+    }
+
+    function setActiveFormat(format) {
+      activeFormat = format;
+
+      const label = document.getElementById('optionsModeLabel');
+      const groupClean1 = document.getElementById('optionsGroupClean1');
+      const groupClean2 = document.getElementById('optionsGroupClean2');
+      const groupCpent = document.getElementById('optionsGroupCpent');
+
+      if (groupClean1) groupClean1.style.display = format === 'clean1' ? '' : 'none';
+      if (groupClean2) groupClean2.style.display = format === 'clean2' ? '' : 'none';
+      if (groupCpent) groupCpent.style.display = format === 'cpent' ? '' : 'none';
+
+      if (label) {
+        const name = format === 'clean1' ? '清理格式' : format === 'clean2' ? '清理格式2' : 'CPENT';
+        label.innerHTML = `<strong>目前模式：</strong> ${name}`;
+      }
+
+      updateOptionsSummary();
+    }
+
+    function getCleanOptionsFromUI(format) {
+      if (format === 'clean2') {
+        const normalizeLists = document.getElementById('opt2NormalizeLists')?.checked ?? true;
+        const tableSpacing = document.getElementById('opt2TableSpacing')?.checked ?? true;
+        const hrToSymbol = document.getElementById('opt2HrToSymbol')?.checked ?? true;
+        const removeBoldMarkers = document.getElementById('opt2RemoveBold')?.checked ?? false;
+
+        return {
+          promoteHeadings: false,
+          normalizeLists,
+          tableSpacing,
+          hrAddSpacing: false,
+          hrToSymbol,
+          removeHeadingsUpTo: 3,
+          removeBlankLines: false,
+          removeEmptyCodeFences: false,
+          escapeAngles: false,
+          removeBoldMarkers
+        };
+      }
+
+      const promoteHeadings = document.getElementById('optPromoteHeadings')?.checked ?? true;
+      const normalizeLists = document.getElementById('optNormalizeLists')?.checked ?? true;
+      const tableSpacing = document.getElementById('optTableSpacing')?.checked ?? true;
+      const hrAddSpacing = document.getElementById('optHrSpacing')?.checked ?? true;
+      const removeBoldMarkers = document.getElementById('optRemoveBold')?.checked ?? false;
+
+      return {
+        promoteHeadings,
+        normalizeLists,
+        tableSpacing,
+        hrAddSpacing,
+        hrToSymbol: false,
+        removeHeadingsUpTo: 0,
+        removeBlankLines: false,
+        removeEmptyCodeFences: false,
+        escapeAngles: false,
+        removeBoldMarkers
+      };
+    }
+
+    function updateOptionsSummary() {
+      const summary = document.getElementById('optionsSummary');
+      if (!summary) return;
+
+      const enabled = [];
+      if (activeFormat === 'clean1') {
+        if (document.getElementById('optPromoteHeadings')?.checked) enabled.push('標題提升到 H1');
+        if (document.getElementById('optNormalizeLists')?.checked) enabled.push('列表整理 + 符號統一');
+        if (document.getElementById('optTableSpacing')?.checked) enabled.push('表格前補空白行');
+        if (document.getElementById('optHrSpacing')?.checked) enabled.push('分隔線前補空白行');
+        if (document.getElementById('optRemoveBold')?.checked) enabled.push('移除 **');
+      } else if (activeFormat === 'clean2') {
+        enabled.push('移除 H1–H3');
+        if (document.getElementById('opt2NormalizeLists')?.checked) enabled.push('列表整理 + 符號統一');
+        if (document.getElementById('opt2TableSpacing')?.checked) enabled.push('表格前補空白行');
+        if (document.getElementById('opt2HrToSymbol')?.checked) enabled.push('--- → ⸻');
+        if (document.getElementById('opt2RemoveBold')?.checked) enabled.push('移除 **');
+      } else if (activeFormat === 'cpent') {
+        enabled.push('移除空行');
+        if (document.getElementById('optCpentUnifyBullets')?.checked) enabled.push('符號統一');
+        if (document.getElementById('optCpentMergeLines')?.checked) enabled.push('合併多行成一行');
+        if (document.getElementById('optCpentRemoveBold')?.checked) enabled.push('移除 **');
+        enabled.push('保留 code fence 原樣');
+      }
+
+      summary.innerHTML = `<strong>目前勾選：</strong><br>${enabled.length ? enabled.map(s => `• ${s}`).join('<br>') : '（無）'}`;
+    }
+    setActiveFormat(activeFormat);
+
+    // ===== 原本清理格式 =====
+    function cleanText() {
+      setActiveFormat('clean1');
+      document.getElementById('outputText').value = cleanCore(getCleanOptionsFromUI('clean1'));
+    }
+    // ===== 新增清理格式2 =====
+    function cleanText2() {
+        setActiveFormat('clean2');
+        document.getElementById('outputText').value = cleanCore(getCleanOptionsFromUI('clean2'));
+    }
+
+    function cleanTextCpent() {
+      setActiveFormat('cpent');
+      const input = document.getElementById("inputText").value;
+      const lines = input.split(/\r?\n/);
+      const output = [];
+
+      const unifyBullets = document.getElementById('optCpentUnifyBullets')?.checked ?? true;
+      const mergeLines = document.getElementById('optCpentMergeLines')?.checked ?? true;
+      const removeBoldMarkers = document.getElementById('optCpentRemoveBold')?.checked ?? false;
+
+      let currentItem = null;
+      let inCodeFence = false;
+
+      function flushCurrentItem() {
+        if (!currentItem) return;
+        output.push(currentItem.trim());
+        currentItem = null;
+      }
+
+      for (let rawLine of lines) {
+        const trimmed = rawLine.trim();
+
+        if (isFenceLine(trimmed)) {
+          flushCurrentItem();
+          inCodeFence = !inCodeFence;
+          output.push(rawLine.replace(/\s+$/g, ''));
+          continue;
+        }
+
+        if (inCodeFence) {
+          output.push(rawLine.replace(/\s+$/g, ''));
+          continue;
+        }
+
+        let line = trimmed;
+
+        // 空行跳過
+        if (line === "") continue;
+
+        if (removeBoldMarkers) line = line.replace(/\*\*/g, "");
+
+        // 統一清單符號（只處理無序清單）
+        if (unifyBullets && /^[•\*\-]\s+/.test(line)) {
+          line = "- " + line.replace(/^[•\*\-]\s+/, "");
+        }
+
+        if (line.startsWith("- ")) {
+          flushCurrentItem();
+          currentItem = line;
+        } else {
+          if (currentItem && mergeLines) {
+            currentItem += " " + line;
+          } else if (currentItem && !mergeLines) {
+            flushCurrentItem();
+            output.push(line);
+          } else {
+            output.push(line);
+          }
+        }
+      }
+
+      flushCurrentItem();
+      document.getElementById("outputText").value = output.join("\n");
+    }
+
+    // ===== 複製輸出 =====
+    function copyOutput() {
+      const outputText = document.getElementById("outputText");
+      outputText.select();
+      document.execCommand("copy");
+
+      const toast = document.createElement("div");
+      toast.className = "toast";
+      toast.textContent = "✅ 已複製！";
+      document.body.appendChild(toast);
+      setTimeout(() => toast.remove(), 1500);
+    }
+    // Help toggle panel handlers
+    const helpToggle = document.getElementById('helpToggle');
+    const helpPanel = document.getElementById('helpPanel');
+    const helpClose = document.getElementById('helpClose');
+    const optionsToggle = document.getElementById('optionsToggle');
+    const optionsPanel = document.getElementById('optionsPanel');
+    const optionsClose = document.getElementById('optionsClose');
+
+    function toggleHelp(forceOpen = null) {
+      const isOpen = forceOpen === null ? helpPanel.classList.toggle('open') : (forceOpen ? (helpPanel.classList.add('open'), true) : (helpPanel.classList.remove('open'), false));
+      helpToggle.setAttribute('aria-expanded', String(isOpen));
+      if (isOpen && optionsPanel.classList.contains('open')) toggleOptions(false);
+      // Do not automatically move focus when opening help; user requested so it doesn't jump.
+    }
+    function toggleOptions(forceOpen = null) {
+      const isOpen = forceOpen === null ? optionsPanel.classList.toggle('open') : (forceOpen ? (optionsPanel.classList.add('open'), true) : (optionsPanel.classList.remove('open'), false));
+      optionsToggle.setAttribute('aria-expanded', String(isOpen));
+      if (isOpen && helpPanel.classList.contains('open')) toggleHelp(false);
+    }
+    helpToggle.addEventListener('click', toggleHelp);
+    helpClose.addEventListener('click', toggleHelp);
+    optionsToggle.addEventListener('click', () => toggleOptions());
+    optionsClose.addEventListener('click', () => toggleOptions());
+    document.getElementById('optPromoteHeadings')?.addEventListener('change', updateOptionsSummary);
+    document.getElementById('optNormalizeLists')?.addEventListener('change', updateOptionsSummary);
+    document.getElementById('optTableSpacing')?.addEventListener('change', updateOptionsSummary);
+    document.getElementById('optHrSpacing')?.addEventListener('change', updateOptionsSummary);
+    document.getElementById('optRemoveBold')?.addEventListener('change', updateOptionsSummary);
+    document.getElementById('opt2NormalizeLists')?.addEventListener('change', updateOptionsSummary);
+    document.getElementById('opt2TableSpacing')?.addEventListener('change', updateOptionsSummary);
+    document.getElementById('opt2HrToSymbol')?.addEventListener('change', updateOptionsSummary);
+    document.getElementById('opt2RemoveBold')?.addEventListener('change', updateOptionsSummary);
+    document.getElementById('optCpentUnifyBullets')?.addEventListener('change', updateOptionsSummary);
+    document.getElementById('optCpentMergeLines')?.addEventListener('change', updateOptionsSummary);
+    document.getElementById('optCpentRemoveBold')?.addEventListener('change', updateOptionsSummary);
+    // Close on Escape
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && helpPanel.classList.contains('open')) {
+        toggleHelp(false);
+      }
+      if (e.key === 'Escape' && optionsPanel.classList.contains('open')) {
+        toggleOptions(false);
+      }
+    });
+  </script>
+</body>
+</html>
