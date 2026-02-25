@@ -304,7 +304,7 @@
 
   <script>
     const HELP_TEXT = {
-      clean1: "保留表格與內容；自動把最小標題層級提升到 H1（例：##→#、###→##）；整理列表；移除行首空白；表格行會移除 | 前的全形/不換行空白並確保 | 在行首（避免被當成 code block / 純文字）。",
+      clean1: "保留表格與內容；自動把最小標題層級提升到 H1（例：##→#、###→##）；整理列表；移除多餘空行（僅在 --- 與表格開始前補 1 行空行）；表格行會移除 | 前的全形/不換行空白並確保 | 在行首。",
       clean2: "移除 H1–H3 的 # 標記但保留文字；保留表格；整理列表縮排；將 --- 分隔線改成 ⸻。",
       cpent: "CPENT 筆記用：移除空行；統一無序清單符號為 -；把條列項目下方的多行文字合併成同一行（不會改動 code fence 內容）。"
     };
@@ -455,8 +455,13 @@
       let inCodeFence = false;
       let fenceBuffer = [];
 
-      function pushCollapsedBlank() {
+      function pushUserBlank() {
         if (options.removeBlankLines) return;
+        if (output.length === 0) return;
+        if (output[output.length - 1] !== '') output.push('');
+      }
+
+      function pushSpacingBlank() {
         if (output.length === 0) return;
         if (output[output.length - 1] !== '') output.push('');
       }
@@ -493,7 +498,7 @@
 
         if (trimmed === '') {
           if (options.removeBlankLines) continue;
-          pushCollapsedBlank();
+          pushUserBlank();
           continue;
         }
 
@@ -505,16 +510,18 @@
           output.push('⸻');
           let j = i + 1;
           while (j < lines.length && lines[j].trim() === "") j++;
-          if (j < lines.length && isTableRowLine(lines[j])) pushCollapsedBlank();
+          if (j < lines.length && isTableRowLine(lines[j])) pushSpacingBlank();
           continue;
         }
 
         if (options.hrAddSpacing && /^---+$/.test(trimmed)) {
-          const nextLine = lines[i + 1] ? lines[i + 1].trim() : '';
-          const nextIsHeading = /^#+\s*/.test(nextLine);
-          if (!nextIsHeading && output.length > 0 && output[output.length - 1].trim() !== '') {
-            output.push('');
-          }
+          pushSpacingBlank();
+        }
+
+        // Ensure hr has no leading whitespace (avoid being parsed as code/text)
+        if (/^---+$/.test(trimmed)) {
+          line = trimmed;
+          trimmed = line.trim();
         }
 
         if (options.promoteHeadings) {
@@ -560,9 +567,7 @@
 
         if (options.tableSpacing) {
           if (isTableRow) {
-            if (!inTable && output.length > 0 && output[output.length - 1].trim() !== '') {
-              output.push('');
-            }
+            if (!inTable) pushSpacingBlank();
             inTable = true;
           } else {
             inTable = false;
@@ -673,7 +678,7 @@
         hrToSymbol: false,
         removeHeadingsUpTo: 0,
         stripHeadingMarkersUpTo: 0,
-        removeBlankLines: false,
+        removeBlankLines: true,
         removeEmptyCodeFences: false,
         escapeAngles: false,
         removeBoldMarkers
