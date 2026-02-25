@@ -304,8 +304,8 @@
 
   <script>
     const HELP_TEXT = {
-      clean1: "保留表格與內容；自動把最小標題層級提升到 H1（例：##→#、###→##）；整理列表縮排（頂層不縮排，下一層 2 空白）；除 --- 與表格行（|...）外，其餘行會先移除行首空白再補 1 個空白。",
-      clean2: "移除 H1–H3 標頭；保留表格；整理列表縮排；將 --- 分隔線改成 ⸻。",
+      clean1: "保留表格與內容；自動把最小標題層級提升到 H1（例：##→#、###→##）；整理列表；只有 --- 與表格行（|...）會保留 1 個行首空白，其餘行會移除行首空白。",
+      clean2: "移除 H1–H3 的 # 標記但保留文字；保留表格；整理列表縮排；將 --- 分隔線改成 ⸻。",
       cpent: "CPENT 筆記用：移除空行；統一無序清單符號為 -；把條列項目下方的多行文字合併成同一行（不會改動 code fence 內容）。"
     };
 
@@ -503,6 +503,14 @@
           }
         }
 
+        if (options.stripHeadingMarkersUpTo) {
+          const m = trimmed.match(new RegExp(`^(#{1,${options.stripHeadingMarkersUpTo}})\\s+(.*)$`));
+          if (m) {
+            line = m[2];
+            trimmed = line.trim();
+          }
+        }
+
         if (options.normalizeLists && matchListLine(line)) {
           const prevOutput = findPrevNonEmptyLine(output);
           line = normalizeListLine(line, prevOutput, minListIndent);
@@ -565,14 +573,14 @@
           continue;
         }
 
-        // --- 與表格行（|...）：移除行首空白（trim 後輸出）
+        // 只有 --- 與表格行（|...）保留 1 個行首空白（其餘行移除行首空白）
         if (/^---+$/.test(trimmed) || trimmed.startsWith('|')) {
-          out.push(trimmed);
+          out.push(' ' + trimmed);
           continue;
         }
 
-        // 其他行：移除行首空白後，補 1 個前置空白（確保只有 1 個）
-        out.push(' ' + trimmed);
+        // 其他行：移除行首空白（不動內容本身）
+        out.push(line.replace(/^[ \t]+/, ''));
       }
 
       return out.join('\n');
@@ -611,7 +619,8 @@
           tableSpacing,
           hrAddSpacing: false,
           hrToSymbol,
-          removeHeadingsUpTo: 3,
+          removeHeadingsUpTo: 0,
+          stripHeadingMarkersUpTo: 3,
           removeBlankLines: false,
           removeEmptyCodeFences: false,
           escapeAngles: false,
@@ -632,6 +641,7 @@
         hrAddSpacing,
         hrToSymbol: false,
         removeHeadingsUpTo: 0,
+        stripHeadingMarkersUpTo: 0,
         removeBlankLines: false,
         removeEmptyCodeFences: false,
         escapeAngles: false,
@@ -651,7 +661,7 @@
         if (document.getElementById('optHrSpacing')?.checked) enabled.push('分隔線前補空白行');
         if (document.getElementById('optRemoveBold')?.checked) enabled.push('移除 **');
       } else if (activeFormat === 'clean2') {
-        enabled.push('移除 H1–H3');
+        enabled.push('H1–H3 去除 #（保留文字）');
         if (document.getElementById('opt2NormalizeLists')?.checked) enabled.push('列表整理 + 符號統一');
         if (document.getElementById('opt2TableSpacing')?.checked) enabled.push('表格前補空白行');
         if (document.getElementById('opt2HrToSymbol')?.checked) enabled.push('--- → ⸻');
