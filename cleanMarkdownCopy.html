@@ -304,7 +304,7 @@
 
   <script>
     const HELP_TEXT = {
-      clean1: "保留表格與內容；自動把最小標題層級提升到 H1（例：##→#、###→##）；整理列表；只有 --- 與表格行（|...）會保留 1 個行首空白，其餘行會移除行首空白。",
+      clean1: "保留表格與內容；自動把最小標題層級提升到 H1（例：##→#、###→##）；整理列表；移除行首空白；表格行會移除 | 前的全形/不換行空白並確保 | 在行首（避免被當成 code block / 純文字）。",
       clean2: "移除 H1–H3 的 # 標記但保留文字；保留表格；整理列表縮排；將 --- 分隔線改成 ⸻。",
       cpent: "CPENT 筆記用：移除空行；統一無序清單符號為 -；把條列項目下方的多行文字合併成同一行（不會改動 code fence 內容）。"
     };
@@ -341,6 +341,21 @@
 
     function isFenceLine(trimmedLine) {
       return /^```/.test(trimmedLine);
+    }
+
+    function stripLeadingMarkdownWhitespace(line) {
+      // Includes normal space/tab, NBSP, full-width space, and BOM.
+      return line.replace(/^[ \t\u00A0\u3000\uFEFF]+/, '');
+    }
+
+    function isTableRowLine(rawLine) {
+      return stripLeadingMarkdownWhitespace(rawLine).startsWith('|');
+    }
+
+    function escapeHtmlCommentsForMarkdown(text) {
+      // Prevent markdown renderers from treating it as an actual HTML comment (content disappears in preview).
+      // ZWSP is invisible in most editors but breaks the "<!--" token.
+      return text.replace(/<!--/g, '<\u200b!--').replace(/-->/g, '--\u200b>');
     }
 
     function computeHeadingShift(lines) {
@@ -483,7 +498,7 @@
           output.push('⸻');
           let j = i + 1;
           while (j < lines.length && lines[j].trim() === "") j++;
-          if (j < lines.length && /^\|/.test(lines[j].trim())) pushCollapsedBlank();
+          if (j < lines.length && isTableRowLine(lines[j])) pushCollapsedBlank();
           continue;
         }
 
@@ -527,8 +542,17 @@
           trimmed = line.trim();
         }
 
+        const isTableRow = isTableRowLine(line);
+        if (isTableRow) {
+          // Remove leading whitespace so | is truly at line start (avoid tables becoming code blocks/text)
+          line = stripLeadingMarkdownWhitespace(line);
+          // Escape HTML comments inside table cells to avoid disappearing text in preview
+          line = escapeHtmlCommentsForMarkdown(line);
+          trimmed = line.trim();
+        }
+
         if (options.tableSpacing) {
-          if (/\|/.test(trimmed)) {
+          if (isTableRow) {
             if (!inTable && output.length > 0 && output[output.length - 1].trim() !== '') {
               output.push('');
             }
@@ -573,14 +597,14 @@
           continue;
         }
 
-        // 只有 --- 與表格行（|...）保留 1 個行首空白（其餘行移除行首空白）
-        if (/^---+$/.test(trimmed) || trimmed.startsWith('|')) {
-          out.push(' ' + trimmed);
+        // 表格行：移除 | 前導空白（含 NBSP / 全形空白），並避免 <!-- --> 造成預覽消失
+        if (isTableRowLine(line)) {
+          out.push(escapeHtmlCommentsForMarkdown(stripLeadingMarkdownWhitespace(line)));
           continue;
         }
 
         // 其他行：移除行首空白（不動內容本身）
-        out.push(line.replace(/^[ \t]+/, ''));
+        out.push(stripLeadingMarkdownWhitespace(line));
       }
 
       return out.join('\n');
