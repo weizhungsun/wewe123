@@ -358,6 +358,13 @@
       return text.replace(/<!--/g, '<\u200b!--').replace(/-->/g, '--\u200b>');
     }
 
+    function normalizeWhitespaceOnlyLines(text) {
+      return text
+        .split(/\r?\n/)
+        .map(line => (/^[\s\u200b]*$/.test(line) ? '' : line))
+        .join('\n');
+    }
+
     function computeHeadingShift(lines) {
       let inCodeFence = false;
       const levels = [];
@@ -706,12 +713,12 @@
     function cleanText() {
       setActiveFormat('clean1');
       const cleaned = cleanCore(getCleanOptionsFromUI('clean1'));
-      document.getElementById('outputText').value = applyClean1LeadingSpaceRule(cleaned);
+      document.getElementById('outputText').value = normalizeWhitespaceOnlyLines(applyClean1LeadingSpaceRule(cleaned));
     }
     // ===== 新增清理格式2 =====
     function cleanText2() {
         setActiveFormat('clean2');
-        document.getElementById('outputText').value = cleanCore(getCleanOptionsFromUI('clean2'));
+        document.getElementById('outputText').value = normalizeWhitespaceOnlyLines(cleanCore(getCleanOptionsFromUI('clean2')));
     }
 
     function cleanTextCpent() {
@@ -776,7 +783,7 @@
       }
 
       flushCurrentItem();
-      document.getElementById("outputText").value = output.join("\n");
+      document.getElementById("outputText").value = normalizeWhitespaceOnlyLines(output.join("\n"));
     }
 
     // ===== 複製輸出 =====
