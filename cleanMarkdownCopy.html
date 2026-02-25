@@ -304,7 +304,7 @@
 
   <script>
     const HELP_TEXT = {
-      clean1: "保留表格與內容；自動把最小標題層級提升到 H1（例：##→#、###→##）；整理列表縮排（頂層不縮排，下一層 2 空白）。",
+      clean1: "保留表格與內容；自動把最小標題層級提升到 H1（例：##→#、###→##）；整理列表縮排（頂層不縮排，下一層 2 空白）；除 --- 與表格行（|...）外，其餘行前自動補一個空白。",
       clean2: "移除 H1–H3 標頭；保留表格；整理列表縮排；將 --- 分隔線改成 ⸻。",
       cpent: "CPENT 筆記用：移除空行；統一無序清單符號為 -；把條列項目下方的多行文字合併成同一行（不會改動 code fence 內容）。"
     };
@@ -541,6 +541,44 @@
       return output.join('\n');
     }
 
+    function applyClean1LeadingSpaceRule(text) {
+      const lines = text.split(/\r?\n/);
+      let inCodeFence = false;
+
+      const out = [];
+      for (const line of lines) {
+        const trimmed = line.trim();
+
+        if (isFenceLine(trimmed)) {
+          inCodeFence = !inCodeFence;
+          out.push(line);
+          continue;
+        }
+
+        if (inCodeFence) {
+          out.push(line);
+          continue;
+        }
+
+        if (trimmed === '') {
+          out.push('');
+          continue;
+        }
+
+        // --- 與表格行（|...）不加前置空白，並移除前方空白
+        if (/^---+$/.test(trimmed) || trimmed.startsWith('|')) {
+          out.push(trimmed);
+          continue;
+        }
+
+        // 其他行：若本來就有縮排就保留；否則補一個前置空白
+        if (/^[ \t]/.test(line)) out.push(line);
+        else out.push(' ' + line);
+      }
+
+      return out.join('\n');
+    }
+
     function setActiveFormat(format) {
       activeFormat = format;
 
@@ -634,7 +672,8 @@
     // ===== 原本清理格式 =====
     function cleanText() {
       setActiveFormat('clean1');
-      document.getElementById('outputText').value = cleanCore(getCleanOptionsFromUI('clean1'));
+      const cleaned = cleanCore(getCleanOptionsFromUI('clean1'));
+      document.getElementById('outputText').value = applyClean1LeadingSpaceRule(cleaned);
     }
     // ===== 新增清理格式2 =====
     function cleanText2() {
