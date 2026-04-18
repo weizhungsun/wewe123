@@ -299,12 +299,8 @@
 
     <div id="optionsGroupPreserve" style="display:none">
       <div class="row">
-        <input type="checkbox" id="optPreserveCollapseBlankLines" checked>
-        <label for="optPreserveCollapseBlankLines">連續空白行最多保留 1 行（不改 code block）</label>
-      </div>
-      <div class="row">
-        <input type="checkbox" id="optPreserveTrimEdges" checked>
-        <label for="optPreserveTrimEdges">移除開頭與結尾多餘空白行</label>
+        <input type="checkbox" id="optPreserveRemoveBlankLines" checked>
+        <label for="optPreserveRemoveBlankLines">比照清理格式1移除空白行</label>
       </div>
     </div>
 
@@ -325,7 +321,7 @@
     const HELP_TEXT = {
       clean1: "保留表格與內容；自動把最小標題層級提升到 H1（例：##→#、###→##）；整理列表；移除多餘空行（僅在 --- 與表格開始前補 1 行空行）；表格行會移除 | 前的全形/不換行空白並確保 | 在行首。",
       clean2: "移除 H1–H3 的 # 標記但保留文字；保留表格；整理列表縮排；將 --- 分隔線改成 ⸻。",
-      preserve: "不改 markdown 結構，只做保守空白整理：移除行尾多餘空白、將純空白行正規化，可選擇合併連續空白行與去掉首尾多餘空白行；保留表格、code block、列表縮排與標題。",
+      preserve: "比照清理格式1清掉多餘空白行，但不提升標題、不移除 #、不整理列表縮排，也不改表格與 code block 結構。",
       cpent: "CPENT 筆記用：移除空行；統一無序清單符號為 -；把條列項目下方的多行文字合併成同一行（不會改動 code fence 內容）。"
     };
 
@@ -421,43 +417,16 @@
       return line.match(/^(\s*)(\d+\.|[-\*\u2022])\s+(.*)$/);
     }
 
-    function computeMinListIndent(lines) {
-      let inCodeFence = false;
-      const indents = [];
-      for (const rawLine of lines) {
-        const trimmed = rawLine.trim();
-        if (isFenceLine(trimmed)) {
-          inCodeFence = !inCodeFence;
-          continue;
-        }
-        if (inCodeFence) continue;
-        const m = matchListLine(rawLine);
-        if (!m) continue;
-        const width = getLeadingWhitespaceWidth(m[1]);
-        indents.push(width);
-      }
-      // If all list items are shifted right (e.g. every line starts with 2 spaces),
-      // remove that common base indent. If there is any truly top-level item (0),
-      // keep base indent at 0 so nested items stay nested.
-      return indents.length ? Math.min(...indents) : 0;
-    }
-
-    function normalizeListLine(line, prevOutputLine, minListIndent) {
+    function normalizeListLine(line) {
       const m = matchListLine(line);
       if (!m) return line;
 
-      const leading = getLeadingWhitespaceWidth(m[1]);
+      const leadingWhitespace = m[1];
       const marker = m[2];
       const content = m[3];
 
-      let spaces = Math.max(0, leading - minListIndent);
-
-      const indentUnit = 2;
-      spaces = Math.round(spaces / indentUnit) * indentUnit;
-
-      const indent = ' '.repeat(spaces);
-      if (/^\d+\.$/.test(marker)) return indent + marker + ' ' + content;
-      return indent + '- ' + content;
+      if (/^\d+\.$/.test(marker)) return leadingWhitespace + marker + ' ' + content;
+      return leadingWhitespace + '- ' + content;
     }
 
     function findPrevNonEmptyLine(output) {
@@ -473,7 +442,6 @@
       const output = [];
 
       const headingShift = options.promoteHeadings ? computeHeadingShift(lines) : 0;
-      const minListIndent = options.normalizeLists ? computeMinListIndent(lines) : 0;
 
       let inTable = false;
       let inCodeFence = false;
@@ -565,8 +533,7 @@
         }
 
         if (options.normalizeLists && matchListLine(line)) {
-          const prevOutput = findPrevNonEmptyLine(output);
-          line = normalizeListLine(line, prevOutput, minListIndent);
+          line = normalizeListLine(line);
           trimmed = line.trim();
         }
 
@@ -609,49 +576,6 @@
       return output.join('\n');
     }
 
-    function preserveMarkdownWhitespace(options = {}) {
-      const input = document.getElementById('inputText').value;
-      const lines = input.split(/\r?\n/);
-      const output = [];
-      let inCodeFence = false;
-      let previousWasBlank = false;
-
-      for (const rawLine of lines) {
-        const trimmed = rawLine.trim();
-
-        if (isFenceLine(trimmed)) {
-          inCodeFence = !inCodeFence;
-          output.push(rawLine.replace(/\s+$/g, ''));
-          previousWasBlank = false;
-          continue;
-        }
-
-        if (inCodeFence) {
-          output.push(rawLine.replace(/\s+$/g, ''));
-          previousWasBlank = false;
-          continue;
-        }
-
-        const line = rawLine.replace(/\s+$/g, '');
-        if (trimmed === '') {
-          if (options.collapseBlankLines && previousWasBlank) continue;
-          output.push('');
-          previousWasBlank = true;
-          continue;
-        }
-
-        output.push(line);
-        previousWasBlank = false;
-      }
-
-      if (options.trimEdgeBlankLines) {
-        while (output.length && output[0] === '') output.shift();
-        while (output.length && output[output.length - 1] === '') output.pop();
-      }
-
-      return output.join('\n');
-    }
-
     function setActiveFormat(format) {
       activeFormat = format;
 
@@ -681,8 +605,17 @@
     function getCleanOptionsFromUI(format) {
       if (format === 'preserve') {
         return {
-          collapseBlankLines: document.getElementById('optPreserveCollapseBlankLines')?.checked ?? true,
-          trimEdgeBlankLines: document.getElementById('optPreserveTrimEdges')?.checked ?? true
+          promoteHeadings: false,
+          normalizeLists: false,
+          tableSpacing: false,
+          hrAddSpacing: false,
+          hrToSymbol: false,
+          removeHeadingsUpTo: 0,
+          stripHeadingMarkersUpTo: 0,
+          removeBlankLines: document.getElementById('optPreserveRemoveBlankLines')?.checked ?? true,
+          removeEmptyCodeFences: false,
+          escapeAngles: false,
+          removeBoldMarkers: false
         };
       }
 
@@ -747,10 +680,9 @@
         if (document.getElementById('opt2RemoveBold')?.checked) enabled.push('移除 **');
       } else if (activeFormat === 'preserve') {
         enabled.push('保留 markdown 結構');
-        enabled.push('移除行尾多餘空白');
-        if (document.getElementById('optPreserveCollapseBlankLines')?.checked) enabled.push('連續空白行最多 1 行');
-        if (document.getElementById('optPreserveTrimEdges')?.checked) enabled.push('移除首尾多餘空白行');
-        enabled.push('不改表格 / code block / 縮排');
+        if (document.getElementById('optPreserveRemoveBlankLines')?.checked) enabled.push('比照清理格式1移除空白行');
+        enabled.push('不改 H1/H2/# 標記');
+        enabled.push('不改表格 / code block / 列表縮排');
       } else if (activeFormat === 'cpent') {
         enabled.push('移除空行');
         if (document.getElementById('optCpentUnifyBullets')?.checked) enabled.push('符號統一');
@@ -777,7 +709,7 @@
 
     function cleanTextPreserveMarkdown() {
       setActiveFormat('preserve');
-      document.getElementById('outputText').value = preserveMarkdownWhitespace(getCleanOptionsFromUI('preserve'));
+      document.getElementById('outputText').value = normalizeWhitespaceOnlyLines(cleanCore(getCleanOptionsFromUI('preserve')));
     }
 
     function cleanTextCpent() {
@@ -889,8 +821,7 @@
     document.getElementById('opt2TableSpacing')?.addEventListener('change', updateOptionsSummary);
     document.getElementById('opt2HrToSymbol')?.addEventListener('change', updateOptionsSummary);
     document.getElementById('opt2RemoveBold')?.addEventListener('change', updateOptionsSummary);
-    document.getElementById('optPreserveCollapseBlankLines')?.addEventListener('change', updateOptionsSummary);
-    document.getElementById('optPreserveTrimEdges')?.addEventListener('change', updateOptionsSummary);
+    document.getElementById('optPreserveRemoveBlankLines')?.addEventListener('change', updateOptionsSummary);
     document.getElementById('optCpentUnifyBullets')?.addEventListener('change', updateOptionsSummary);
     document.getElementById('optCpentMergeLines')?.addEventListener('change', updateOptionsSummary);
     document.getElementById('optCpentRemoveBold')?.addEventListener('change', updateOptionsSummary);
