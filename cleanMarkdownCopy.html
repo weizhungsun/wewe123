@@ -194,6 +194,10 @@
       <span class="help-icon" tabindex="0" aria-label="清理格式2 說明" id="tipClean2">?</span>
     </span>
     <span class="btn-wrap">
+      <button onclick="cleanTextPreserveMarkdown()">🧹 保留 Markdown</button>
+      <span class="help-icon" tabindex="0" aria-label="保留 Markdown 說明" id="tipPreserve">?</span>
+    </span>
+    <span class="btn-wrap">
       <button onclick="cleanTextCpent()">🧹 CPENT</button>
       <span class="help-icon" tabindex="0" aria-label="CPENT 清理 說明" id="tipCpent">?</span>
     </span>
@@ -213,6 +217,10 @@
     <div class="section">
       <strong>🧹 Clean 2: 清理格式2</strong>
       <p id="helpClean2"></p>
+    </div>
+    <div class="section">
+      <strong>🧹 Preserve Markdown: 保留 Markdown</strong>
+      <p id="helpPreserve"></p>
     </div>
     <div class="section">
       <strong>🧹 CPENT</strong>
@@ -289,6 +297,17 @@
       </div>
     </div>
 
+    <div id="optionsGroupPreserve" style="display:none">
+      <div class="row">
+        <input type="checkbox" id="optPreserveCollapseBlankLines" checked>
+        <label for="optPreserveCollapseBlankLines">連續空白行最多保留 1 行（不改 code block）</label>
+      </div>
+      <div class="row">
+        <input type="checkbox" id="optPreserveTrimEdges" checked>
+        <label for="optPreserveTrimEdges">移除開頭與結尾多餘空白行</label>
+      </div>
+    </div>
+
     <div class="summary" id="optionsSummary"></div>
   </aside>
 
@@ -306,22 +325,27 @@
     const HELP_TEXT = {
       clean1: "保留表格與內容；自動把最小標題層級提升到 H1（例：##→#、###→##）；整理列表；移除多餘空行（僅在 --- 與表格開始前補 1 行空行）；表格行會移除 | 前的全形/不換行空白並確保 | 在行首。",
       clean2: "移除 H1–H3 的 # 標記但保留文字；保留表格；整理列表縮排；將 --- 分隔線改成 ⸻。",
+      preserve: "不改 markdown 結構，只做保守空白整理：移除行尾多餘空白、將純空白行正規化，可選擇合併連續空白行與去掉首尾多餘空白行；保留表格、code block、列表縮排與標題。",
       cpent: "CPENT 筆記用：移除空行；統一無序清單符號為 -；把條列項目下方的多行文字合併成同一行（不會改動 code fence 內容）。"
     };
 
     function syncHelpText() {
       const tip1 = document.getElementById('tipClean1');
       const tip2 = document.getElementById('tipClean2');
+      const tipPreserve = document.getElementById('tipPreserve');
       const tipCpent = document.getElementById('tipCpent');
       const h1 = document.getElementById('helpClean1');
       const h2 = document.getElementById('helpClean2');
+      const hPreserve = document.getElementById('helpPreserve');
       const hCpent = document.getElementById('helpCpent');
 
       if (tip1) tip1.dataset.tooltip = HELP_TEXT.clean1;
       if (tip2) tip2.dataset.tooltip = HELP_TEXT.clean2;
+      if (tipPreserve) tipPreserve.dataset.tooltip = HELP_TEXT.preserve;
       if (tipCpent) tipCpent.dataset.tooltip = HELP_TEXT.cpent;
       if (h1) h1.textContent = HELP_TEXT.clean1;
       if (h2) h2.textContent = HELP_TEXT.clean2;
+      if (hPreserve) hPreserve.textContent = HELP_TEXT.preserve;
       if (hCpent) hCpent.textContent = HELP_TEXT.cpent;
     }
     syncHelpText();
@@ -585,41 +609,47 @@
       return output.join('\n');
     }
 
-    function applyClean1LeadingSpaceRule(text) {
-      const lines = text.split(/\r?\n/);
+    function preserveMarkdownWhitespace(options = {}) {
+      const input = document.getElementById('inputText').value;
+      const lines = input.split(/\r?\n/);
+      const output = [];
       let inCodeFence = false;
+      let previousWasBlank = false;
 
-      const out = [];
-      for (const line of lines) {
-        const trimmed = line.trim();
+      for (const rawLine of lines) {
+        const trimmed = rawLine.trim();
 
         if (isFenceLine(trimmed)) {
           inCodeFence = !inCodeFence;
-          out.push(line);
+          output.push(rawLine.replace(/\s+$/g, ''));
+          previousWasBlank = false;
           continue;
         }
 
         if (inCodeFence) {
-          out.push(line);
+          output.push(rawLine.replace(/\s+$/g, ''));
+          previousWasBlank = false;
           continue;
         }
 
+        const line = rawLine.replace(/\s+$/g, '');
         if (trimmed === '') {
-          out.push('');
+          if (options.collapseBlankLines && previousWasBlank) continue;
+          output.push('');
+          previousWasBlank = true;
           continue;
         }
 
-        // 表格行：移除 | 前導空白（含 NBSP / 全形空白），並避免 <!-- --> 造成預覽消失
-        if (isTableRowLine(line)) {
-          out.push(escapeHtmlCommentsForMarkdown(stripLeadingMarkdownWhitespace(line)));
-          continue;
-        }
-
-        // 其他行：移除行首空白（不動內容本身）
-        out.push(stripLeadingMarkdownWhitespace(line));
+        output.push(line);
+        previousWasBlank = false;
       }
 
-      return out.join('\n');
+      if (options.trimEdgeBlankLines) {
+        while (output.length && output[0] === '') output.shift();
+        while (output.length && output[output.length - 1] === '') output.pop();
+      }
+
+      return output.join('\n');
     }
 
     function setActiveFormat(format) {
@@ -628,14 +658,20 @@
       const label = document.getElementById('optionsModeLabel');
       const groupClean1 = document.getElementById('optionsGroupClean1');
       const groupClean2 = document.getElementById('optionsGroupClean2');
+      const groupPreserve = document.getElementById('optionsGroupPreserve');
       const groupCpent = document.getElementById('optionsGroupCpent');
 
       if (groupClean1) groupClean1.style.display = format === 'clean1' ? '' : 'none';
       if (groupClean2) groupClean2.style.display = format === 'clean2' ? '' : 'none';
+      if (groupPreserve) groupPreserve.style.display = format === 'preserve' ? '' : 'none';
       if (groupCpent) groupCpent.style.display = format === 'cpent' ? '' : 'none';
 
       if (label) {
-        const name = format === 'clean1' ? '清理格式' : format === 'clean2' ? '清理格式2' : 'CPENT';
+        const name =
+          format === 'clean1' ? '清理格式' :
+          format === 'clean2' ? '清理格式2' :
+          format === 'preserve' ? '保留 Markdown' :
+          'CPENT';
         label.innerHTML = `<strong>目前模式：</strong> ${name}`;
       }
 
@@ -643,6 +679,13 @@
     }
 
     function getCleanOptionsFromUI(format) {
+      if (format === 'preserve') {
+        return {
+          collapseBlankLines: document.getElementById('optPreserveCollapseBlankLines')?.checked ?? true,
+          trimEdgeBlankLines: document.getElementById('optPreserveTrimEdges')?.checked ?? true
+        };
+      }
+
       if (format === 'clean2') {
         const normalizeLists = document.getElementById('opt2NormalizeLists')?.checked ?? true;
         const tableSpacing = document.getElementById('opt2TableSpacing')?.checked ?? true;
@@ -702,6 +745,12 @@
         if (document.getElementById('opt2TableSpacing')?.checked) enabled.push('表格前補空白行');
         if (document.getElementById('opt2HrToSymbol')?.checked) enabled.push('--- → ⸻');
         if (document.getElementById('opt2RemoveBold')?.checked) enabled.push('移除 **');
+      } else if (activeFormat === 'preserve') {
+        enabled.push('保留 markdown 結構');
+        enabled.push('移除行尾多餘空白');
+        if (document.getElementById('optPreserveCollapseBlankLines')?.checked) enabled.push('連續空白行最多 1 行');
+        if (document.getElementById('optPreserveTrimEdges')?.checked) enabled.push('移除首尾多餘空白行');
+        enabled.push('不改表格 / code block / 縮排');
       } else if (activeFormat === 'cpent') {
         enabled.push('移除空行');
         if (document.getElementById('optCpentUnifyBullets')?.checked) enabled.push('符號統一');
@@ -718,12 +767,17 @@
     function cleanText() {
       setActiveFormat('clean1');
       const cleaned = cleanCore(getCleanOptionsFromUI('clean1'));
-      document.getElementById('outputText').value = normalizeWhitespaceOnlyLines(applyClean1LeadingSpaceRule(cleaned));
+      document.getElementById('outputText').value = normalizeWhitespaceOnlyLines(cleaned);
     }
     // ===== 新增清理格式2 =====
     function cleanText2() {
         setActiveFormat('clean2');
         document.getElementById('outputText').value = normalizeWhitespaceOnlyLines(cleanCore(getCleanOptionsFromUI('clean2')));
+    }
+
+    function cleanTextPreserveMarkdown() {
+      setActiveFormat('preserve');
+      document.getElementById('outputText').value = preserveMarkdownWhitespace(getCleanOptionsFromUI('preserve'));
     }
 
     function cleanTextCpent() {
@@ -835,6 +889,8 @@
     document.getElementById('opt2TableSpacing')?.addEventListener('change', updateOptionsSummary);
     document.getElementById('opt2HrToSymbol')?.addEventListener('change', updateOptionsSummary);
     document.getElementById('opt2RemoveBold')?.addEventListener('change', updateOptionsSummary);
+    document.getElementById('optPreserveCollapseBlankLines')?.addEventListener('change', updateOptionsSummary);
+    document.getElementById('optPreserveTrimEdges')?.addEventListener('change', updateOptionsSummary);
     document.getElementById('optCpentUnifyBullets')?.addEventListener('change', updateOptionsSummary);
     document.getElementById('optCpentMergeLines')?.addEventListener('change', updateOptionsSummary);
     document.getElementById('optCpentRemoveBold')?.addEventListener('change', updateOptionsSummary);
