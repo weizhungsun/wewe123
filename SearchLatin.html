@@ -325,6 +325,7 @@
               <input class="input" type="text" id="wordInput" placeholder="輸入拉丁文單字…" autocomplete="off" />
               <button class="btn btn-primary" id="lookupBtn" type="button">查詢</button>
               <div class="quick-actions" aria-label="快速操作">
+                <button class="btn btn-sm btn-subtle" id="backBtn" type="button" title="返回 iframe 內的上一頁">上一頁</button>
                 <button class="btn btn-sm btn-subtle" id="pasteBtn" type="button" title="清除後貼上剪貼簿內容">貼上</button>
                 <button class="btn btn-sm btn-subtle" id="clearInputBtn" type="button" title="清除搜尋框">清除</button>
                 <button class="btn btn-sm btn-subtle" id="jumpLatinBtn" type="button" title="跳到 Wiktionary 的 Latin 區塊">Latin</button>
@@ -372,17 +373,21 @@
       const overlayText = document.getElementById("overlayText");
       const historyList = document.getElementById("historyList");
       const clearHistoryBtn = document.getElementById("clearHistoryBtn");
+      const backBtn = document.getElementById("backBtn");
       const pasteBtn = document.getElementById("pasteBtn");
       const clearInputBtn = document.getElementById("clearInputBtn");
       const jumpLatinBtn = document.getElementById("jumpLatinBtn");
 
       let pendingWord = null;
+      let pendingFrameAction = null;
       let history = loadHistory();
 
       renderHistory();
       setStatus("idle", "待命");
+      updateNavButtons();
 
       lookupBtn.addEventListener("click", () => lookup());
+      backBtn.addEventListener("click", () => goBack());
       pasteBtn.addEventListener("click", () => pasteFromClipboard());
       clearInputBtn.addEventListener("click", () => clearInput());
       jumpLatinBtn.addEventListener("click", () => jumpToLatinSection());
@@ -395,10 +400,20 @@
       });
 
       wikiFrame.addEventListener("load", () => {
-        if (!pendingWord) return;
-        addToHistory(pendingWord);
-        setStatus("done", `完成：${pendingWord}`);
-        pendingWord = null;
+        if (pendingWord) {
+          addToHistory(pendingWord);
+          setStatus("done", `完成：${pendingWord}`);
+          pendingWord = null;
+          return;
+        }
+
+        if (pendingFrameAction === "back") {
+          pendingFrameAction = null;
+          setStatus("done", "已返回上一頁");
+          return;
+        }
+
+        updateNavButtons();
       });
 
       clearHistoryBtn.addEventListener("click", () => {
@@ -435,6 +450,19 @@
         wordInput.value = "";
         wordInput.focus();
         setStatus("idle", "已清除");
+      }
+
+      function goBack() {
+        const current = wikiFrame?.src ?? "";
+        if (!current || current === "about:blank") {
+          setStatus("error", "尚未載入任何頁面");
+          return;
+        }
+
+        pendingWord = null;
+        pendingFrameAction = "back";
+        setStatus("loading", "返回上一頁…");
+        window.history.back();
       }
 
       function jumpToLatinSection() {
@@ -487,9 +515,16 @@
         overlayText.textContent = isLoading ? text : "查詢中…";
         lookupBtn.disabled = isLoading;
         wordInput.disabled = isLoading;
+        backBtn.disabled = isLoading;
         pasteBtn.disabled = isLoading;
         clearInputBtn.disabled = isLoading;
         jumpLatinBtn.disabled = isLoading;
+        if (!isLoading) updateNavButtons();
+      }
+
+      function updateNavButtons() {
+        const current = wikiFrame?.src ?? "";
+        backBtn.disabled = !current || current === "about:blank";
       }
 
       function loadHistory() {
