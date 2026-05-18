@@ -1,78 +1,621 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>拉丁文 Wiktionary 查詢工具</title>
-  <style>
-    body {
-      font-family: sans-serif;
-      padding: 20px;
-    }
-    input[type="text"] {
-      width: 300px;
-      padding: 8px;
-      font-size: 16px;
-    }
-    button {
-      padding: 8px 16px;
-      font-size: 16px;
-    }
-    iframe {
-      width: 100%;
-      height: 80vh;
-      margin-top: 20px;
-      border: 1px solid #ccc;
-    }
-  </style>
-</head>
-<body>
-  <h2>拉丁字 Wiktionary 查詢</h2>
-  <input type="text" id="wordInput" placeholder="輸入拉丁字...">
-  <button onclick="lookup()">查詢</button>
-  <iframe id="wikiFrame"></iframe>
-
-  <script>
-    const wordInput = document.getElementById("wordInput");
-    const wikiFrame = document.getElementById("wikiFrame");
-
-    function getUrlWord() {
-      const params = new URLSearchParams(window.location.search);
-      return (
-        params.get("q") ||
-        params.get("keyword") ||
-        params.get("word") ||
-        ""
-      ).trim();
-    }
-
-    function showWord(word) {
-      if (word) {
-        const url = `https://en.wiktionary.org/wiki/${encodeURIComponent(word)}#Latin`;
-        wikiFrame.src = url;
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>查詢 Wiktionary（Latin）</title>
+    <style>
+      :root {
+        --bg: #ffffff;
+        --panel: #ffffff;
+        --text: #111827;
+        --muted: #6b7280;
+        --border: #e5e7eb;
+        --shadow: 0 12px 30px rgba(17, 24, 39, 0.08);
+        --accent: #2563eb;
+        --accent-weak: rgba(37, 99, 235, 0.12);
+        --danger: #b91c1c;
       }
-    }
 
-    function lookup() {
-      const word = wordInput.value.trim();
-      if (word) {
+      body {
+        margin: 0;
+        font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Arial, "Noto Sans", "PingFang TC",
+          "Microsoft JhengHei", sans-serif;
+        background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+        color: var(--text);
+      }
+
+      .page {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px 16px 28px;
+      }
+
+      .header {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 16px;
+        margin-bottom: 14px;
+      }
+
+      .title {
+        font-size: 20px;
+        font-weight: 700;
+        letter-spacing: 0.2px;
+        margin: 0;
+      }
+
+      .subtitle {
+        margin: 0;
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      .layout {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 280px;
+        gap: 14px;
+      }
+
+      @media (max-width: 980px) {
+        .layout {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      .card {
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        box-shadow: var(--shadow);
+        overflow: hidden;
+      }
+
+      .controls {
+        padding: 14px;
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+
+      .controls-left {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex: 1 1 520px;
+        min-width: 260px;
+      }
+
+      .input {
+        flex: 1 1 auto;
+        min-width: 220px;
+        padding: 10px 12px;
+        font-size: 16px;
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        outline: none;
+        background: #fff;
+      }
+
+      .input:focus {
+        border-color: var(--accent);
+        box-shadow: 0 0 0 4px var(--accent-weak);
+      }
+
+      .btn {
+        padding: 10px 14px;
+        font-size: 15px;
+        font-weight: 600;
+        border-radius: 10px;
+        border: 1px solid var(--border);
+        background: #fff;
+        cursor: pointer;
+      }
+
+      .btn-primary {
+        background: var(--accent);
+        border-color: var(--accent);
+        color: #fff;
+      }
+
+      .btn-sm {
+        padding: 8px 10px;
+        font-size: 13px;
+        font-weight: 600;
+        border-radius: 10px;
+      }
+
+      .btn-subtle {
+        background: #f9fafb;
+      }
+
+      .btn:disabled {
+        opacity: 0.65;
+        cursor: not-allowed;
+      }
+
+      .status {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        color: var(--muted);
+        font-size: 13px;
+        margin-left: auto;
+        white-space: nowrap;
+      }
+
+      .status[data-variant="error"] {
+        color: var(--danger);
+      }
+
+      .spinner {
+        width: 14px;
+        height: 14px;
+        border-radius: 999px;
+        border: 2px solid rgba(107, 114, 128, 0.35);
+        border-top-color: rgba(37, 99, 235, 0.95);
+        animation: spin 0.9s linear infinite;
+      }
+
+      .spinner[hidden] {
+        display: none;
+      }
+
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      .frame-wrap {
+        position: relative;
+        height: calc(100vh - 180px);
+        min-height: 420px;
+      }
+
+      @media (max-width: 980px) {
+        .frame-wrap {
+          height: 70vh;
+        }
+      }
+
+      iframe {
+        width: 100%;
+        height: 100%;
+        border: 0;
+      }
+
+      .overlay {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(255, 255, 255, 0.72);
+        backdrop-filter: blur(2px);
+        transition: opacity 150ms ease;
+        pointer-events: none;
+      }
+
+      .overlay[hidden] {
+        opacity: 0;
+        display: none;
+      }
+
+      .overlay-card {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 12px;
+        border-radius: 999px;
+        border: 1px solid var(--border);
+        background: #fff;
+        box-shadow: 0 8px 22px rgba(17, 24, 39, 0.12);
+        color: var(--muted);
+        font-size: 13px;
+        max-width: 90%;
+      }
+
+      .history {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+      }
+
+      .history-header {
+        padding: 14px 14px 10px;
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+      }
+
+      .history-title {
+        margin: 0;
+        font-size: 14px;
+        font-weight: 700;
+      }
+
+      .history-list {
+        list-style: none;
+        padding: 8px;
+        margin: 0;
+        overflow: auto;
+        flex: 1 1 auto;
+      }
+
+      .history-item {
+        display: flex;
+        gap: 8px;
+        padding: 6px;
+        border-radius: 10px;
+        align-items: center;
+      }
+
+      .history-item:hover {
+        background: #f3f4f6;
+      }
+
+      .history-btn {
+        flex: 1 1 auto;
+        text-align: left;
+        border: 0;
+        background: transparent;
+        padding: 6px 8px;
+        border-radius: 8px;
+        cursor: pointer;
+        color: var(--text);
+        font-size: 14px;
+        line-height: 1.2;
+        word-break: break-word;
+      }
+
+      .history-empty {
+        color: var(--muted);
+        font-size: 13px;
+        padding: 10px;
+      }
+
+      .hint {
+        color: var(--muted);
+        font-size: 12px;
+        padding: 10px 14px 14px;
+        border-top: 1px solid var(--border);
+      }
+
+      .quick-actions {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      @media (max-width: 720px) {
+        .controls-left {
+          flex-wrap: wrap;
+        }
+
+        .input {
+          flex: 1 1 100%;
+          min-width: 0;
+        }
+
+        .quick-actions {
+          flex-wrap: wrap;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page">
+      <div class="header">
+        <div>
+          <h1 class="title">查詢 Wiktionary（Latin）</h1>
+          <p class="subtitle">輸入單字後按 Enter 或點「查詢」，會直接定位到 Wiktionary 的 Latin 區塊。</p>
+        </div>
+      </div>
+
+      <div class="layout">
+        <div class="card">
+          <div class="controls">
+            <div class="controls-left">
+              <input class="input" type="text" id="wordInput" placeholder="輸入拉丁文單字…" autocomplete="off" />
+              <button class="btn btn-primary" id="lookupBtn" type="button">查詢</button>
+              <div class="quick-actions" aria-label="快速操作">
+                <button class="btn btn-sm btn-subtle" id="backBtn" type="button" title="返回 iframe 內的上一頁">上一頁</button>
+                <button class="btn btn-sm btn-subtle" id="pasteBtn" type="button" title="清除後貼上剪貼簿內容">貼上</button>
+                <button class="btn btn-sm btn-subtle" id="clearInputBtn" type="button" title="清除搜尋框">清除</button>
+                <button class="btn btn-sm btn-subtle" id="jumpLatinBtn" type="button" title="跳到 Wiktionary 的 Latin 區塊">Latin</button>
+              </div>
+            </div>
+            <div class="status" id="status" data-variant="idle">
+              <span class="spinner" id="spinner" hidden></span>
+              <span id="statusText">待命</span>
+            </div>
+          </div>
+
+          <div class="frame-wrap">
+            <iframe id="wikiFrame" title="Wiktionary (Latin)" src="about:blank"></iframe>
+            <div class="overlay" id="overlay" hidden>
+              <div class="overlay-card">
+                <span class="spinner"></span>
+                <span id="overlayText">查詢中…</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <aside class="card history" aria-label="歷史紀錄">
+          <div class="history-header">
+            <h2 class="history-title">歷史紀錄</h2>
+            <button class="btn" id="clearHistoryBtn" type="button">清除</button>
+          </div>
+          <ul class="history-list" id="historyList"></ul>
+          <div class="hint">最多保留 10 筆；點擊即可再次查詢。</div>
+        </aside>
+      </div>
+    </div>
+
+    <script>
+      const HISTORY_KEY = "latinLookupHistory.v2";
+      const HISTORY_MAX = 10;
+
+      const wordInput = document.getElementById("wordInput");
+      const lookupBtn = document.getElementById("lookupBtn");
+      const wikiFrame = document.getElementById("wikiFrame");
+      const statusEl = document.getElementById("status");
+      const statusText = document.getElementById("statusText");
+      const spinner = document.getElementById("spinner");
+      const overlay = document.getElementById("overlay");
+      const overlayText = document.getElementById("overlayText");
+      const historyList = document.getElementById("historyList");
+      const clearHistoryBtn = document.getElementById("clearHistoryBtn");
+      const backBtn = document.getElementById("backBtn");
+      const pasteBtn = document.getElementById("pasteBtn");
+      const clearInputBtn = document.getElementById("clearInputBtn");
+      const jumpLatinBtn = document.getElementById("jumpLatinBtn");
+
+      let pendingWord = null;
+      let pendingFrameAction = null;
+      let history = loadHistory();
+
+      renderHistory();
+      setStatus("idle", "待命");
+      updateNavButtons();
+
+      lookupBtn.addEventListener("click", () => lookup());
+      backBtn.addEventListener("click", () => goBack());
+      pasteBtn.addEventListener("click", () => pasteFromClipboard());
+      clearInputBtn.addEventListener("click", () => clearInput());
+      jumpLatinBtn.addEventListener("click", () => jumpToLatinSection());
+
+      wordInput.addEventListener("keydown", (event) => {
+        if (event.key === "Enter") {
+          event.preventDefault();
+          lookup();
+        }
+      });
+
+      wikiFrame.addEventListener("load", () => {
+        if (pendingWord) {
+          addToHistory(pendingWord);
+          setStatus("done", `完成：${pendingWord}`);
+          pendingWord = null;
+          return;
+        }
+
+        if (pendingFrameAction === "back") {
+          pendingFrameAction = null;
+          setStatus("done", "已返回上一頁");
+          return;
+        }
+
+        updateNavButtons();
+      });
+
+      clearHistoryBtn.addEventListener("click", () => {
+        history = [];
+        saveHistory(history);
+        renderHistory();
+      });
+
+      const urlWord = getUrlWord();
+      if (urlWord) {
+        lookup(urlWord, { updateUrl: false });
+      }
+
+      async function pasteFromClipboard() {
+        if (lookupBtn.disabled) return;
+        wordInput.value = "";
+        wordInput.focus();
+
+        if (!navigator.clipboard?.readText) {
+          setStatus("error", "此環境不支援剪貼簿讀取（請手動貼上）");
+          return;
+        }
+
+        try {
+          const text = await navigator.clipboard.readText();
+          wordInput.value = (text ?? "").trim();
+          if (!wordInput.value) {
+            setStatus("error", "剪貼簿沒有可用文字");
+            return;
+          }
+          setStatus("idle", "已貼上");
+        } catch {
+          setStatus("error", "無法讀取剪貼簿（可能需要權限或 https/localhost）");
+        }
+      }
+
+      function clearInput() {
+        if (lookupBtn.disabled) return;
+        wordInput.value = "";
+        wordInput.focus();
+        setStatus("idle", "已清除");
+      }
+
+      function goBack() {
+        const current = wikiFrame?.src ?? "";
+        if (!current || current === "about:blank") {
+          setStatus("error", "尚未載入任何頁面");
+          return;
+        }
+
+        pendingWord = null;
+        pendingFrameAction = "back";
+        setStatus("loading", "返回上一頁…");
+        window.history.back();
+      }
+
+      function jumpToLatinSection() {
+        const current = wikiFrame?.src ?? "";
+        if (!current || current === "about:blank") {
+          setStatus("error", "尚未載入任何頁面");
+          return;
+        }
+
+        try {
+          if (wikiFrame.contentWindow?.location) {
+            wikiFrame.contentWindow.location.hash = "Latin";
+            return;
+          }
+        } catch {
+          // Cross-origin: fall back to resetting src with #Latin
+        }
+
+        try {
+          const next = new URL(current);
+          next.hash = "Latin";
+          wikiFrame.src = next.toString();
+        } catch {
+          wikiFrame.src = `${current.split("#")[0]}#Latin`;
+        }
+      }
+
+      function getUrlWord() {
+        const params = new URLSearchParams(window.location.search);
+        const namedWord =
+          params.get("q") ||
+          params.get("keyword") ||
+          params.get("keywork") ||
+          params.get("word");
+
+        if (namedWord) return namedWord.trim();
+
+        const rawQuery = window.location.search.replace(/^\?/, "");
+        if (!rawQuery || rawQuery.includes("=")) return "";
+
+        try {
+          return decodeURIComponent(rawQuery.replace(/\+/g, " ")).trim();
+        } catch {
+          return rawQuery.trim();
+        }
+      }
+
+      function updateUrlWord(word) {
         const url = new URL(window.location.href);
+        url.search = "";
         url.searchParams.set("q", word);
         window.history.replaceState({}, "", url);
-        showWord(word);
       }
-    }
 
-    wordInput.addEventListener("keydown", (event) => {
-      if (event.key === "Enter") {
-        lookup();
+      function lookup(forcedWord, options = {}) {
+        const shouldUpdateUrl = options.updateUrl !== false;
+        const word = (forcedWord ?? wordInput.value).trim();
+        if (!word) {
+          setStatus("error", "請輸入單字");
+          wordInput.focus();
+          return;
+        }
+
+        pendingWord = word;
+        wordInput.value = word;
+        if (shouldUpdateUrl) {
+          updateUrlWord(word);
+        }
+
+        const url = `https://en.wiktionary.org/wiki/${encodeURIComponent(word)}#Latin`;
+        setStatus("loading", `查詢中：${word}`);
+        wikiFrame.src = url;
       }
-    });
 
-    const urlWord = getUrlWord();
-    if (urlWord) {
-      wordInput.value = urlWord;
-      showWord(urlWord);
-    }
-  </script>
-</body>
+      function setStatus(variant, text) {
+        statusEl.dataset.variant = variant;
+        statusText.textContent = text;
+        const isLoading = variant === "loading";
+        spinner.hidden = !isLoading;
+        overlay.hidden = !isLoading;
+        overlayText.textContent = isLoading ? text : "查詢中…";
+        lookupBtn.disabled = isLoading;
+        wordInput.disabled = isLoading;
+        backBtn.disabled = isLoading;
+        pasteBtn.disabled = isLoading;
+        clearInputBtn.disabled = isLoading;
+        jumpLatinBtn.disabled = isLoading;
+        if (!isLoading) updateNavButtons();
+      }
+
+      function updateNavButtons() {
+        const current = wikiFrame?.src ?? "";
+        backBtn.disabled = !current || current === "about:blank";
+      }
+
+      function loadHistory() {
+        try {
+          const raw = localStorage.getItem(HISTORY_KEY);
+          const parsed = raw ? JSON.parse(raw) : [];
+          if (!Array.isArray(parsed)) return [];
+          return parsed.filter((x) => typeof x === "string").slice(0, HISTORY_MAX);
+        } catch {
+          return [];
+        }
+      }
+
+      function saveHistory(nextHistory) {
+        try {
+          localStorage.setItem(HISTORY_KEY, JSON.stringify(nextHistory));
+        } catch {
+          // Ignore storage errors (private mode, quota, etc.)
+        }
+      }
+
+      function addToHistory(word) {
+        const next = [word, ...history.filter((w) => w !== word)].slice(0, HISTORY_MAX);
+        history = next;
+        saveHistory(history);
+        renderHistory();
+      }
+
+      function renderHistory() {
+        historyList.innerHTML = "";
+
+        if (history.length === 0) {
+          const empty = document.createElement("div");
+          empty.className = "history-empty";
+          empty.textContent = "目前沒有紀錄";
+          historyList.appendChild(empty);
+          clearHistoryBtn.disabled = true;
+          return;
+        }
+
+        clearHistoryBtn.disabled = false;
+        for (const word of history) {
+          const li = document.createElement("li");
+          li.className = "history-item";
+
+          const btn = document.createElement("button");
+          btn.type = "button";
+          btn.className = "history-btn";
+          btn.textContent = word;
+          btn.addEventListener("click", () => lookup(word));
+
+          li.appendChild(btn);
+          historyList.appendChild(li);
+        }
+      }
+    </script>
+  </body>
 </html>
