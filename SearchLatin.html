@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>查詢 Wiktionary（Latin）</title>
+    <title>查詢 Wiktionary（Latin / EN）</title>
     <style>
       :root {
         --bg: #ffffff;
@@ -17,15 +17,27 @@
         --danger: #b91c1c;
       }
 
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+      }
+
+      html {
+        overflow-x: hidden;
+      }
+
       body {
         margin: 0;
         font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Arial, "Noto Sans", "PingFang TC",
           "Microsoft JhengHei", sans-serif;
         background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
         color: var(--text);
+        overflow-x: hidden;
       }
 
       .page {
+        width: 100%;
         max-width: 1200px;
         margin: 0 auto;
         padding: 20px 16px 28px;
@@ -56,6 +68,7 @@
         display: grid;
         grid-template-columns: minmax(0, 1fr) 280px;
         gap: 14px;
+        min-width: 0;
       }
 
       @media (max-width: 980px) {
@@ -70,27 +83,31 @@
         border-radius: 12px;
         box-shadow: var(--shadow);
         overflow: hidden;
+        min-width: 0;
       }
 
       .controls {
         padding: 14px;
         border-bottom: 1px solid var(--border);
-        display: flex;
-        align-items: center;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        align-items: start;
         gap: 10px;
-        flex-wrap: wrap;
+        min-width: 0;
       }
 
       .controls-left {
-        display: flex;
-        align-items: center;
+        display: grid;
+        grid-template-columns: minmax(240px, 1fr) auto auto;
+        align-items: start;
         gap: 10px;
-        flex: 1 1 520px;
-        min-width: 260px;
+        min-width: 0;
+        width: 100%;
       }
 
       .input {
-        flex: 1 1 auto;
+        width: 100%;
+        box-sizing: border-box;
         min-width: 220px;
         padding: 10px 12px;
         font-size: 16px;
@@ -113,6 +130,7 @@
         border: 1px solid var(--border);
         background: #fff;
         cursor: pointer;
+        white-space: nowrap;
       }
 
       .btn-primary {
@@ -132,6 +150,33 @@
         background: #f9fafb;
       }
 
+      .segment {
+        display: inline-flex;
+        flex: 0 0 auto;
+        padding: 3px;
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        background: #f9fafb;
+      }
+
+      .segment-btn {
+        border: 0;
+        border-radius: 9px;
+        background: transparent;
+        color: var(--muted);
+        cursor: pointer;
+        font-size: 13px;
+        font-weight: 700;
+        padding: 7px 10px;
+        white-space: nowrap;
+      }
+
+      .segment-btn[aria-pressed="true"] {
+        background: #fff;
+        color: var(--accent);
+        box-shadow: 0 1px 6px rgba(17, 24, 39, 0.1);
+      }
+
       .btn:disabled {
         opacity: 0.65;
         cursor: not-allowed;
@@ -145,6 +190,8 @@
         font-size: 13px;
         margin-left: auto;
         white-space: nowrap;
+        justify-self: end;
+        padding-top: 10px;
       }
 
       .status[data-variant="error"] {
@@ -274,6 +321,19 @@
         word-break: break-word;
       }
 
+      .history-lang {
+        flex: 0 0 auto;
+        min-width: 42px;
+        text-align: center;
+        border-radius: 999px;
+        border: 1px solid var(--border);
+        color: var(--muted);
+        background: #fff;
+        font-size: 11px;
+        font-weight: 700;
+        padding: 4px 6px;
+      }
+
       .history-empty {
         color: var(--muted);
         font-size: 13px;
@@ -288,23 +348,78 @@
       }
 
       .quick-actions {
-        display: inline-flex;
+        grid-column: 1 / -1;
+        display: flex;
         align-items: center;
-        gap: 8px;
+        gap: 6px;
+        min-width: 0;
+        overflow-x: auto;
+        padding-bottom: 2px;
+        scrollbar-width: thin;
+      }
+
+      .quick-actions .btn {
+        flex: 0 0 auto;
+      }
+
+      @media (max-width: 980px) {
+        .controls {
+          grid-template-columns: 1fr;
+        }
+
+        .status {
+          justify-self: start;
+          padding-top: 0;
+          white-space: normal;
+        }
       }
 
       @media (max-width: 720px) {
         .controls-left {
-          flex-wrap: wrap;
+          grid-template-columns: 1fr;
         }
 
         .input {
-          flex: 1 1 100%;
+          grid-column: 1 / -1;
           min-width: 0;
         }
 
+        .segment {
+          display: flex;
+          width: 100%;
+          box-sizing: border-box;
+        }
+
+        .segment-btn {
+          flex: 1 1 0;
+        }
+
+        .btn-primary {
+          width: 100%;
+        }
+
         .quick-actions {
-          flex-wrap: wrap;
+          display: grid;
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+          overflow-x: visible;
+        }
+
+        .quick-actions .btn {
+          min-width: 0;
+          padding-left: 8px;
+          padding-right: 8px;
+          text-align: center;
+        }
+      }
+
+      @media (max-width: 420px) {
+        .page {
+          padding-left: 10px;
+          padding-right: 10px;
+        }
+
+        .controls {
+          padding: 10px;
         }
       }
     </style>
@@ -313,8 +428,8 @@
     <div class="page">
       <div class="header">
         <div>
-          <h1 class="title">查詢 Wiktionary（Latin）</h1>
-          <p class="subtitle">輸入單字後按 Enter 或點「查詢」，會直接定位到 Wiktionary 的 Latin 區塊。</p>
+          <h1 class="title">查詢 Wiktionary（Latin / EN）</h1>
+          <p class="subtitle">輸入單字後按 Enter 或點查詢，可指定定位到 Wiktionary 的 Latin 或 English 區塊。</p>
         </div>
       </div>
 
@@ -323,13 +438,20 @@
           <div class="controls">
             <div class="controls-left">
               <input class="input" type="text" id="wordInput" placeholder="輸入拉丁文單字…" autocomplete="off" />
+              <div class="segment" aria-label="預設定位區塊">
+                <button class="segment-btn" id="latinModeBtn" type="button" aria-pressed="true">Latin</button>
+                <button class="segment-btn" id="englishModeBtn" type="button" aria-pressed="false">EN</button>
+              </div>
               <button class="btn btn-primary" id="lookupBtn" type="button">查詢</button>
               <div class="quick-actions" aria-label="快速操作">
                 <button class="btn btn-sm btn-subtle" id="backBtn" type="button" title="返回 iframe 內的上一頁">上一頁</button>
                 <button class="btn btn-sm btn-subtle" id="pasteBtn" type="button" title="清除後貼上剪貼簿內容">貼上</button>
                 <button class="btn btn-sm btn-subtle" id="deleteCharBtn" type="button" title="刪除游標前一個字元">退格</button>
                 <button class="btn btn-sm btn-subtle" id="clearInputBtn" type="button" title="清除搜尋框">清除</button>
-                <button class="btn btn-sm btn-subtle" id="jumpLatinBtn" type="button" title="跳到 Wiktionary 的 Latin 區塊">Latin</button>
+                <button class="btn btn-sm btn-subtle" id="lookupLatinBtn" type="button" title="以目前輸入查 Latin">查 Latin</button>
+                <button class="btn btn-sm btn-subtle" id="lookupEnglishBtn" type="button" title="以目前輸入查 English">查 EN</button>
+                <button class="btn btn-sm btn-subtle" id="jumpLatinBtn" type="button" title="跳到目前頁面的 Latin 區塊">Latin</button>
+                <button class="btn btn-sm btn-subtle" id="jumpEnglishBtn" type="button" title="跳到目前頁面的 English 區塊">EN</button>
               </div>
             </div>
             <div class="status" id="status" data-variant="idle">
@@ -339,7 +461,7 @@
           </div>
 
           <div class="frame-wrap">
-            <iframe id="wikiFrame" title="Wiktionary (Latin)" src="about:blank"></iframe>
+            <iframe id="wikiFrame" title="Wiktionary (Latin / English)" src="about:blank"></iframe>
             <div class="overlay" id="overlay" hidden>
               <div class="overlay-card">
                 <span class="spinner"></span>
@@ -355,7 +477,7 @@
             <button class="btn" id="clearHistoryBtn" type="button">清除</button>
           </div>
           <ul class="history-list" id="historyList"></ul>
-          <div class="hint">最多保留 10 筆；點擊即可再次查詢。</div>
+          <div class="hint">最多保留 10 筆；歷史會保留 Latin / EN 目標。</div>
         </aside>
       </div>
     </div>
@@ -363,6 +485,10 @@
     <script>
       const HISTORY_KEY = "latinLookupHistory.v2";
       const HISTORY_MAX = 10;
+      const SECTION_TARGETS = {
+        latin: { label: "Latin", hash: "Latin" },
+        en: { label: "EN", hash: "English" }
+      };
 
       const wordInput = document.getElementById("wordInput");
       const lookupBtn = document.getElementById("lookupBtn");
@@ -379,11 +505,19 @@
       const deleteCharBtn = document.getElementById("deleteCharBtn");
       const clearInputBtn = document.getElementById("clearInputBtn");
       const jumpLatinBtn = document.getElementById("jumpLatinBtn");
+      const jumpEnglishBtn = document.getElementById("jumpEnglishBtn");
+      const lookupLatinBtn = document.getElementById("lookupLatinBtn");
+      const lookupEnglishBtn = document.getElementById("lookupEnglishBtn");
+      const latinModeBtn = document.getElementById("latinModeBtn");
+      const englishModeBtn = document.getElementById("englishModeBtn");
 
       let pendingWord = null;
+      let pendingSection = "latin";
       let pendingFrameAction = null;
+      let activeSection = "latin";
       let history = loadHistory();
 
+      setActiveSection(activeSection);
       renderHistory();
       setStatus("idle", "待命");
       updateNavButtons();
@@ -393,7 +527,12 @@
       pasteBtn.addEventListener("click", () => pasteFromClipboard());
       deleteCharBtn.addEventListener("click", () => deletePreviousChar());
       clearInputBtn.addEventListener("click", () => clearInput());
-      jumpLatinBtn.addEventListener("click", () => jumpToLatinSection());
+      jumpLatinBtn.addEventListener("click", () => jumpToSection("latin"));
+      jumpEnglishBtn.addEventListener("click", () => jumpToSection("en"));
+      lookupLatinBtn.addEventListener("click", () => lookup(undefined, { section: "latin" }));
+      lookupEnglishBtn.addEventListener("click", () => lookup(undefined, { section: "en" }));
+      latinModeBtn.addEventListener("click", () => setActiveSection("latin"));
+      englishModeBtn.addEventListener("click", () => setActiveSection("en"));
 
       wordInput.addEventListener("keydown", (event) => {
         if (event.key === "Enter") {
@@ -408,8 +547,8 @@
         }
 
         if (pendingWord) {
-          addToHistory(pendingWord);
-          setStatus("done", `完成：${pendingWord}`);
+          addToHistory({ word: pendingWord, section: pendingSection });
+          setStatus("done", `完成：${pendingWord}（${getSectionLabel(pendingSection)}）`);
           pendingWord = null;
           return;
         }
@@ -420,9 +559,9 @@
           return;
         }
 
-        if (pendingFrameAction === "latin") {
+        if (pendingFrameAction === "section") {
           pendingFrameAction = null;
-          setStatus("done", "已重新定位 Latin");
+          setStatus("done", `已定位 ${getSectionLabel(activeSection)}`);
           return;
         }
 
@@ -437,7 +576,9 @@
 
       const urlWord = getUrlWord();
       if (urlWord) {
-        lookup(urlWord, { updateUrl: false });
+        const urlSection = getUrlSection();
+        setActiveSection(urlSection);
+        lookup(urlWord, { updateUrl: false, section: urlSection });
       }
 
       async function pasteFromClipboard() {
@@ -502,28 +643,33 @@
         pendingWord = null;
         pendingFrameAction = "back";
         setStatus("loading", "返回上一頁…");
-        window.history.back();
+        try {
+          wikiFrame.contentWindow.history.back();
+        } catch {
+          window.history.back();
+        }
       }
 
-      function jumpToLatinSection() {
+      function jumpToSection(section = activeSection) {
         const current = wikiFrame?.src ?? "";
         if (!current || current === "about:blank") {
           setStatus("error", "尚未載入任何頁面");
           return;
         }
 
+        setActiveSection(section);
         pendingWord = null;
-        pendingFrameAction = "latin";
-        setStatus("loading", "重新定位 Latin…");
+        pendingFrameAction = "section";
+        setStatus("loading", `定位 ${getSectionLabel(section)}…`);
 
         try {
-          forceFrameUrl(toLatinUrl(wikiFrame.contentWindow.location.href));
+          forceFrameUrl(toSectionUrl(wikiFrame.contentWindow.location.href, section));
           return;
         } catch {
-          // Cross-origin: fall back to resetting src with #Latin.
+          // Cross-origin: fall back to resetting src with the requested section hash.
         }
 
-        forceFrameUrl(toLatinUrl(current));
+        forceFrameUrl(toSectionUrl(current, section));
       }
 
       function getUrlWord() {
@@ -546,15 +692,22 @@
         }
       }
 
-      function updateUrlWord(word) {
+      function getUrlSection() {
+        const params = new URLSearchParams(window.location.search);
+        return normalizeSection(params.get("section") || params.get("lang") || params.get("target") || "latin");
+      }
+
+      function updateUrlWord(word, section = activeSection) {
         const url = new URL(window.location.href);
         url.search = "";
         url.searchParams.set("q", word);
+        url.searchParams.set("section", section);
         window.history.replaceState({}, "", url);
       }
 
       function lookup(forcedWord, options = {}) {
         const shouldUpdateUrl = options.updateUrl !== false;
+        const section = normalizeSection(options.section || activeSection);
         const word = (forcedWord ?? wordInput.value).trim();
         if (!word) {
           setStatus("error", "請輸入單字");
@@ -562,25 +715,54 @@
           return;
         }
 
+        setActiveSection(section);
         pendingWord = word;
+        pendingSection = section;
         wordInput.value = word;
         if (shouldUpdateUrl) {
-          updateUrlWord(word);
+          updateUrlWord(word, section);
         }
 
-        const url = `https://en.wiktionary.org/wiki/${encodeURIComponent(word)}#Latin`;
-        setStatus("loading", `查詢中：${word}`);
+        const url = buildWiktionaryUrl(word, section);
+        setStatus("loading", `查詢中：${word}（${getSectionLabel(section)}）`);
         forceFrameUrl(url);
       }
 
-      function toLatinUrl(current) {
+      function buildWiktionaryUrl(word, section = activeSection) {
+        const hash = getSectionHash(section);
+        return `https://en.wiktionary.org/wiki/${encodeURIComponent(word)}#${hash}`;
+      }
+
+      function toSectionUrl(current, section = activeSection) {
+        const hash = getSectionHash(section);
         try {
           const url = new URL(current);
-          url.hash = "Latin";
+          url.hash = hash;
           return url.toString();
         } catch {
-          return `${current.split("#")[0]}#Latin`;
+          return `${current.split("#")[0]}#${hash}`;
         }
+      }
+
+      function normalizeSection(section) {
+        const value = String(section || "").trim().toLowerCase();
+        if (value === "en" || value === "eng" || value === "english") return "en";
+        return "latin";
+      }
+
+      function getSectionHash(section) {
+        return SECTION_TARGETS[normalizeSection(section)].hash;
+      }
+
+      function getSectionLabel(section) {
+        return SECTION_TARGETS[normalizeSection(section)].label;
+      }
+
+      function setActiveSection(section) {
+        activeSection = normalizeSection(section);
+        latinModeBtn.setAttribute("aria-pressed", String(activeSection === "latin"));
+        englishModeBtn.setAttribute("aria-pressed", String(activeSection === "en"));
+        lookupBtn.textContent = `查詢 ${getSectionLabel(activeSection)}`;
       }
 
       function forceFrameUrl(url) {
@@ -604,12 +786,20 @@
         deleteCharBtn.disabled = isLoading;
         clearInputBtn.disabled = isLoading;
         jumpLatinBtn.disabled = isLoading;
+        jumpEnglishBtn.disabled = isLoading;
+        lookupLatinBtn.disabled = isLoading;
+        lookupEnglishBtn.disabled = isLoading;
+        latinModeBtn.disabled = isLoading;
+        englishModeBtn.disabled = isLoading;
         if (!isLoading) updateNavButtons();
       }
 
       function updateNavButtons() {
         const current = wikiFrame?.src ?? "";
-        backBtn.disabled = !current || current === "about:blank";
+        const hasPage = Boolean(current && current !== "about:blank");
+        backBtn.disabled = !hasPage;
+        jumpLatinBtn.disabled = !hasPage;
+        jumpEnglishBtn.disabled = !hasPage;
       }
 
       function loadHistory() {
@@ -617,7 +807,10 @@
           const raw = localStorage.getItem(HISTORY_KEY);
           const parsed = raw ? JSON.parse(raw) : [];
           if (!Array.isArray(parsed)) return [];
-          return parsed.filter((x) => typeof x === "string").slice(0, HISTORY_MAX);
+          return parsed
+            .map(normalizeHistoryItem)
+            .filter(Boolean)
+            .slice(0, HISTORY_MAX);
         } catch {
           return [];
         }
@@ -631,8 +824,26 @@
         }
       }
 
-      function addToHistory(word) {
-        const next = [word, ...history.filter((w) => w !== word)].slice(0, HISTORY_MAX);
+      function normalizeHistoryItem(item) {
+        if (typeof item === "string") {
+          const word = item.trim();
+          return word ? { word, section: "latin" } : null;
+        }
+        if (!item || typeof item !== "object") return null;
+        const word = String(item.word || "").trim();
+        if (!word) return null;
+        return { word, section: normalizeSection(item.section) };
+      }
+
+      function getHistoryKey(item) {
+        return `${item.section}:${item.word.toLowerCase()}`;
+      }
+
+      function addToHistory(item) {
+        const normalized = normalizeHistoryItem(item);
+        if (!normalized) return;
+        const currentKey = getHistoryKey(normalized);
+        const next = [normalized, ...history.filter((x) => getHistoryKey(x) !== currentKey)].slice(0, HISTORY_MAX);
         history = next;
         saveHistory(history);
         renderHistory();
@@ -651,17 +862,22 @@
         }
 
         clearHistoryBtn.disabled = false;
-        for (const word of history) {
+        for (const item of history) {
           const li = document.createElement("li");
           li.className = "history-item";
 
           const btn = document.createElement("button");
           btn.type = "button";
           btn.className = "history-btn";
-          btn.textContent = word;
-          btn.addEventListener("click", () => lookup(word));
+          btn.textContent = item.word;
+          btn.addEventListener("click", () => lookup(item.word, { section: item.section }));
+
+          const badge = document.createElement("span");
+          badge.className = "history-lang";
+          badge.textContent = getSectionLabel(item.section);
 
           li.appendChild(btn);
+          li.appendChild(badge);
           historyList.appendChild(li);
         }
       }
