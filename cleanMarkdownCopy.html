@@ -201,6 +201,7 @@
       <button onclick="cleanTextCpent()">🧹 CPENT</button>
       <span class="help-icon" tabindex="0" aria-label="CPENT 清理 說明" id="tipCpent">?</span>
     </span>
+    <button onclick="cleanAndCopy()">⚡ 清理並複製</button>
     <button onclick="copyOutput()">📋 複製結果</button>
   </div>
 
@@ -319,8 +320,8 @@
 
   <script>
     const HELP_TEXT = {
-      clean1: "保留表格與內容；自動把最小標題層級提升到 H1（例：##→#、###→##）；整理列表；移除多餘空行（僅在 --- 與表格開始前補 1 行空行）；表格行會移除 | 前的全形/不換行空白並確保 | 在行首。",
-      clean2: "移除 H1–H3 的 # 標記但保留文字；保留表格；整理列表縮排；將 --- 分隔線改成 ⸻。",
+      clean1: "筆記預設：移除 GPT/Gemini 常見多餘空行與不可見空白；保留 Markdown 結構；標題、表格、分隔線與 code block 前只補必要 1 行空白；表格行會確保 | 在行首。",
+      clean2: "文字化輸出：移除 H1–H3 的 # 標記但保留文字；整理多餘空白行；保留表格；整理列表縮排；將 --- 分隔線改成 ⸻。",
       preserve: "比照清理格式1清掉多餘空白行，但不提升標題、不移除 #、不整理列表縮排，也不改表格與 code block 結構。",
       cpent: "CPENT 筆記用：移除空行；統一無序清單符號為 -；把條列項目下方的多行文字合併成同一行（不會改動 code fence 內容）。"
     };
@@ -385,6 +386,61 @@
         .join('\n');
     }
 
+    function normalizeInputText(text) {
+      return text
+        .replace(/\r\n?/g, '\n')
+        .replace(/\uFEFF/g, '')
+        .replace(/[\u200B\u200C\u200D]/g, '')
+        .replace(/\u00A0/g, ' ');
+    }
+
+    function cleanOutsideCodeLine(rawLine) {
+      return rawLine
+        .replace(/\u3000/g, ' ')
+        .replace(/[ \t]+$/g, '');
+    }
+
+    function isHeadingLine(line) {
+      return /^#{1,6}\s+\S/.test(line.trim());
+    }
+
+    function isHrLine(line) {
+      return /^-{3,}$/.test(line.trim()) || line.trim() === '⸻';
+    }
+
+    function isBlockquoteLine(line) {
+      return /^>\s?/.test(line.trim());
+    }
+
+    function isListLine(line) {
+      return Boolean(matchListLine(line));
+    }
+
+    function collapseExtraBlankLines(text, maxBlankLines = 1) {
+      const lines = normalizeWhitespaceOnlyLines(text).split('\n');
+      const output = [];
+      let blankCount = 0;
+
+      for (const line of lines) {
+        if (line.trim() === '') {
+          blankCount += 1;
+          if (blankCount <= maxBlankLines && output.length > 0) output.push('');
+          continue;
+        }
+        blankCount = 0;
+        output.push(line);
+      }
+
+      while (output.length && output[0] === '') output.shift();
+      while (output.length && output[output.length - 1] === '') output.pop();
+      return output.join('\n');
+    }
+
+    function finalizeCleanedText(text, options) {
+      const maxBlankLines = options.removeBlankLines ? 1 : 1;
+      return collapseExtraBlankLines(text, maxBlankLines).trim();
+    }
+
     function computeHeadingShift(lines) {
       let inCodeFence = false;
       const levels = [];
@@ -421,7 +477,8 @@
       const m = matchListLine(line);
       if (!m) return line;
 
-      const leadingWhitespace = m[1];
+      const depth = Math.floor(getLeadingWhitespaceWidth(m[1]) / 2);
+      const leadingWhitespace = '  '.repeat(depth);
       const marker = m[2];
       const content = m[3];
 
@@ -437,8 +494,8 @@
     }
 
     function cleanCore(options) {
-      const input = document.getElementById('inputText').value;
-      const lines = input.split(/\r?\n/);
+      const input = normalizeInputText(document.getElementById('inputText').value);
+      const lines = input.split('\n');
       const output = [];
 
       const headingShift = options.promoteHeadings ? computeHeadingShift(lines) : 0;
@@ -458,27 +515,54 @@
         if (output[output.length - 1] !== '') output.push('');
       }
 
+      function ensureMarkdownBlockSpacing(line) {
+        if (!options.markdownBlockSpacing) return;
+
+        const prev = findPrevNonEmptyLine(output);
+        if (!prev) return;
+
+        const isOpeningFence = isFenceLine(line.trim()) && !inCodeFence;
+        const blockNeedsSpacing =
+          isHeadingLine(line) ||
+          isOpeningFence ||
+          isHrLine(line) ||
+          isTableRowLine(line);
+
+        if (!blockNeedsSpacing) return;
+        if (isListLine(prev) && isListLine(line)) return;
+        if (isTableRowLine(prev) && isTableRowLine(line)) return;
+        if (isBlockquoteLine(prev) && isBlockquoteLine(line)) return;
+        if (isHrLine(prev)) return;
+
+        pushSpacingBlank();
+      }
+
       for (let i = 0; i < lines.length; i++) {
-        let line = lines[i].replace(/\s+$/g, '');
+        let line = lines[i];
         let trimmed = line.trim();
 
         if (isFenceLine(trimmed)) {
+          const fenceLine = cleanOutsideCodeLine(line);
           if (options.removeEmptyCodeFences) {
             if (!inCodeFence) {
               inCodeFence = true;
-              fenceBuffer = [line];
+              fenceBuffer = [fenceLine];
               continue;
             }
-            fenceBuffer.push(line);
+            fenceBuffer.push(fenceLine);
             inCodeFence = false;
             const contentLines = fenceBuffer.slice(1, -1).filter(l => l.trim() !== '');
-            if (contentLines.length > 0) output.push(...fenceBuffer);
+            if (contentLines.length > 0) {
+              ensureMarkdownBlockSpacing(fenceBuffer[0]);
+              output.push(...fenceBuffer);
+            }
             fenceBuffer = [];
             continue;
           }
 
+          ensureMarkdownBlockSpacing(fenceLine);
           inCodeFence = !inCodeFence;
-          output.push(line);
+          output.push(fenceLine);
           continue;
         }
 
@@ -487,6 +571,9 @@
           else output.push(line);
           continue;
         }
+
+        line = cleanOutsideCodeLine(line);
+        trimmed = line.trim();
 
         if (trimmed === '') {
           if (options.removeBlankLines) continue;
@@ -499,6 +586,7 @@
         }
 
         if (options.hrToSymbol && /^---+$/.test(trimmed)) {
+          ensureMarkdownBlockSpacing('⸻');
           output.push('⸻');
           let j = i + 1;
           while (j < lines.length && lines[j].trim() === "") j++;
@@ -565,6 +653,7 @@
           }
         }
 
+        ensureMarkdownBlockSpacing(line);
         output.push(line);
       }
 
@@ -573,7 +662,7 @@
         if (contentLines.length > 0) output.push(...fenceBuffer);
       }
 
-      return output.join('\n');
+      return finalizeCleanedText(output.join('\n'), options);
     }
 
     function setActiveFormat(format) {
@@ -615,7 +704,8 @@
           removeBlankLines: document.getElementById('optPreserveRemoveBlankLines')?.checked ?? true,
           removeEmptyCodeFences: false,
           escapeAngles: false,
-          removeBoldMarkers: false
+          removeBoldMarkers: false,
+          markdownBlockSpacing: document.getElementById('optPreserveRemoveBlankLines')?.checked ?? true
         };
       }
 
@@ -636,7 +726,8 @@
           removeBlankLines: false,
           removeEmptyCodeFences: false,
           escapeAngles: false,
-          removeBoldMarkers
+          removeBoldMarkers,
+          markdownBlockSpacing: true
         };
       }
 
@@ -657,7 +748,8 @@
         removeBlankLines: true,
         removeEmptyCodeFences: false,
         escapeAngles: false,
-        removeBoldMarkers
+        removeBoldMarkers,
+        markdownBlockSpacing: true
       };
     }
 
@@ -699,23 +791,23 @@
     function cleanText() {
       setActiveFormat('clean1');
       const cleaned = cleanCore(getCleanOptionsFromUI('clean1'));
-      document.getElementById('outputText').value = normalizeWhitespaceOnlyLines(cleaned);
+      document.getElementById('outputText').value = cleaned;
     }
     // ===== 新增清理格式2 =====
     function cleanText2() {
         setActiveFormat('clean2');
-        document.getElementById('outputText').value = normalizeWhitespaceOnlyLines(cleanCore(getCleanOptionsFromUI('clean2')));
+        document.getElementById('outputText').value = cleanCore(getCleanOptionsFromUI('clean2'));
     }
 
     function cleanTextPreserveMarkdown() {
       setActiveFormat('preserve');
-      document.getElementById('outputText').value = normalizeWhitespaceOnlyLines(cleanCore(getCleanOptionsFromUI('preserve')));
+      document.getElementById('outputText').value = cleanCore(getCleanOptionsFromUI('preserve'));
     }
 
     function cleanTextCpent() {
       setActiveFormat('cpent');
-      const input = document.getElementById("inputText").value;
-      const lines = input.split(/\r?\n/);
+      const input = normalizeInputText(document.getElementById("inputText").value);
+      const lines = input.split('\n');
       const output = [];
 
       const unifyBullets = document.getElementById('optCpentUnifyBullets')?.checked ?? true;
@@ -737,12 +829,12 @@
         if (isFenceLine(trimmed)) {
           flushCurrentItem();
           inCodeFence = !inCodeFence;
-          output.push(rawLine.replace(/\s+$/g, ''));
+          output.push(rawLine.replace(/[ \t]+$/g, ''));
           continue;
         }
 
         if (inCodeFence) {
-          output.push(rawLine.replace(/\s+$/g, ''));
+          output.push(rawLine);
           continue;
         }
 
@@ -774,20 +866,40 @@
       }
 
       flushCurrentItem();
-      document.getElementById("outputText").value = normalizeWhitespaceOnlyLines(output.join("\n"));
+      document.getElementById("outputText").value = collapseExtraBlankLines(output.join("\n"), 0).trim();
+    }
+
+    function showToast(message) {
+      const toast = document.createElement("div");
+      toast.className = "toast";
+      toast.textContent = message;
+      document.body.appendChild(toast);
+      setTimeout(() => toast.remove(), 1500);
     }
 
     // ===== 複製輸出 =====
-    function copyOutput() {
+    async function copyOutput() {
       const outputText = document.getElementById("outputText");
-      outputText.select();
-      document.execCommand("copy");
+      const text = outputText.value;
 
-      const toast = document.createElement("div");
-      toast.className = "toast";
-      toast.textContent = "✅ 已複製！";
-      document.body.appendChild(toast);
-      setTimeout(() => toast.remove(), 1500);
+      try {
+        if (navigator.clipboard && window.isSecureContext) {
+          await navigator.clipboard.writeText(text);
+        } else {
+          outputText.select();
+          document.execCommand("copy");
+        }
+        showToast("✅ 已複製！");
+      } catch (err) {
+        outputText.select();
+        document.execCommand("copy");
+        showToast("✅ 已複製！");
+      }
+    }
+
+    async function cleanAndCopy() {
+      cleanText();
+      await copyOutput();
     }
     // Help toggle panel handlers
     const helpToggle = document.getElementById('helpToggle');
