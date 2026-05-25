@@ -574,11 +574,10 @@
         renderHistory();
       });
 
-      const urlWord = getUrlWord();
-      if (urlWord) {
-        const urlSection = getUrlSection();
-        setActiveSection(urlSection);
-        lookup(urlWord, { updateUrl: false, section: urlSection });
+      const urlLookup = getUrlLookup();
+      if (urlLookup) {
+        setActiveSection(urlLookup.section);
+        lookup(urlLookup.word, { updateUrl: false, section: urlLookup.section });
       }
 
       async function pasteFromClipboard() {
@@ -672,36 +671,48 @@
         forceFrameUrl(toSectionUrl(current, section));
       }
 
-      function getUrlWord() {
+      function getUrlLookup() {
         const params = new URLSearchParams(window.location.search);
+        const englishWord = params.get("en");
+        if (englishWord?.trim()) {
+          return { word: englishWord.trim(), section: "en" };
+        }
+
+        const latinWord = params.get("latin") || params.get("lating");
+        if (latinWord?.trim()) {
+          return { word: latinWord.trim(), section: "latin" };
+        }
+
         const namedWord =
           params.get("q") ||
           params.get("keyword") ||
           params.get("keywork") ||
           params.get("word");
 
-        if (namedWord) return namedWord.trim();
+        if (namedWord?.trim()) {
+          return { word: namedWord.trim(), section: getUrlSection(params) };
+        }
 
         const rawQuery = window.location.search.replace(/^\?/, "");
-        if (!rawQuery || rawQuery.includes("=")) return "";
+        if (!rawQuery || rawQuery.includes("=")) return null;
 
         try {
-          return decodeURIComponent(rawQuery.replace(/\+/g, " ")).trim();
+          const word = decodeURIComponent(rawQuery.replace(/\+/g, " ")).trim();
+          return word ? { word, section: "latin" } : null;
         } catch {
-          return rawQuery.trim();
+          const word = rawQuery.trim();
+          return word ? { word, section: "latin" } : null;
         }
       }
 
-      function getUrlSection() {
-        const params = new URLSearchParams(window.location.search);
+      function getUrlSection(params = new URLSearchParams(window.location.search)) {
         return normalizeSection(params.get("section") || params.get("lang") || params.get("target") || "latin");
       }
 
       function updateUrlWord(word, section = activeSection) {
         const url = new URL(window.location.href);
         url.search = "";
-        url.searchParams.set("q", word);
-        url.searchParams.set("section", section);
+        url.searchParams.set(normalizeSection(section) === "en" ? "en" : "latin", word);
         window.history.replaceState({}, "", url);
       }
 
