@@ -574,8 +574,11 @@
         renderHistory();
       });
 
-      const urlLookup = getUrlLookup();
-      if (urlLookup) {
+      runUrlLookup();
+
+      function runUrlLookup() {
+        const urlLookup = getUrlLookup();
+        if (!urlLookup) return;
         setActiveSection(urlLookup.section);
         lookup(urlLookup.word, { updateUrl: false, section: urlLookup.section });
       }
@@ -672,13 +675,14 @@
       }
 
       function getUrlLookup() {
-        const params = new URLSearchParams(window.location.search);
+        const query = getUrlQuery();
+        const params = new URLSearchParams(query);
         const englishWord = params.get("en");
         if (englishWord?.trim()) {
           return { word: englishWord.trim(), section: "en" };
         }
 
-        const latinWord = params.get("latin") || params.get("lating");
+        const latinWord = params.get("latin");
         if (latinWord?.trim()) {
           return { word: latinWord.trim(), section: "latin" };
         }
@@ -693,7 +697,7 @@
           return { word: namedWord.trim(), section: getUrlSection(params) };
         }
 
-        const rawQuery = window.location.search.replace(/^\?/, "");
+        const rawQuery = query.replace(/^\?/, "");
         if (!rawQuery || rawQuery.includes("=")) return null;
 
         try {
@@ -705,13 +709,24 @@
         }
       }
 
-      function getUrlSection(params = new URLSearchParams(window.location.search)) {
+      function getUrlQuery() {
+        if (window.location.search) return window.location.search;
+
+        const hash = window.location.hash || "";
+        const hashQueryStart = hash.indexOf("?");
+        if (hashQueryStart >= 0) return hash.slice(hashQueryStart);
+        if (/^#(?:en|latin|q|keyword|keywork|word)=/i.test(hash)) return `?${hash.slice(1)}`;
+        return "";
+      }
+
+      function getUrlSection(params = new URLSearchParams(getUrlQuery())) {
         return normalizeSection(params.get("section") || params.get("lang") || params.get("target") || "latin");
       }
 
       function updateUrlWord(word, section = activeSection) {
         const url = new URL(window.location.href);
         url.search = "";
+        url.hash = "";
         url.searchParams.set(normalizeSection(section) === "en" ? "en" : "latin", word);
         window.history.replaceState({}, "", url);
       }
@@ -777,10 +792,11 @@
       }
 
       function forceFrameUrl(url) {
-        wikiFrame.src = "about:blank";
-        window.setTimeout(() => {
-          wikiFrame.src = url;
-        }, 0);
+        if (wikiFrame.src === url) {
+          wikiFrame.src = "about:blank";
+        }
+
+        wikiFrame.src = url;
       }
 
       function setStatus(variant, text) {
