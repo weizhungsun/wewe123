@@ -1,0 +1,2040 @@
+<!doctype html>
+<html lang="zh-Hant-TW">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="color-scheme" content="light">
+  <meta name="description" content="離線薪資談判計算工具，拆解固定薪資、浮動獎金與 Total Compensation。">
+  <title>薪資談判即時計算器</title>
+  <style>
+    :root {
+      --ink: #17233c;
+      --muted: #657086;
+      --paper: #f4f1ea;
+      --card: #fffdf8;
+      --line: #ded9cf;
+      --navy: #17284b;
+      --navy-2: #233b68;
+      --gold: #d6a64b;
+      --gold-soft: #f7e9c7;
+      --green: #14745a;
+      --green-soft: #dff3eb;
+      --orange: #a85a19;
+      --orange-soft: #fbe8d6;
+      --red: #a23b3b;
+      --red-soft: #fae3e1;
+      --shadow: 0 18px 50px rgba(23, 40, 75, 0.09);
+      --radius-lg: 24px;
+      --radius-md: 16px;
+      --radius-sm: 10px;
+    }
+
+    * { box-sizing: border-box; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      margin: 0;
+      min-width: 320px;
+      background:
+        radial-gradient(circle at 92% 0%, rgba(214, 166, 75, 0.16), transparent 32rem),
+        linear-gradient(180deg, #f8f6f1 0%, var(--paper) 100%);
+      color: var(--ink);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans TC", sans-serif;
+      line-height: 1.55;
+    }
+
+    button, input, select { font: inherit; }
+
+    button { cursor: pointer; }
+    button, label, summary { touch-action: manipulation; }
+
+    .skip-link {
+      position: fixed;
+      left: 1rem;
+      top: -5rem;
+      z-index: 99;
+      padding: 0.7rem 1rem;
+      border-radius: 999px;
+      background: #fff;
+      color: var(--navy);
+      box-shadow: var(--shadow);
+    }
+
+    .skip-link:focus { top: 1rem; }
+
+    .app-header {
+      position: relative;
+      overflow: hidden;
+      background: var(--navy);
+      color: #fff;
+    }
+
+    .app-header::after {
+      content: "";
+      position: absolute;
+      width: 34rem;
+      height: 34rem;
+      right: -13rem;
+      top: -24rem;
+      border: 1px solid rgba(255,255,255,.12);
+      border-radius: 50%;
+      box-shadow: 0 0 0 5rem rgba(255,255,255,.025), 0 0 0 10rem rgba(255,255,255,.02);
+    }
+
+    .header-inner,
+    .app-shell {
+      width: min(1180px, calc(100% - 2rem));
+      margin-inline: auto;
+    }
+
+    .header-inner {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 2rem;
+      align-items: end;
+      padding: 3.6rem 0 3rem;
+    }
+
+    .eyebrow {
+      margin: 0 0 0.65rem;
+      color: #f4cc78;
+      font-size: 0.76rem;
+      font-weight: 800;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 0;
+      max-width: 720px;
+      font-family: ui-serif, Georgia, "Noto Serif TC", serif;
+      font-size: clamp(2.15rem, 5vw, 3.55rem);
+      font-weight: 700;
+      letter-spacing: -0.045em;
+      line-height: 1.08;
+    }
+
+    .header-copy {
+      max-width: 680px;
+      margin: 1rem 0 0;
+      color: #c9d2e4;
+      font-size: 1rem;
+    }
+
+    .privacy-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.55rem;
+      white-space: nowrap;
+      padding: 0.75rem 1rem;
+      border: 1px solid rgba(255,255,255,.16);
+      border-radius: 999px;
+      background: rgba(255,255,255,.08);
+      color: #f8f9fc;
+      font-size: 0.84rem;
+      font-weight: 700;
+    }
+
+    .privacy-chip::before {
+      content: "";
+      width: 0.55rem;
+      height: 0.55rem;
+      border-radius: 50%;
+      background: #77d7b6;
+      box-shadow: 0 0 0 4px rgba(119,215,182,.12);
+    }
+
+    .app-shell { padding: 2rem 0 calc(4rem + env(safe-area-inset-bottom)); }
+
+    .export-toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      gap: 1rem;
+      align-items: center;
+      margin-bottom: 1rem;
+      padding: 0.85rem 1rem;
+      border: 1px solid rgba(222, 217, 207, .85);
+      border-radius: var(--radius-md);
+      background: rgba(255, 253, 248, .8);
+    }
+
+    .export-toolbar p {
+      flex: 1 1 260px;
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.78rem;
+    }
+
+    .export-actions {
+      display: flex;
+      flex-wrap: wrap;
+      flex: 0 0 auto;
+      gap: 0.55rem;
+      justify-content: flex-end;
+    }
+
+    .export-button {
+      min-height: 42px;
+      padding: 0.6rem 0.9rem;
+      border: 1px solid var(--navy);
+      border-radius: 999px;
+      background: var(--navy);
+      color: #fff;
+      font-size: 0.78rem;
+      font-weight: 780;
+      transition: background .2s, transform .2s;
+    }
+
+    .export-button.secondary {
+      border-color: #aeb8c9;
+      background: #fff;
+      color: var(--navy);
+    }
+
+    .export-button.danger {
+      border-color: #d4a7a1;
+      color: #8b302b;
+    }
+
+    .export-button:hover { background: var(--navy-2); }
+    .export-button.secondary:hover { background: #f1f4f8; }
+    .export-button.danger:hover { background: #fff0ee; }
+    .export-button:active { transform: translateY(1px); }
+
+    .export-feedback {
+      flex: 1 0 100% !important;
+      min-height: 1.2em;
+      color: var(--green) !important;
+      font-weight: 720;
+    }
+
+    .export-feedback:empty { display: none; }
+
+    .workspace {
+      display: grid;
+      grid-template-columns: minmax(0, 0.92fr) minmax(0, 1.08fr);
+      gap: 1.4rem;
+      align-items: start;
+    }
+
+    .panel {
+      border: 1px solid rgba(222, 217, 207, .85);
+      border-radius: var(--radius-lg);
+      background: rgba(255, 253, 248, .92);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(10px);
+    }
+
+    .input-panel { padding: 1.55rem; }
+
+    .section-heading {
+      display: flex;
+      justify-content: space-between;
+      gap: 1rem;
+      align-items: start;
+      margin-bottom: 1.25rem;
+    }
+
+    .section-heading h2,
+    .section-heading h3 {
+      margin: 0;
+      font-size: 1.16rem;
+      letter-spacing: -0.02em;
+    }
+
+    .section-heading p {
+      margin: 0.25rem 0 0;
+      color: var(--muted);
+      font-size: 0.86rem;
+    }
+
+    .text-button,
+    .copy-button {
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: #fff;
+      color: var(--navy);
+      font-size: 0.8rem;
+      font-weight: 750;
+      transition: border-color .2s, background .2s, transform .2s;
+    }
+
+    .text-button { padding: 0.55rem 0.8rem; }
+    .copy-button { padding: 0.5rem 0.85rem; }
+
+    .text-button:hover,
+    .copy-button:hover {
+      border-color: #aeb8c9;
+      background: #f7f9fc;
+    }
+
+    .text-button:active,
+    .copy-button:active { transform: translateY(1px); }
+
+    .field-group {
+      margin: 0;
+      padding: 0;
+      border: 0;
+    }
+
+    .field-group + .field-group {
+      margin-top: 1.4rem;
+      padding-top: 1.3rem;
+      border-top: 1px solid var(--line);
+    }
+
+    .field-group legend {
+      width: 100%;
+      margin-bottom: 0.85rem;
+      color: var(--ink);
+      font-size: 0.77rem;
+      font-weight: 850;
+      letter-spacing: 0.11em;
+      text-transform: uppercase;
+    }
+
+    .goal-grid,
+    .field-grid {
+      display: grid;
+      gap: 0.8rem;
+    }
+
+    .goal-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .field-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+
+    .field { min-width: 0; }
+
+    .field label {
+      display: block;
+      margin-bottom: 0.38rem;
+      color: #4c566b;
+      font-size: 0.78rem;
+      font-weight: 720;
+    }
+
+    .input-wrap { position: relative; }
+
+    .input-wrap input,
+    .input-wrap select {
+      width: 100%;
+      min-height: 48px;
+      padding: 0.68rem 3rem 0.68rem 0.8rem;
+      border: 1px solid #d4d0c8;
+      border-radius: var(--radius-sm);
+      outline: none;
+      background: #fff;
+      color: var(--ink);
+      font-weight: 720;
+      font-variant-numeric: tabular-nums;
+      transition: border-color .2s, box-shadow .2s;
+    }
+
+    .input-wrap select { padding-right: 2.1rem; }
+
+    .input-wrap input:focus,
+    .input-wrap select:focus {
+      border-color: #5972a2;
+      box-shadow: 0 0 0 4px rgba(89,114,162,.13);
+    }
+
+    .input-wrap .unit {
+      position: absolute;
+      right: 0.78rem;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #7a8291;
+      font-size: 0.72rem;
+      font-weight: 750;
+      pointer-events: none;
+    }
+
+    .field-note {
+      margin: 0.4rem 0 0;
+      color: #818896;
+      font-size: 0.71rem;
+    }
+
+    .summary-panel { overflow: hidden; }
+
+    .summary-hero {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 1.2rem;
+      align-items: center;
+      padding: 1.5rem;
+      background: linear-gradient(135deg, var(--navy) 0%, var(--navy-2) 100%);
+      color: #fff;
+    }
+
+    .summary-hero .label {
+      display: block;
+      margin-bottom: 0.2rem;
+      color: #bfcbe0;
+      font-size: 0.76rem;
+      font-weight: 760;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+    }
+
+    .hero-number {
+      display: flex;
+      gap: 0.4rem;
+      align-items: baseline;
+      margin: 0;
+      font-family: ui-serif, Georgia, serif;
+      font-size: clamp(2.3rem, 6vw, 3.65rem);
+      font-weight: 740;
+      letter-spacing: -0.045em;
+      line-height: 1;
+    }
+
+    .hero-number small {
+      color: #ccd5e5;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-size: 0.9rem;
+      font-weight: 650;
+      letter-spacing: 0;
+    }
+
+    .hero-sub {
+      margin: 0.65rem 0 0;
+      color: #c6d0e1;
+      font-size: 0.8rem;
+    }
+
+    .status-badge {
+      min-width: 88px;
+      padding: 0.62rem 0.8rem;
+      border: 1px solid rgba(255,255,255,.15);
+      border-radius: 999px;
+      background: rgba(255,255,255,.09);
+      color: #fff;
+      text-align: center;
+      font-size: 0.8rem;
+      font-weight: 800;
+    }
+
+    .summary-body { padding: 1.3rem 1.5rem 1.55rem; }
+
+    .metric-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 0.75rem;
+    }
+
+    .metric {
+      min-width: 0;
+      padding: 0.9rem;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-md);
+      background: #fff;
+    }
+
+    .metric span {
+      display: block;
+      color: var(--muted);
+      font-size: 0.74rem;
+      font-weight: 680;
+    }
+
+    .metric strong {
+      display: block;
+      margin-top: 0.25rem;
+      color: var(--navy);
+      font-size: 1.15rem;
+      font-variant-numeric: tabular-nums;
+      letter-spacing: -0.025em;
+    }
+
+    .progress-area { margin-top: 1.1rem; }
+
+    .progress-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 1rem;
+      margin-bottom: 0.4rem;
+      color: var(--muted);
+      font-size: 0.76rem;
+    }
+
+    .progress-head strong {
+      color: var(--ink);
+      font-size: 0.82rem;
+    }
+
+    .progress-track {
+      height: 10px;
+      overflow: hidden;
+      border-radius: 99px;
+      background: #ebe7df;
+    }
+
+    .progress-fill {
+      width: 0;
+      height: 100%;
+      border-radius: inherit;
+      background: var(--gold);
+      transition: width .3s ease, background .3s ease;
+    }
+
+    .risk-note {
+      display: flex;
+      gap: 0.7rem;
+      align-items: start;
+      margin-top: 1rem;
+      padding: 0.85rem 0.95rem;
+      border-radius: var(--radius-sm);
+      background: var(--gold-soft);
+      color: #6c4f17;
+      font-size: 0.78rem;
+    }
+
+    .risk-note::before {
+      content: "!";
+      display: grid;
+      flex: 0 0 auto;
+      place-items: center;
+      width: 1.25rem;
+      height: 1.25rem;
+      border-radius: 50%;
+      background: #8b671e;
+      color: #fff;
+      font-size: 0.72rem;
+      font-weight: 850;
+    }
+
+    .scenario-section,
+    .support-section { margin-top: 1.5rem; }
+
+    .section-title-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 1rem;
+      align-items: end;
+      margin: 0 0 0.9rem;
+    }
+
+    .section-title-row h2 {
+      margin: 0;
+      font-size: 1.3rem;
+      letter-spacing: -0.025em;
+    }
+
+    .section-title-row p {
+      margin: 0;
+      max-width: 470px;
+      color: var(--muted);
+      font-size: 0.8rem;
+      text-align: right;
+    }
+
+    .scenario-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 0.9rem;
+    }
+
+    .scenario-card {
+      position: relative;
+      overflow: hidden;
+      padding: 1.2rem;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-md);
+      background: var(--card);
+      box-shadow: 0 10px 30px rgba(23, 40, 75, .06);
+    }
+
+    .scenario-card::before {
+      content: "";
+      position: absolute;
+      inset: 0 0 auto;
+      height: 4px;
+      background: var(--scenario-color, var(--gold));
+    }
+
+    .scenario-top {
+      display: flex;
+      justify-content: space-between;
+      gap: 0.6rem;
+      align-items: center;
+    }
+
+    .scenario-name {
+      color: var(--muted);
+      font-size: 0.76rem;
+      font-weight: 780;
+    }
+
+    .scenario-state {
+      padding: 0.28rem 0.56rem;
+      border-radius: 999px;
+      font-size: 0.7rem;
+      font-weight: 800;
+    }
+
+    .state-met { background: var(--green-soft); color: var(--green); }
+    .state-near { background: var(--orange-soft); color: var(--orange); }
+    .state-below { background: var(--red-soft); color: var(--red); }
+
+    .scenario-target {
+      margin: 0.8rem 0 0;
+      font-family: ui-serif, Georgia, serif;
+      font-size: 2rem;
+      font-weight: 740;
+      letter-spacing: -0.04em;
+    }
+
+    .scenario-target small {
+      color: var(--muted);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-size: 0.72rem;
+      font-weight: 650;
+      letter-spacing: 0;
+    }
+
+    .scenario-needed {
+      margin: 0.15rem 0 1rem;
+      color: var(--muted);
+      font-size: 0.75rem;
+    }
+
+    .scenario-needed strong { color: var(--navy); }
+
+    .scenario-list {
+      display: grid;
+      gap: 0.55rem;
+      margin: 0;
+    }
+
+    .scenario-list div {
+      display: flex;
+      justify-content: space-between;
+      gap: 0.8rem;
+      padding-top: 0.5rem;
+      border-top: 1px solid #ebe7df;
+    }
+
+    .scenario-list dt {
+      color: var(--muted);
+      font-size: 0.73rem;
+    }
+
+    .scenario-list dd {
+      margin: 0;
+      color: var(--ink);
+      font-size: 0.77rem;
+      font-weight: 760;
+      font-variant-numeric: tabular-nums;
+      text-align: right;
+    }
+
+    .delta-positive { color: var(--green) !important; }
+    .delta-negative { color: var(--red) !important; }
+
+    .support-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.3fr) minmax(280px, .7fr);
+      gap: 1rem;
+    }
+
+    .talk-card,
+    .check-card {
+      padding: 1.25rem;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-md);
+      background: var(--card);
+      box-shadow: 0 10px 30px rgba(23, 40, 75, .05);
+    }
+
+    .card-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 0.8rem;
+      margin-bottom: 0.7rem;
+    }
+
+    .card-head h3 {
+      margin: 0;
+      font-size: 0.97rem;
+    }
+
+    .talk-text {
+      margin: 0;
+      padding: 1rem;
+      border-left: 3px solid var(--gold);
+      border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+      background: #f8f5ee;
+      color: #39445a;
+      font-size: 0.88rem;
+    }
+
+    .offer-readout {
+      margin: 0.85rem 0 0;
+      color: var(--muted);
+      font-size: 0.76rem;
+    }
+
+    .offer-readout strong { color: var(--ink); }
+
+    .check-card h3 {
+      margin: 0 0 0.75rem;
+      font-size: 0.97rem;
+    }
+
+    .check-list {
+      display: grid;
+      gap: 0.55rem;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .check-list li {
+      display: flex;
+      gap: 0.55rem;
+      align-items: start;
+      color: #4e586d;
+      font-size: 0.79rem;
+    }
+
+    .check-list li::before {
+      content: "?";
+      display: grid;
+      flex: 0 0 auto;
+      place-items: center;
+      width: 1.05rem;
+      height: 1.05rem;
+      margin-top: 0.1rem;
+      border-radius: 50%;
+      background: #e7ebf3;
+      color: var(--navy);
+      font-size: 0.65rem;
+      font-weight: 850;
+    }
+
+    .principle-bar {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 0.8rem;
+      align-items: center;
+      margin-top: 1rem;
+      padding: 1rem 1.15rem;
+      border-radius: var(--radius-md);
+      background: #e8e2d7;
+    }
+
+    .principle-bar strong {
+      color: var(--navy);
+      font-size: 0.78rem;
+      letter-spacing: .05em;
+      text-transform: uppercase;
+    }
+
+    .principle-bar p {
+      margin: 0;
+      color: #50596c;
+      font-size: 0.8rem;
+    }
+
+    .notes-section { margin-top: 1.6rem; }
+
+    .notes-layout {
+      display: grid;
+      grid-template-columns: minmax(280px, .8fr) minmax(0, 1.2fr);
+      gap: 1rem;
+      align-items: start;
+    }
+
+    .notes-card {
+      padding: 1.25rem;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-md);
+      background: var(--card);
+      box-shadow: 0 10px 30px rgba(23, 40, 75, .05);
+    }
+
+    .notes-card h3 {
+      margin: 0 0 0.35rem;
+      font-size: 1rem;
+    }
+
+    .notes-card > p {
+      margin: 0 0 0.9rem;
+      color: var(--muted);
+      font-size: 0.76rem;
+    }
+
+    .confirm-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 0.55rem;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .confirm-grid li {
+      display: block;
+      padding: 0.65rem;
+      border: 1px solid transparent;
+      border-radius: var(--radius-sm);
+      background: #f6f3ec;
+      color: #465066;
+      font-size: 0.76rem;
+    }
+
+    .confirm-grid li:has(.check-control:checked) {
+      border-color: #9fcbbb;
+      background: #eef7f3;
+    }
+
+    .check-label {
+      display: flex;
+      gap: 0.55rem;
+      align-items: start;
+      color: #354056;
+      font-weight: 760;
+      line-height: 1.45;
+      cursor: pointer;
+    }
+
+    .check-control {
+      flex: 0 0 auto;
+      width: 1.1rem;
+      height: 1.1rem;
+      margin: 0.05rem 0 0;
+      accent-color: var(--green);
+    }
+
+    .note-label {
+      display: block;
+      margin: 0.6rem 0 0.28rem 1.65rem;
+      color: #747d8e;
+      font-size: 0.68rem;
+      font-weight: 720;
+    }
+
+    .check-note {
+      display: block;
+      width: calc(100% - 1.65rem);
+      min-height: 58px;
+      margin-left: 1.65rem;
+      padding: 0.55rem 0.65rem;
+      overflow: hidden;
+      resize: vertical;
+      border: 1px solid #d6d2ca;
+      border-radius: 8px;
+      outline: none;
+      background: #fff;
+      color: var(--ink);
+      font: inherit;
+      line-height: 1.45;
+    }
+
+    .check-note:focus {
+      border-color: #5972a2;
+      box-shadow: 0 0 0 3px rgba(89,114,162,.13);
+    }
+
+    .check-progress {
+      margin: -0.35rem 0 0.85rem !important;
+      color: var(--green) !important;
+      font-weight: 780;
+    }
+
+    .industry-note {
+      margin-top: 1rem;
+      padding: 0.9rem;
+      border-left: 3px solid var(--gold);
+      border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+      background: #f8f5ee;
+    }
+
+    .industry-note strong {
+      display: block;
+      margin-bottom: 0.45rem;
+      color: var(--navy);
+      font-size: 0.8rem;
+    }
+
+    .industry-note ul {
+      display: grid;
+      gap: 0.45rem;
+      margin: 0;
+      padding-left: 1.1rem;
+      color: #525c70;
+      font-size: 0.76rem;
+    }
+
+    .qa-list {
+      display: grid;
+      gap: 0.55rem;
+    }
+
+    .qa-list details {
+      border: 1px solid #e3ded5;
+      border-radius: var(--radius-sm);
+      background: #fff;
+    }
+
+    .qa-list summary {
+      position: relative;
+      padding: 0.8rem 2.4rem 0.8rem 0.85rem;
+      color: var(--ink);
+      font-size: 0.8rem;
+      font-weight: 760;
+      cursor: pointer;
+      list-style: none;
+    }
+
+    .qa-list summary::-webkit-details-marker { display: none; }
+
+    .qa-list summary::after {
+      content: "+";
+      position: absolute;
+      right: 0.85rem;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--gold);
+      font-size: 1.15rem;
+    }
+
+    .qa-list details[open] summary::after { content: "−"; }
+
+    .qa-answer {
+      margin: 0;
+      padding: 0 0.85rem 0.85rem;
+      color: #525c70;
+      font-size: 0.77rem;
+    }
+
+    .qa-answer strong { color: var(--navy); }
+
+    .notes-disclaimer {
+      margin: 0.9rem 0 0 !important;
+      padding-top: 0.75rem;
+      border-top: 1px solid var(--line);
+      color: #7d8492 !important;
+      font-size: 0.7rem !important;
+    }
+
+    .visually-hidden {
+      position: absolute !important;
+      width: 1px !important;
+      height: 1px !important;
+      padding: 0 !important;
+      margin: -1px !important;
+      overflow: hidden !important;
+      clip: rect(0,0,0,0) !important;
+      white-space: nowrap !important;
+      border: 0 !important;
+    }
+
+    :focus-visible {
+      outline: 3px solid rgba(214, 166, 75, .72);
+      outline-offset: 3px;
+    }
+
+    @media (max-width: 900px) {
+      .header-inner { grid-template-columns: 1fr; gap: 1.2rem; }
+      .workspace { grid-template-columns: 1fr; }
+      .scenario-grid { grid-template-columns: 1fr; }
+      .support-grid { grid-template-columns: 1fr; }
+      .notes-layout { grid-template-columns: 1fr; }
+      .section-title-row { align-items: start; }
+      .section-title-row p { text-align: left; }
+    }
+
+    @media (max-width: 580px) {
+      .header-inner,
+      .app-shell { width: min(1180px, calc(100% - 1.1rem - env(safe-area-inset-left) - env(safe-area-inset-right))); }
+      .header-inner { padding: calc(2.6rem + env(safe-area-inset-top)) 0 2.25rem; }
+      .app-shell { padding-top: 1rem; }
+      .input-panel, .summary-body, .summary-hero { padding: 1.05rem; }
+      .goal-grid, .field-grid, .metric-grid { grid-template-columns: 1fr; }
+      .export-toolbar { display: block; }
+      .export-actions { display: grid; grid-template-columns: 1fr; margin-top: 0.7rem; }
+      .export-button { width: 100%; min-height: 48px; }
+      .confirm-grid { grid-template-columns: 1fr; }
+      .check-note { min-height: 64px; font-size: 16px; }
+      .summary-hero { grid-template-columns: 1fr; }
+      .status-badge { justify-self: start; }
+      .section-title-row { display: block; }
+      .section-title-row p { margin-top: 0.35rem; }
+      .principle-bar { grid-template-columns: 1fr; }
+    }
+
+    @media print {
+      @page { size: A4; margin: 12mm; }
+      * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      html, body { width: 100%; overflow: visible; background: #fff; }
+      body { color: #111; font-size: 9pt; line-height: 1.4; }
+      .app-header { overflow: visible; background: #fff; color: #111; border-bottom: 1.5pt solid #17284b; }
+      .app-header::after, .privacy-chip, .text-button, .copy-button, .export-toolbar, .skip-link { display: none !important; }
+      .header-copy, .eyebrow { color: #333; }
+      .header-inner, .app-shell { width: 100%; }
+      .header-inner { display: block; padding: 0 0 6mm; }
+      h1 { font-size: 22pt; line-height: 1.15; }
+      .header-copy { max-width: none; margin-top: 2mm; font-size: 9pt; }
+      .eyebrow { margin-bottom: 2mm; font-size: 7pt; }
+      .app-shell { padding: 7mm 0 0; }
+      .workspace, .support-grid, .notes-layout { display: block; }
+      .panel, .scenario-card, .talk-card, .check-card, .notes-card {
+        margin-bottom: 5mm;
+        border-color: #aaa;
+        box-shadow: none;
+        backdrop-filter: none;
+      }
+      .panel, .scenario-card, .talk-card, .check-card { break-inside: avoid; }
+      .input-panel, .summary-body, .summary-hero, .scenario-card, .talk-card, .check-card, .notes-card { padding: 4mm; }
+      .goal-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+      .field-grid, .metric-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .confirm-grid { grid-template-columns: 1fr; }
+      .confirm-grid li { break-inside: avoid; }
+      .check-note { min-height: 12mm; resize: none; background: #fff; }
+      .input-wrap input, .input-wrap select { min-height: 9mm; padding-block: 1.5mm; }
+      .scenario-section { break-before: auto; margin-top: 6mm; }
+      .support-section, .notes-section { break-before: page; margin-top: 0; }
+      .scenario-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 3mm; }
+      .scenario-card { margin-bottom: 0; padding: 3mm; font-size: 7pt; }
+      .scenario-target { margin-top: 3mm; font-size: 18pt; }
+      .scenario-needed, .scenario-list dt, .scenario-list dd { font-size: 7pt; }
+      .scenario-list { gap: 1mm; }
+      .scenario-list div { padding-top: 1.5mm; }
+      .section-title-row { display: block; margin-bottom: 4mm; }
+      .section-title-row p { margin-top: 1mm; text-align: left; }
+      .qa-list details { break-inside: avoid; }
+      .qa-list summary::after { display: none; }
+      .summary-hero { background: #fff; color: #000; border-bottom: 1px solid #999; }
+      .summary-hero .label, .hero-sub, .hero-number small { color: #333; }
+      .status-badge { border-color: #777; color: #000; }
+      .risk-note, .industry-note, .talk-text, .principle-bar { background: #f2f2f2; }
+    }
+
+  </style>
+</head>
+<body>
+  <a class="skip-link" href="#calculator">跳到計算區</a>
+
+  <header class="app-header">
+    <div class="header-inner">
+      <div>
+        <p class="eyebrow">Compensation Briefing Tool</p>
+        <h1>薪資談判，不只看一個數字。</h1>
+        <p class="header-copy">把固定薪、獎金與一次性項目拆清楚，在 HR 問到期望薪資時，立即知道方案離目標還有多遠。</p>
+      </div>
+      <div class="privacy-chip" aria-label="離線工具，資料僅儲存在目前瀏覽器">離線運作 · 僅存本機</div>
+    </div>
+  </header>
+
+  <main class="app-shell" id="calculator">
+    <div class="export-toolbar" aria-label="匯出工具">
+      <p id="storageStatus" aria-live="polite">輸入內容會自動儲存在此瀏覽器，不會上傳薪資資料。</p>
+      <div class="export-actions">
+        <button class="export-button secondary" type="button" id="exportPdf">列印／另存 PDF</button>
+        <button class="export-button" type="button" id="exportImage">下載完整報告 PNG</button>
+        <button class="export-button secondary" type="button" id="downloadMarkdown">下載 Markdown</button>
+        <button class="export-button secondary" type="button" id="copyResults">複製完整結果</button>
+        <button class="export-button secondary danger" type="button" id="clearAllData">清除所有資料</button>
+      </div>
+      <p class="export-feedback" aria-live="polite" id="exportStatus"></p>
+    </div>
+
+    <div class="workspace">
+      <form class="panel input-panel" id="salaryForm" novalidate>
+        <div class="section-heading">
+          <div>
+            <h2>薪酬條件</h2>
+            <p>所有金額以新台幣「萬元」輸入</p>
+          </div>
+          <button class="text-button" type="reset">回復預設</button>
+        </div>
+
+        <fieldset class="field-group">
+          <legend>談判情境</legend>
+          <div class="field-grid">
+            <div class="field">
+              <label for="industry">產業類型</label>
+              <div class="input-wrap">
+                <select id="industry" name="industry">
+                  <option value="manufacturing" selected>製造業</option>
+                  <option value="information">資訊業</option>
+                  <option value="other">其他</option>
+                </select>
+              </div>
+              <p class="field-note">用於調整談判備忘，不會改變薪資公式</p>
+            </div>
+          </div>
+        </fieldset>
+
+        <fieldset class="field-group">
+          <legend>談判目標</legend>
+          <div class="goal-grid">
+            <div class="field">
+              <label for="goalConservative">保守目標</label>
+              <div class="input-wrap">
+                <input id="goalConservative" name="goalConservative" type="number" min="0" step="1" value="250" inputmode="decimal">
+                <span class="unit">萬元</span>
+              </div>
+            </div>
+            <div class="field">
+              <label for="goalTarget">目標上緣</label>
+              <div class="input-wrap">
+                <input id="goalTarget" name="goalTarget" type="number" min="0" step="1" value="260" inputmode="decimal">
+                <span class="unit">萬元</span>
+              </div>
+            </div>
+            <div class="field">
+              <label for="goalIdeal">理想條件</label>
+              <div class="input-wrap">
+                <input id="goalIdeal" name="goalIdeal" type="number" min="0" step="1" value="270" inputmode="decimal">
+                <span class="unit">萬元</span>
+              </div>
+            </div>
+          </div>
+        </fieldset>
+
+        <fieldset class="field-group">
+          <legend>固定與保證收入</legend>
+          <div class="field-grid">
+            <div class="field">
+              <label for="monthlySalary">固定月薪</label>
+              <div class="input-wrap">
+                <input id="monthlySalary" name="monthlySalary" type="number" min="0" step="0.1" value="16.5" inputmode="decimal">
+                <span class="unit">萬元</span>
+              </div>
+            </div>
+            <div class="field">
+              <label for="guaranteedMonths">保證薪資月數</label>
+              <div class="input-wrap">
+                <input id="guaranteedMonths" name="guaranteedMonths" type="number" min="0" step="0.5" value="14" inputmode="decimal">
+                <span class="unit">個月</span>
+              </div>
+            </div>
+            <div class="field">
+              <label for="otherFixed">其他固定報酬</label>
+              <div class="input-wrap">
+                <input id="otherFixed" name="otherFixed" type="number" min="0" step="0.1" value="0" inputmode="decimal">
+                <span class="unit">萬元／年</span>
+              </div>
+              <p class="field-note">僅填契約中明確保證的年度報酬</p>
+            </div>
+          </div>
+        </fieldset>
+
+        <fieldset class="field-group">
+          <legend>浮動與一次性收入</legend>
+          <div class="field-grid">
+            <div class="field">
+              <label for="bonusMode">績效獎金輸入方式</label>
+              <div class="input-wrap">
+                <select id="bonusMode" name="bonusMode">
+                  <option value="months" selected>以月數計算</option>
+                  <option value="amount">直接輸入金額</option>
+                </select>
+              </div>
+            </div>
+            <div class="field">
+              <label for="performanceBonus" id="performanceBonusLabel">績效獎金月數</label>
+              <div class="input-wrap">
+                <input id="performanceBonus" name="performanceBonus" type="number" min="0" step="0.1" value="1" inputmode="decimal">
+                <span class="unit" id="performanceBonusUnit">個月</span>
+              </div>
+            </div>
+            <div class="field">
+              <label for="signOnBonus">到職獎金（Sign-on Bonus）</label>
+              <div class="input-wrap">
+                <input id="signOnBonus" name="signOnBonus" type="number" min="0" step="0.1" value="0" inputmode="decimal">
+                <span class="unit">萬元</span>
+              </div>
+              <p class="field-note">一次性到職獎金，只計入第一年；需確認服務期限與提前離職返還條款</p>
+            </div>
+            <div class="field">
+              <label for="equity">RSU／員工分紅</label>
+              <div class="input-wrap">
+                <input id="equity" name="equity" type="number" min="0" step="0.1" value="0" inputmode="decimal">
+                <span class="unit">萬元／年</span>
+              </div>
+            </div>
+            <div class="field">
+              <label for="otherVariable">其他浮動報酬</label>
+              <div class="input-wrap">
+                <input id="otherVariable" name="otherVariable" type="number" min="0" step="0.1" value="0" inputmode="decimal">
+                <span class="unit">萬元／年</span>
+              </div>
+            </div>
+          </div>
+        </fieldset>
+      </form>
+
+      <section class="panel summary-panel" aria-labelledby="summaryTitle" aria-live="polite">
+        <div class="summary-hero">
+          <div>
+            <span class="label" id="summaryTitle">第二年起預估 Total Compensation</span>
+            <p class="hero-number"><span id="recurringTotal">247.5</span><small>萬元／年</small></p>
+            <p class="hero-sub" id="summaryDifference">距離保守目標尚差 2.5 萬元</p>
+          </div>
+          <div class="status-badge" id="summaryStatus">接近目標</div>
+        </div>
+
+        <div class="summary-body">
+          <div class="metric-grid">
+            <div class="metric">
+              <span>固定保證年薪</span>
+              <strong id="guaranteedTotal">231.0 萬</strong>
+            </div>
+            <div class="metric">
+              <span>年度浮動薪酬</span>
+              <strong id="variableTotal">16.5 萬</strong>
+            </div>
+            <div class="metric">
+              <span>第一年總包</span>
+              <strong id="firstYearTotal">247.5 萬</strong>
+            </div>
+            <div class="metric">
+              <span>浮動薪酬占比</span>
+              <strong id="variableRatio">6.7%</strong>
+            </div>
+          </div>
+
+          <div class="progress-area">
+            <div class="progress-head">
+              <span>保守目標達成度</span>
+              <strong id="progressLabel">99.0%</strong>
+            </div>
+            <div class="progress-track" role="progressbar" aria-label="保守目標達成度" aria-valuemin="0" aria-valuemax="100" aria-valuenow="99" id="progressTrack">
+              <div class="progress-fill" id="progressFill"></div>
+            </div>
+          </div>
+
+          <div class="risk-note" id="riskNote">目前浮動薪酬占比低於 20%，薪酬結構相對穩定；仍應確認績效獎金的實際發放條件。</div>
+        </div>
+      </section>
+    </div>
+
+    <section class="scenario-section" aria-labelledby="scenarioTitle">
+      <div class="section-title-row">
+        <h2 id="scenarioTitle">三種談判方案</h2>
+        <p>以第二年起的年度總包為基準，一次性到職獎金不應用來支撐長期薪資目標。</p>
+      </div>
+      <div class="scenario-grid" id="scenarioGrid"></div>
+    </section>
+
+    <section class="support-section" aria-labelledby="supportTitle">
+      <div class="section-title-row">
+        <h2 id="supportTitle">面談現場輔助</h2>
+        <p>先談職務價值與 Total Compensation，再確認每一項薪酬是否保證。</p>
+      </div>
+
+      <div class="support-grid">
+        <article class="talk-card">
+          <div class="card-head">
+            <h3>可直接對 HR 說</h3>
+            <button class="copy-button" type="button" id="copyTalk">複製話術</button>
+          </div>
+          <blockquote class="talk-text" id="talkText"></blockquote>
+          <p class="offer-readout" id="offerReadout"></p>
+          <p class="visually-hidden" aria-live="polite" id="copyStatus"></p>
+        </article>
+
+        <aside class="check-card">
+          <h3>需要向 HR 確認</h3>
+          <ul class="check-list">
+            <li>保證年薪究竟是幾個月？</li>
+            <li>績效獎金的 Target 與實際平均發放？</li>
+            <li>第一年獎金是否按到職比例計算？</li>
+            <li>職級、直接部屬與管理責任範圍？</li>
+            <li>預算有限時，是否有到職獎金？是否附帶返還條款？</li>
+          </ul>
+        </aside>
+      </div>
+
+      <div class="principle-bar">
+        <strong>核心原則</strong>
+        <p>適度透露求職進度，保留公司與金額細節，把話題拉回這個職位的職級、Scope 與薪資區間；不要讓現職薪資加成成為唯一基準。</p>
+      </div>
+    </section>
+
+    <section class="notes-section" aria-labelledby="notesTitle">
+      <div class="section-title-row">
+        <h2 id="notesTitle">談薪備忘與常見問題</h2>
+        <p>先取得完整薪酬結構，再判斷是否達標；不確定的獎金一律先視為非保證收入。</p>
+      </div>
+
+      <div class="notes-layout">
+        <article class="notes-card">
+          <h3>談薪至少確認</h3>
+          <p>請 HR 將關鍵條件寫入正式 Offer 或可驗證的薪酬文件。</p>
+          <p class="check-progress" id="checkProgress" aria-live="polite">已確認 0／10 項</p>
+          <ul class="confirm-grid">
+            <li class="check-item"><label class="check-label" for="check-base"><input class="check-control" id="check-base" type="checkbox"><span>月薪或年薪的計算基準</span></label><label class="note-label" for="note-base">備註</label><textarea class="check-note" id="note-base" rows="2" placeholder="記錄 HR 回覆、金額或待確認事項"></textarea></li>
+            <li class="check-item"><label class="check-label" for="check-guaranteed-months"><input class="check-control" id="check-guaranteed-months" type="checkbox"><span>固定薪資保證幾個月</span></label><label class="note-label" for="note-guaranteed-months">備註</label><textarea class="check-note" id="note-guaranteed-months" rows="2" placeholder="記錄 HR 回覆、金額或待確認事項"></textarea></li>
+            <li class="check-item"><label class="check-label" for="check-performance"><input class="check-control" id="check-performance" type="checkbox"><span>績效獎金公式、門檻與歷年發放</span></label><label class="note-label" for="note-performance">備註</label><textarea class="check-note" id="note-performance" rows="2" placeholder="記錄 Target、計算公式與實際發放"></textarea></li>
+            <li class="check-item"><label class="check-label" for="check-sign-on"><input class="check-control" id="check-sign-on" type="checkbox"><span>到職獎金與提前離職返還條款</span></label><label class="note-label" for="note-sign-on">備註</label><textarea class="check-note" id="note-sign-on" rows="2" placeholder="記錄金額、發放時間與返還條件"></textarea></li>
+            <li class="check-item"><label class="check-label" for="check-equity"><input class="check-control" id="check-equity" type="checkbox"><span>RSU、股票或員工認股的 Vesting</span></label><label class="note-label" for="note-equity">備註</label><textarea class="check-note" id="note-equity" rows="2" placeholder="記錄數量、價格、歸屬與離職規則"></textarea></li>
+            <li class="check-item"><label class="check-label" for="check-level-title"><input class="check-control" id="check-level-title" type="checkbox"><span>職級、職稱與實際責任範圍</span></label><label class="note-label" for="note-level-title">備註</label><textarea class="check-note" id="note-level-title" rows="2" placeholder="記錄職級、Scope、管理人數與匯報線"></textarea></li>
+            <li class="check-item"><label class="check-label" for="check-overtime-oncall"><input class="check-control" id="check-overtime-oncall" type="checkbox"><span>加班、輪班與 On-call 補償</span></label><label class="note-label" for="note-overtime-oncall">備註</label><textarea class="check-note" id="note-overtime-oncall" rows="2" placeholder="記錄頻率、工時、補休與津貼方式"></textarea></li>
+            <li class="check-item"><label class="check-label" for="check-review-promotion"><input class="check-control" id="check-review-promotion" type="checkbox"><span>調薪與升遷評估週期</span></label><label class="note-label" for="note-review-promotion">備註</label><textarea class="check-note" id="note-review-promotion" rows="2" placeholder="記錄評估月份、資格與升遷標準"></textarea></li>
+            <li class="check-item"><label class="check-label" for="check-probation"><input class="check-control" id="check-probation" type="checkbox"><span>試用期薪資與福利是否相同</span></label><label class="note-label" for="note-probation">備註</label><textarea class="check-note" id="note-probation" rows="2" placeholder="記錄試用期長度、薪資與福利差異"></textarea></li>
+            <li class="check-item"><label class="check-label" for="check-first-year-proration"><input class="check-control" id="check-first-year-proration" type="checkbox"><span>第一年獎金是否按到職比例計算</span></label><label class="note-label" for="note-first-year-proration">備註</label><textarea class="check-note" id="note-first-year-proration" rows="2" placeholder="記錄計算期間、比例與發放條件"></textarea></li>
+          </ul>
+
+          <div class="industry-note" id="industryNote"></div>
+          <p class="notes-disclaimer">產業提醒是常見談判檢查點，不代表個別公司的實際制度；最終仍以正式 Offer、聘僱契約及公司書面規範為準。</p>
+        </article>
+
+        <article class="notes-card">
+          <h3>HR 常見問題與回答方向</h3>
+          <p>回答要誠實、簡短，並把討論帶回職務價值與完整薪酬。</p>
+          <div class="qa-list">
+            <details>
+              <summary>目前薪資是多少？可以提供薪資單嗎？</summary>
+              <p class="qa-answer"><strong>建議回答：</strong>現職薪資反映的是原公司的產業與制度，和這次職務 Scope 不完全相同。我願意討論期望薪資與整體結構，但希望新職務依職級、責任與市場價值核薪；現階段不方便提供完整薪資明細。</p>
+            </details>
+            <details>
+              <summary>目前有其他 Offer 或面試嗎？</summary>
+              <p class="qa-answer"><strong>建議回答：</strong>誠實說明目前是接觸中、面試後期或已取得 Offer，並提供合理的決策時間點；不必透露公司名稱、精確金額或 Offer 文件。</p>
+            </details>
+            <details>
+              <summary>你的期望薪資是多少？</summary>
+              <p class="qa-answer"><strong>建議回答：</strong>先說明是 Total Compensation，再給區間而非單一底線；補充會依固定薪資、保證獎金、職級、管理範圍與長期發展綜合評估。</p>
+            </details>
+            <details>
+              <summary>這個數字超過預算，可以降低嗎？</summary>
+              <p class="qa-answer"><strong>建議回答：</strong>先確認差距在固定月薪、保證月數、職級或浮動獎金，不要立即自行降價。若固定薪資受限，可討論職級、保證獎金、到職獎金或明確的調薪檢視點。</p>
+            </details>
+            <details>
+              <summary>你可以接受的最低薪資是多少？</summary>
+              <p class="qa-answer"><strong>建議回答：</strong>不要先揭露真正底線。可以表示需要看到完整職責、職級與薪酬結構後才能評估，並反問公司核定的薪資區間。</p>
+            </details>
+            <details>
+              <summary>為什麼想離開目前公司？</summary>
+              <p class="qa-answer"><strong>建議回答：</strong>聚焦下一階段想承擔的 Scope、技術或管理影響力與發展方向；避免抱怨主管、同事或只用薪資作為離職理由。</p>
+            </details>
+            <details>
+              <summary>如果錄取，何時可以到職？</summary>
+              <p class="qa-answer"><strong>建議回答：</strong>將「Offer 決策期限」與「實際到職日」分開說明，保留現職交接與已排定承諾所需時間，不必為了製造急迫感承諾不切實際的日期。</p>
+            </details>
+          </div>
+        </article>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    (() => {
+      "use strict";
+
+      const form = document.getElementById("salaryForm");
+      const ids = [
+        "industry", "goalConservative", "goalTarget", "goalIdeal", "monthlySalary",
+        "guaranteedMonths", "otherFixed", "bonusMode", "performanceBonus",
+        "signOnBonus", "equity", "otherVariable"
+      ];
+      const fields = Object.fromEntries(ids.map((id) => [id, document.getElementById(id)]));
+      const scenarioNames = ["保守方案", "目標方案", "理想方案"];
+      const scenarioColors = ["#c28d2f", "#48689e", "#14745a"];
+      const stringFields = new Set(["industry", "bonusMode"]);
+      const industryContent = {
+        manufacturing: {
+          label: "製造業",
+          talkLabel: "製造業",
+          title: "製造業特別確認",
+          items: [
+            "年終、績效與公司分紅是否分開計算，各自是否保證。",
+            "是否需要輪班、廠區支援、假日值班、出差或跨廠協作，以及對應津貼。",
+            "員工持股信託、認股或分紅不等同保證現金，需確認取得與處分條件。",
+            "職稱是否對應實際職等、直接部屬、預算權與決策責任。"
+          ]
+        },
+        information: {
+          label: "資訊業",
+          talkLabel: "資訊業",
+          title: "資訊業特別確認",
+          items: [
+            "年度獎金的 Target、績效係數、到職比例與實際平均發放。",
+            "RSU 或股票的 Vesting、Cliff、Refresh Policy、幣別與離職後處理。",
+            "On-call 輪值、重大事件應變、夜間支援與加班補償方式。",
+            "Technical 與 People Manager 的職級路徑、升遷標準及遠端／混合辦公安排。"
+          ]
+        },
+        other: {
+          label: "其他產業",
+          talkLabel: "",
+          title: "通用特別確認",
+          items: [
+            "固定薪資、保證獎金與非保證獎金應分開確認，不以最高可能值代表總包。",
+            "工作地點、出差、工時、輪值或特殊勤務是否另有津貼與補償。",
+            "職稱是否對應實際職級、責任範圍、決策權與升遷路徑。",
+            "股票、分紅、佣金或其他變動報酬的取得條件、發放時間與離職後處理。"
+          ]
+        }
+      };
+
+      const safeNumber = (value) => {
+        const parsed = Number.parseFloat(value);
+        return Number.isFinite(parsed) && parsed > 0 ? parsed : 0;
+      };
+
+      const format = (value, digits = 1) => {
+        const safe = Number.isFinite(value) ? Math.max(0, value) : 0;
+        return new Intl.NumberFormat("zh-TW", {
+          minimumFractionDigits: digits,
+          maximumFractionDigits: digits
+        }).format(safe);
+      };
+
+      const signedFormat = (value) => {
+        const safe = Number.isFinite(value) ? value : 0;
+        const prefix = safe > 0 ? "+" : safe < 0 ? "−" : "";
+        return `${prefix}${format(Math.abs(safe), 1)} 萬`;
+      };
+
+      const getInput = () => Object.fromEntries(
+        ids.map((id) => [id, stringFields.has(id) ? fields[id].value : safeNumber(fields[id].value)])
+      );
+
+      const calculate = (input, monthlyOverride = input.monthlySalary) => {
+        const performance = input.bonusMode === "months"
+          ? monthlyOverride * input.performanceBonus
+          : input.performanceBonus;
+        const guaranteed = monthlyOverride * input.guaranteedMonths + input.otherFixed;
+        const variable = performance + input.equity + input.otherVariable;
+        const recurring = guaranteed + variable;
+        const firstYear = recurring + input.signOnBonus;
+        const variableRatio = recurring > 0 ? variable / recurring * 100 : 0;
+        return { performance, guaranteed, variable, recurring, firstYear, variableRatio };
+      };
+
+      const requiredMonthly = (target, input) => {
+        const fixedNonMonthly = input.otherFixed + input.equity + input.otherVariable;
+        const fixedBonusAmount = input.bonusMode === "amount" ? input.performanceBonus : 0;
+        const salaryMonths = input.guaranteedMonths + (input.bonusMode === "months" ? input.performanceBonus : 0);
+        if (salaryMonths <= 0) return 0;
+        return Math.max(0, (target - fixedNonMonthly - fixedBonusAmount) / salaryMonths);
+      };
+
+      const statusFor = (total, target) => {
+        if (target <= 0 || total >= target) return { label: "已達標", className: "state-met", key: "met" };
+        if (target - total <= target * 0.05) return { label: "接近目標", className: "state-near", key: "near" };
+        return { label: "尚有差距", className: "state-below", key: "below" };
+      };
+
+      const createScenarioCard = (name, target, color, input, actual) => {
+        const neededMonthly = requiredMonthly(target, input);
+        const projected = calculate(input, neededMonthly);
+        const delta = actual.recurring - target;
+        const status = statusFor(actual.recurring, target);
+        const article = document.createElement("article");
+        article.className = "scenario-card";
+        article.style.setProperty("--scenario-color", color);
+        article.innerHTML = `
+          <div class="scenario-top">
+            <span class="scenario-name">${name}</span>
+            <span class="scenario-state ${status.className}">${status.label}</span>
+          </div>
+          <p class="scenario-target">${format(target, 0)} <small>萬元／年</small></p>
+          <p class="scenario-needed">達標所需月薪 <strong>${format(neededMonthly, 2)} 萬</strong></p>
+          <dl class="scenario-list">
+            <div><dt>建議月薪</dt><dd>${format(neededMonthly, 2)} 萬</dd></div>
+            <div><dt>固定保證收入</dt><dd>${format(projected.guaranteed, 1)} 萬</dd></div>
+            <div><dt>預估浮動收入</dt><dd>${format(projected.variable, 1)} 萬</dd></div>
+            <div><dt>方案年度總包</dt><dd>${format(projected.recurring, 1)} 萬</dd></div>
+            <div><dt>目前方案差額</dt><dd class="${delta >= 0 ? "delta-positive" : "delta-negative"}">${signedFormat(delta)}</dd></div>
+          </dl>`;
+        return article;
+      };
+
+      const updateBonusMode = () => {
+        const usesMonths = fields.bonusMode.value === "months";
+        document.getElementById("performanceBonusLabel").textContent = usesMonths ? "績效獎金月數" : "績效獎金金額";
+        document.getElementById("performanceBonusUnit").textContent = usesMonths ? "個月" : "萬元／年";
+        fields.performanceBonus.step = usesMonths ? "0.1" : "0.5";
+      };
+
+      const update = () => {
+        updateBonusMode();
+        const input = getInput();
+        const actual = calculate(input);
+        const industry = industryContent[input.industry] || industryContent.manufacturing;
+        const conservativeStatus = statusFor(actual.recurring, input.goalConservative);
+        const delta = actual.recurring - input.goalConservative;
+        const progress = input.goalConservative > 0 ? actual.recurring / input.goalConservative * 100 : 100;
+
+        document.getElementById("recurringTotal").textContent = format(actual.recurring, 1);
+        document.getElementById("guaranteedTotal").textContent = `${format(actual.guaranteed, 1)} 萬`;
+        document.getElementById("variableTotal").textContent = `${format(actual.variable, 1)} 萬`;
+        document.getElementById("firstYearTotal").textContent = `${format(actual.firstYear, 1)} 萬`;
+        document.getElementById("variableRatio").textContent = `${format(actual.variableRatio, 1)}%`;
+        document.getElementById("summaryStatus").textContent = conservativeStatus.label;
+        document.getElementById("summaryDifference").textContent = delta >= 0
+          ? `已高於保守目標 ${format(delta, 1)} 萬元`
+          : `距離保守目標尚差 ${format(Math.abs(delta), 1)} 萬元`;
+
+        const progressDisplay = Math.max(0, Math.min(progress, 100));
+        const progressFill = document.getElementById("progressFill");
+        progressFill.style.width = `${progressDisplay}%`;
+        progressFill.style.background = conservativeStatus.key === "met" ? "#4db88f" : conservativeStatus.key === "near" ? "#d6a64b" : "#c96555";
+        document.getElementById("progressLabel").textContent = `${format(progress, 1)}%`;
+        const progressTrack = document.getElementById("progressTrack");
+        progressTrack.setAttribute("aria-valuenow", String(Math.round(progressDisplay)));
+        progressTrack.setAttribute("aria-valuetext", `${format(progress, 1)}%`);
+
+        const riskNote = document.getElementById("riskNote");
+        if (actual.variableRatio >= 30) {
+          riskNote.textContent = `浮動薪酬占比 ${format(actual.variableRatio, 1)}%，風險偏高。請確認獎金、RSU 與分紅是否保證，以及歷年實際發放情況。`;
+          riskNote.style.background = "var(--red-soft)";
+          riskNote.style.color = "#762d2d";
+        } else if (actual.variableRatio >= 20) {
+          riskNote.textContent = `浮動薪酬占比 ${format(actual.variableRatio, 1)}%，需要特別確認績效門檻、發放時點與到職比例。`;
+          riskNote.style.background = "var(--orange-soft)";
+          riskNote.style.color = "#7d4519";
+        } else {
+          riskNote.textContent = `目前浮動薪酬占比 ${format(actual.variableRatio, 1)}%，薪酬結構相對穩定；仍應確認績效獎金的實際發放條件。`;
+          riskNote.style.background = "var(--gold-soft)";
+          riskNote.style.color = "#6c4f17";
+        }
+
+        const scenarioGrid = document.getElementById("scenarioGrid");
+        scenarioGrid.replaceChildren();
+        [input.goalConservative, input.goalTarget, input.goalIdeal].forEach((target, index) => {
+          scenarioGrid.appendChild(createScenarioCard(scenarioNames[index], target, scenarioColors[index], input, actual));
+        });
+
+        const industryNote = document.getElementById("industryNote");
+        industryNote.innerHTML = `<strong>${industry.title}</strong><ul>${industry.items.map((item) => `<li>${item}</li>`).join("")}</ul>`;
+
+        const roleDescription = industry.talkLabel ? `這個${industry.talkLabel}職務` : "這個職務";
+        const talkText = `以我目前對${roleDescription}內容與責任範圍的理解，我期待整體年薪落在 ${format(input.goalConservative, 0)} 至 ${format(input.goalTarget, 0)} 萬元。如果角色具備完整的策略 Ownership、團隊管理與跨部門決策權，整體薪酬可再往 ${format(input.goalIdeal, 0)} 萬元討論。我會綜合評估固定薪資、保證獎金、績效分紅與實際職務 Scope，也希望了解公司目前核定的職級與薪資區間。`;
+        document.getElementById("talkText").textContent = talkText;
+        document.getElementById("offerReadout").innerHTML = `目前輸入方案：固定保證 <strong>${format(actual.guaranteed, 1)} 萬</strong>、第二年起總包 <strong>${format(actual.recurring, 1)} 萬</strong>${input.signOnBonus > 0 ? `、第一年含到職獎金為 <strong>${format(actual.firstYear, 1)} 萬</strong>` : ""}。`;
+      };
+
+      const reportFont = '-apple-system, BlinkMacSystemFont, "Noto Sans TC", "Segoe UI", sans-serif';
+
+      const reportRoundedRect = (ctx, x, y, width, height, radius, color) => {
+        const r = Math.min(radius, width / 2, height / 2);
+        ctx.beginPath();
+        ctx.moveTo(x + r, y);
+        ctx.lineTo(x + width - r, y);
+        ctx.quadraticCurveTo(x + width, y, x + width, y + r);
+        ctx.lineTo(x + width, y + height - r);
+        ctx.quadraticCurveTo(x + width, y + height, x + width - r, y + height);
+        ctx.lineTo(x + r, y + height);
+        ctx.quadraticCurveTo(x, y + height, x, y + height - r);
+        ctx.lineTo(x, y + r);
+        ctx.quadraticCurveTo(x, y, x + r, y);
+        ctx.closePath();
+        ctx.fillStyle = color;
+        ctx.fill();
+      };
+
+      const reportLines = (ctx, text, maxWidth) => {
+        const lines = [];
+        let line = "";
+        Array.from(String(text)).forEach((character) => {
+          const candidate = line + character;
+          if (line && ctx.measureText(candidate).width > maxWidth) {
+            lines.push(line);
+            line = character;
+          } else {
+            line = candidate;
+          }
+        });
+        if (line) lines.push(line);
+        return lines;
+      };
+
+      const reportWrappedText = (ctx, text, x, y, maxWidth, lineHeight) => {
+        const lines = reportLines(ctx, text, maxWidth);
+        lines.forEach((line, index) => ctx.fillText(line, x, y + index * lineHeight));
+        return y + lines.length * lineHeight;
+      };
+
+      const downloadFullPageImage = async () => {
+        const status = document.getElementById("exportStatus");
+        status.textContent = "正在產生完整報告 PNG…";
+
+        try {
+          const input = getInput();
+          const actual = calculate(input);
+          const industry = industryContent[input.industry] || industryContent.manufacturing;
+          const source = document.createElement("canvas");
+          source.width = 1400;
+          source.height = 10000;
+          const ctx = source.getContext("2d");
+          const left = 90;
+          const contentWidth = 1220;
+          let y = 0;
+
+          ctx.fillStyle = "#f4f1ea";
+          ctx.fillRect(0, 0, source.width, source.height);
+          const headerGradient = ctx.createLinearGradient(0, 0, 1400, 340);
+          headerGradient.addColorStop(0, "#17284b");
+          headerGradient.addColorStop(1, "#294474");
+          ctx.fillStyle = headerGradient;
+          ctx.fillRect(0, 0, 1400, 340);
+          ctx.fillStyle = "#f4cc78";
+          ctx.font = `800 23px ${reportFont}`;
+          ctx.fillText("COMPENSATION BRIEFING TOOL", left, 75);
+          ctx.fillStyle = "#ffffff";
+          ctx.font = `800 62px ${reportFont}`;
+          ctx.fillText("薪資談判完整報告", left, 160);
+          ctx.fillStyle = "#cbd5e5";
+          ctx.font = `500 27px ${reportFont}`;
+          ctx.fillText(`${industry.label} · 所有金額為新台幣萬元`, left, 214);
+          ctx.font = `700 28px ${reportFont}`;
+          ctx.fillText(`第二年起總包 ${format(actual.recurring, 1)} 萬／第一年總包 ${format(actual.firstYear, 1)} 萬`, left, 278);
+          y = 410;
+
+          const sectionTitle = (title, subtitle = "") => {
+            ctx.fillStyle = "#17233c";
+            ctx.font = `800 38px ${reportFont}`;
+            ctx.fillText(title, left, y);
+            if (subtitle) {
+              ctx.fillStyle = "#657086";
+              ctx.font = `500 22px ${reportFont}`;
+              ctx.fillText(subtitle, left, y + 38);
+              y += 68;
+            } else {
+              y += 38;
+            }
+            y += 28;
+          };
+
+          const informationGrid = (items) => {
+            const gap = 22;
+            const boxWidth = (contentWidth - gap) / 2;
+            items.forEach(([label, value], index) => {
+              const column = index % 2;
+              const row = Math.floor(index / 2);
+              const x = left + column * (boxWidth + gap);
+              const boxY = y + row * 118;
+              reportRoundedRect(ctx, x, boxY, boxWidth, 96, 18, "#fffdf8");
+              ctx.fillStyle = "#657086";
+              ctx.font = `650 20px ${reportFont}`;
+              ctx.fillText(label, x + 24, boxY + 34);
+              ctx.fillStyle = "#17284b";
+              ctx.font = `800 31px ${reportFont}`;
+              ctx.fillText(value, x + 24, boxY + 74);
+            });
+            y += Math.ceil(items.length / 2) * 118 + 28;
+          };
+
+          sectionTitle("一、薪酬結構", "固定、浮動與一次性收入分開計算");
+          informationGrid([
+            ["固定月薪", `${format(input.monthlySalary, 1)} 萬`],
+            ["保證薪資月數", `${format(input.guaranteedMonths, 1)} 個月`],
+            ["其他固定報酬", `${format(input.otherFixed, 1)} 萬／年`],
+            ["績效獎金", `${format(actual.performance, 1)} 萬／年`],
+            ["到職獎金", `${format(input.signOnBonus, 1)} 萬（僅第一年）`],
+            ["RSU／員工分紅", `${format(input.equity, 1)} 萬／年`],
+            ["其他浮動報酬", `${format(input.otherVariable, 1)} 萬／年`],
+            ["浮動薪酬占比", `${format(actual.variableRatio, 1)}%`]
+          ]);
+          informationGrid([
+            ["固定保證年薪", `${format(actual.guaranteed, 1)} 萬`],
+            ["年度浮動薪酬", `${format(actual.variable, 1)} 萬`],
+            ["第一年總包", `${format(actual.firstYear, 1)} 萬`],
+            ["第二年起總包", `${format(actual.recurring, 1)} 萬`]
+          ]);
+
+          sectionTitle("二、三種談判目標", "達標月薪以第二年起的年度總包為基準");
+          [input.goalConservative, input.goalTarget, input.goalIdeal].forEach((target, index) => {
+            const cardWidth = (contentWidth - 44) / 3;
+            const x = left + index * (cardWidth + 22);
+            reportRoundedRect(ctx, x, y, cardWidth, 230, 20, "#fffdf8");
+            ctx.fillStyle = scenarioColors[index];
+            ctx.fillRect(x, y, cardWidth, 7);
+            ctx.fillStyle = "#657086";
+            ctx.font = `700 21px ${reportFont}`;
+            ctx.fillText(scenarioNames[index], x + 25, y + 48);
+            ctx.fillStyle = "#17233c";
+            ctx.font = `800 44px ${reportFont}`;
+            ctx.fillText(`${format(target, 0)} 萬`, x + 25, y + 104);
+            ctx.fillStyle = "#465066";
+            ctx.font = `600 21px ${reportFont}`;
+            ctx.fillText(`達標月薪 ${format(requiredMonthly(target, input), 2)} 萬`, x + 25, y + 151);
+            const targetDelta = actual.recurring - target;
+            ctx.fillStyle = targetDelta >= 0 ? "#14745a" : "#a23b3b";
+            ctx.fillText(`目前差額 ${signedFormat(targetDelta)}`, x + 25, y + 194);
+          });
+          y += 278;
+
+          sectionTitle("三、可直接對 HR 說");
+          const talkText = document.getElementById("talkText").textContent;
+          ctx.font = `600 25px ${reportFont}`;
+          const talkLines = reportLines(ctx, talkText, contentWidth - 60);
+          const talkHeight = talkLines.length * 39 + 60;
+          reportRoundedRect(ctx, left, y, contentWidth, talkHeight, 20, "#fffdf8");
+          ctx.fillStyle = "#d6a64b";
+          ctx.fillRect(left, y, 7, talkHeight);
+          ctx.fillStyle = "#39445a";
+          reportWrappedText(ctx, talkText, left + 35, y + 42, contentWidth - 70, 39);
+          y += talkHeight + 40;
+
+          sectionTitle("四、談薪至少確認");
+          const checks = Array.from(document.querySelectorAll(".check-item")).map((item) => ({
+            label: item.querySelector(".check-label span").textContent.trim(),
+            checked: item.querySelector(".check-control").checked,
+            note: item.querySelector(".check-note").value.trim()
+          }));
+          checks.forEach(({ label, checked, note }) => {
+            ctx.font = `700 24px ${reportFont}`;
+            const labelLines = reportLines(ctx, label, contentWidth - 100);
+            const noteText = note ? `備註：${note}` : "備註：—";
+            ctx.font = `500 22px ${reportFont}`;
+            const noteLines = reportLines(ctx, noteText, contentWidth - 70);
+            const itemHeight = 30 + labelLines.length * 35 + 12 + noteLines.length * 32 + 26;
+            reportRoundedRect(ctx, left, y, contentWidth, itemHeight, 14, checked ? "#eef7f3" : "#fffdf8");
+            ctx.fillStyle = checked ? "#14745a" : "#8a93a2";
+            ctx.font = `800 27px ${reportFont}`;
+            ctx.fillText(checked ? "✓" : "□", left + 25, y + 42);
+            ctx.fillStyle = "#354056";
+            ctx.font = `700 24px ${reportFont}`;
+            const noteY = reportWrappedText(ctx, label, left + 68, y + 41, contentWidth - 100, 35);
+            ctx.fillStyle = note ? "#525c70" : "#8a93a2";
+            ctx.font = `500 22px ${reportFont}`;
+            reportWrappedText(ctx, noteText, left + 35, noteY + 12, contentWidth - 70, 32);
+            y += itemHeight + 14;
+          });
+          y += 18;
+
+          sectionTitle(`五、${industry.title}`);
+          ctx.font = `600 24px ${reportFont}`;
+          industry.items.forEach((item) => {
+            const lines = reportLines(ctx, item, contentWidth - 82);
+            const itemHeight = Math.max(66, lines.length * 35 + 30);
+            reportRoundedRect(ctx, left, y, contentWidth, itemHeight, 14, "#f7e9c7");
+            ctx.fillStyle = "#8b671e";
+            ctx.fillText("•", left + 25, y + 39);
+            ctx.fillStyle = "#5b4a28";
+            reportWrappedText(ctx, item, left + 58, y + 38, contentWidth - 82, 35);
+            y += itemHeight + 14;
+          });
+          y += 26;
+
+          sectionTitle("六、HR 常見問題與回答方向", "完整收錄頁面中的所有問答");
+          const questionAnswers = Array.from(document.querySelectorAll(".qa-list details")).map((detail) => ({
+            question: detail.querySelector("summary").textContent.trim(),
+            answer: detail.querySelector(".qa-answer").textContent.trim()
+          }));
+          questionAnswers.forEach(({ question, answer }) => {
+            ctx.font = `800 25px ${reportFont}`;
+            const questionLines = reportLines(ctx, question, contentWidth - 60);
+            ctx.font = `500 23px ${reportFont}`;
+            const answerLines = reportLines(ctx, answer, contentWidth - 60);
+            const cardHeight = 32 + questionLines.length * 38 + 16 + answerLines.length * 34 + 30;
+            reportRoundedRect(ctx, left, y, contentWidth, cardHeight, 18, "#fffdf8");
+            ctx.fillStyle = "#17233c";
+            ctx.font = `800 25px ${reportFont}`;
+            let textY = reportWrappedText(ctx, question, left + 30, y + 42, contentWidth - 60, 38);
+            ctx.fillStyle = "#525c70";
+            ctx.font = `500 23px ${reportFont}`;
+            reportWrappedText(ctx, answer, left + 30, textY + 12, contentWidth - 60, 34);
+            y += cardHeight + 18;
+          });
+          y += 26;
+
+          sectionTitle("七、核心原則");
+          const principle = document.querySelector(".principle-bar p").textContent.trim();
+          ctx.font = `700 26px ${reportFont}`;
+          const principleLines = reportLines(ctx, principle, contentWidth - 70);
+          const principleHeight = principleLines.length * 40 + 62;
+          reportRoundedRect(ctx, left, y, contentWidth, principleHeight, 18, "#e8e2d7");
+          ctx.fillStyle = "#17284b";
+          reportWrappedText(ctx, principle, left + 35, y + 45, contentWidth - 70, 40);
+          y += principleHeight + 70;
+
+          ctx.fillStyle = "#7d8492";
+          ctx.font = `500 19px ${reportFont}`;
+          ctx.fillText("本報告僅供薪資談判準備；實際條件以正式 Offer、聘僱契約及公司書面規範為準。", left, y);
+          y += 70;
+
+          const output = document.createElement("canvas");
+          output.width = source.width;
+          output.height = Math.ceil(y);
+          output.getContext("2d").drawImage(source, 0, 0, source.width, output.height, 0, 0, source.width, output.height);
+          const pngBlob = await new Promise((resolve) => output.toBlob(resolve, "image/png"));
+          if (!pngBlob) throw new Error("PNG 編碼失敗");
+          const pngUrl = URL.createObjectURL(pngBlob);
+          const link = document.createElement("a");
+          link.href = pngUrl;
+          link.download = `薪資談判完整報告-${new Date().toISOString().slice(0, 10)}.png`;
+          document.body.appendChild(link);
+          link.click();
+          link.remove();
+          window.setTimeout(() => URL.revokeObjectURL(pngUrl), 1000);
+          status.textContent = `完整報告 PNG 已下載（${output.width} × ${output.height}）。`;
+        } catch (_) {
+          status.textContent = "完整報告 PNG 產生失敗，請改用 PDF 匯出。";
+        }
+      };
+
+      const buildMarkdownReport = () => {
+        const input = getInput();
+        const actual = calculate(input);
+        const industry = industryContent[input.industry] || industryContent.manufacturing;
+        const talkText = document.getElementById("talkText").textContent.trim();
+        const principle = document.querySelector(".principle-bar p").textContent.trim();
+        const checks = Array.from(document.querySelectorAll(".check-item")).map((item) => ({
+          label: item.querySelector(".check-label span").textContent.trim(),
+          checked: item.querySelector(".check-control").checked,
+          note: item.querySelector(".check-note").value.trim()
+        }));
+        const questionAnswers = Array.from(document.querySelectorAll(".qa-list details")).map((detail) => ({
+          question: detail.querySelector("summary").textContent.trim(),
+          answer: detail.querySelector(".qa-answer").textContent.trim()
+        }));
+        const scenarios = [input.goalConservative, input.goalTarget, input.goalIdeal].map((target, index) => ({
+          name: scenarioNames[index],
+          target,
+          neededMonthly: requiredMonthly(target, input),
+          delta: actual.recurring - target,
+          status: statusFor(actual.recurring, target).label
+        }));
+        const quotedTalk = talkText.split("\n").map((line) => `> ${line}`).join("\n");
+        const checklistMarkdown = checks.map(({ label, checked, note }) => {
+          const noteLines = note
+            ? note.split("\n").map((line) => `  - 備註：${line}`).join("\n")
+            : "  - 備註：—";
+          return `- [${checked ? "x" : " "}] ${label}\n${noteLines}`;
+        }).join("\n");
+        const scenarioMarkdown = scenarios.map((scenario) => [
+          `### ${scenario.name}`,
+          `- 目標總包：${format(scenario.target, 1)} 萬元`,
+          `- 達標所需月薪：${format(scenario.neededMonthly, 2)} 萬元`,
+          `- 目前第二年起總包差額：${signedFormat(scenario.delta)}`,
+          `- 狀態：${scenario.status}`
+        ].join("\n")).join("\n\n");
+        const industryMarkdown = industry.items.map((item) => `- ${item}`).join("\n");
+        const qaMarkdown = questionAnswers.map(({ question, answer }) => `### ${question}\n${answer}`).join("\n\n");
+
+        return [
+          "# 薪資談判完整報告",
+          "",
+          `- 產業類型：${industry.label}`,
+          `- 產生日期：${new Intl.DateTimeFormat("zh-TW", { dateStyle: "medium" }).format(new Date())}`,
+          "- 金額單位：新台幣萬元",
+          "",
+          "## 一、薪資結構",
+          `- 固定月薪：${format(input.monthlySalary, 2)} 萬元`,
+          `- 保證薪資月數：${format(input.guaranteedMonths, 1)} 個月`,
+          `- 固定保證年薪：${format(actual.guaranteed, 1)} 萬元`,
+          `- 年度浮動薪酬：${format(actual.variable, 1)} 萬元`,
+          `- 到職獎金（僅第一年）：${format(input.signOnBonus, 1)} 萬元`,
+          `- 第一年 Total Compensation：${format(actual.firstYear, 1)} 萬元`,
+          `- 第二年起 Total Compensation：${format(actual.recurring, 1)} 萬元`,
+          `- 浮動薪酬占比：${format(actual.variableRatio, 1)}%`,
+          "",
+          "## 二、談判目標",
+          scenarioMarkdown,
+          "",
+          "## 三、可直接對 HR 說",
+          quotedTalk,
+          "",
+          "## 四、談薪 Checklist",
+          checklistMarkdown,
+          "",
+          `## 五、${industry.title}`,
+          industryMarkdown,
+          "",
+          "## 六、HR 常見問題與回答方向",
+          qaMarkdown,
+          "",
+          "## 七、核心原則",
+          principle,
+          "",
+          "---",
+          "本報告僅供薪資談判準備；實際條件以正式 Offer、聘僱契約及公司書面規範為準。"
+        ].join("\n");
+      };
+
+      const copyText = async (text) => {
+        if (navigator.clipboard && window.isSecureContext) {
+          try {
+            await navigator.clipboard.writeText(text);
+            return true;
+          } catch (_) { /* Fall back for browsers that deny Clipboard access. */ }
+        }
+        const helper = document.createElement("textarea");
+        helper.value = text;
+        helper.setAttribute("readonly", "");
+        helper.style.position = "fixed";
+        helper.style.inset = "0";
+        helper.style.opacity = "0";
+        document.body.appendChild(helper);
+        helper.select();
+        helper.setSelectionRange(0, helper.value.length);
+        const copied = document.execCommand("copy");
+        helper.remove();
+        if (!copied) throw new Error("Copy failed");
+        return true;
+      };
+
+      const downloadMarkdownReport = () => {
+        const markdown = buildMarkdownReport();
+        const blob = new Blob([markdown], { type: "text/markdown;charset=utf-8" });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = `薪資談判完整報告-${new Date().toISOString().slice(0, 10)}.md`;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+        document.getElementById("exportStatus").textContent = "Markdown 完整報告已下載。";
+      };
+
+      const checklistControls = Array.from(document.querySelectorAll(".check-control"));
+      const checklistNotes = Array.from(document.querySelectorAll(".check-note"));
+      const storageKey = "salary-negotiation-calculator-state-v1";
+      let suppressSave = false;
+      const updateChecklistProgress = () => {
+        const checked = checklistControls.filter((control) => control.checked).length;
+        document.getElementById("checkProgress").textContent = `已確認 ${checked}／${checklistControls.length} 項`;
+      };
+      const resizeChecklistNote = (note) => {
+        note.style.height = "auto";
+        note.style.height = `${Math.max(58, note.scrollHeight)}px`;
+      };
+
+      const saveState = () => {
+        if (suppressSave) return;
+        const state = {
+          version: 1,
+          fields: Object.fromEntries(ids.map((id) => [id, fields[id].value])),
+          checklist: Object.fromEntries(checklistControls.map((control, index) => [control.id, {
+            checked: control.checked,
+            note: checklistNotes[index].value
+          }]))
+        };
+        try {
+          localStorage.setItem(storageKey, JSON.stringify(state));
+          document.getElementById("storageStatus").textContent = "已自動儲存在此瀏覽器，不會上傳薪資資料。";
+        } catch (_) {
+          document.getElementById("storageStatus").textContent = "瀏覽器無法儲存資料；請確認未停用網站儲存功能。";
+        }
+      };
+
+      const restoreState = () => {
+        try {
+          const rawState = localStorage.getItem(storageKey);
+          if (!rawState) return false;
+          const state = JSON.parse(rawState);
+          if (!state || state.version !== 1) return false;
+          ids.forEach((id) => {
+            const savedValue = state.fields && state.fields[id];
+            if (typeof savedValue !== "string") return;
+            if (fields[id].tagName === "SELECT" && !Array.from(fields[id].options).some((option) => option.value === savedValue)) return;
+            fields[id].value = savedValue;
+          });
+          checklistControls.forEach((control, index) => {
+            const savedItem = state.checklist && state.checklist[control.id];
+            if (!savedItem || typeof savedItem !== "object") return;
+            control.checked = savedItem.checked === true;
+            checklistNotes[index].value = typeof savedItem.note === "string" ? savedItem.note : "";
+          });
+          document.getElementById("storageStatus").textContent = "已還原上次儲存在此瀏覽器的資料。";
+          return true;
+        } catch (_) {
+          document.getElementById("storageStatus").textContent = "無法讀取先前資料，已使用頁面預設值。";
+          return false;
+        }
+      };
+
+      form.addEventListener("input", () => { update(); saveState(); });
+      form.addEventListener("change", () => { update(); saveState(); });
+      form.addEventListener("reset", () => window.setTimeout(() => { update(); saveState(); }, 0));
+      checklistControls.forEach((control) => control.addEventListener("change", () => {
+        updateChecklistProgress();
+        saveState();
+      }));
+      checklistNotes.forEach((note) => {
+        note.addEventListener("input", () => {
+          resizeChecklistNote(note);
+          saveState();
+        });
+      });
+
+      document.getElementById("clearAllData").addEventListener("click", () => {
+        if (!window.confirm("確定要清除所有薪資輸入、Checklist 勾選與備註嗎？此動作無法復原。")) return;
+        suppressSave = true;
+        try { localStorage.removeItem(storageKey); } catch (_) { /* Storage may be unavailable. */ }
+        form.reset();
+        checklistControls.forEach((control) => { control.checked = false; });
+        checklistNotes.forEach((note) => {
+          note.value = "";
+          resizeChecklistNote(note);
+        });
+        updateChecklistProgress();
+        update();
+        document.getElementById("storageStatus").textContent = "所有本機資料已清除，頁面已恢復預設值。";
+        window.setTimeout(() => { suppressSave = false; }, 0);
+      });
+
+      document.getElementById("copyTalk").addEventListener("click", async () => {
+        const text = document.getElementById("talkText").textContent;
+        const button = document.getElementById("copyTalk");
+        const status = document.getElementById("copyStatus");
+        try {
+          await navigator.clipboard.writeText(text);
+          button.textContent = "已複製";
+          status.textContent = "談薪話術已複製到剪貼簿。";
+        } catch (_) {
+          const selection = window.getSelection();
+          const range = document.createRange();
+          range.selectNodeContents(document.getElementById("talkText"));
+          selection.removeAllRanges();
+          selection.addRange(range);
+          button.textContent = "已選取文字";
+          status.textContent = "無法自動複製，已選取談薪話術。";
+        }
+        window.setTimeout(() => { button.textContent = "複製話術"; }, 1800);
+      });
+
+      document.getElementById("exportPdf").addEventListener("click", () => {
+        document.getElementById("exportStatus").textContent = "已開啟列印視窗；請選擇另存為 PDF。";
+        window.print();
+      });
+
+      document.getElementById("exportImage").addEventListener("click", downloadFullPageImage);
+      document.getElementById("downloadMarkdown").addEventListener("click", downloadMarkdownReport);
+      document.getElementById("copyResults").addEventListener("click", async () => {
+        const button = document.getElementById("copyResults");
+        const status = document.getElementById("exportStatus");
+        try {
+          await copyText(buildMarkdownReport());
+          button.textContent = "已複製完整結果";
+          status.textContent = "完整 Markdown 結果已複製，可直接貼到筆記或訊息中。";
+        } catch (_) {
+          status.textContent = "瀏覽器未允許自動複製，請改用「下載 Markdown」。";
+        }
+        window.setTimeout(() => { button.textContent = "複製完整結果"; }, 1800);
+      });
+
+      let detailsPrintState = [];
+      window.addEventListener("beforeprint", () => {
+        detailsPrintState = Array.from(document.querySelectorAll(".qa-list details")).map((detail) => detail.open);
+        document.querySelectorAll(".qa-list details").forEach((detail) => { detail.open = true; });
+      });
+      window.addEventListener("afterprint", () => {
+        document.querySelectorAll(".qa-list details").forEach((detail, index) => {
+          detail.open = detailsPrintState[index] || false;
+        });
+      });
+
+      restoreState();
+      checklistNotes.forEach(resizeChecklistNote);
+      updateChecklistProgress();
+      update();
+    })();
+  </script>
+</body>
+</html>
