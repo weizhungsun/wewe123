@@ -450,6 +450,15 @@
       letter-spacing: -0.025em;
     }
 
+    .metric-wide { grid-column: 1 / -1; }
+
+    .metric small {
+      display: block;
+      margin-top: 0.35rem;
+      color: var(--muted);
+      font-size: 0.7rem;
+    }
+
     .progress-area { margin-top: 1.1rem; }
 
     .progress-head {
@@ -1201,6 +1210,11 @@
               <span>浮動薪酬占比</span>
               <strong id="variableRatio">6.7%</strong>
             </div>
+            <div class="metric metric-wide">
+              <span id="recurringMonthlyEquivalentLabel">總包月均值（第二年起 TC ÷ 14 個月）</span>
+              <strong id="recurringMonthlyEquivalent">17.68 萬／月</strong>
+              <small>僅供跨方案比較，包含浮動報酬，不代表每月固定薪資。</small>
+            </div>
           </div>
 
           <div class="progress-area">
@@ -1249,6 +1263,9 @@
             <li>保證年薪究竟是幾個月？</li>
             <li>績效獎金的 Target 與實際平均發放？</li>
             <li>第一年獎金是否按到職比例計算？</li>
+            <li>三節禮金／禮券的金額、發放時間、資格與是否保證？</li>
+            <li>股票／RSU 的授予數量、估值基準、Vesting、Cliff、稅務與離職處理？</li>
+            <li>員工持股信託的員工提撥、公司相對提撥、閉鎖期與離職領回規則？</li>
             <li>職級、直接部屬與管理責任範圍？</li>
             <li>預算有限時，是否有到職獎金？是否附帶返還條款？</li>
           </ul>
@@ -1271,13 +1288,15 @@
         <article class="notes-card">
           <h3>談薪至少確認</h3>
           <p>請 HR 將關鍵條件寫入正式 Offer 或可驗證的薪酬文件。</p>
-          <p class="check-progress" id="checkProgress" aria-live="polite">已確認 0／10 項</p>
+          <p class="check-progress" id="checkProgress" aria-live="polite">已確認 0／12 項</p>
           <ul class="confirm-grid">
             <li class="check-item"><label class="check-label" for="check-base"><input class="check-control" id="check-base" type="checkbox"><span>月薪或年薪的計算基準</span></label><label class="note-label" for="note-base">備註</label><textarea class="check-note" id="note-base" rows="2" placeholder="記錄 HR 回覆、金額或待確認事項"></textarea></li>
             <li class="check-item"><label class="check-label" for="check-guaranteed-months"><input class="check-control" id="check-guaranteed-months" type="checkbox"><span>固定薪資保證幾個月</span></label><label class="note-label" for="note-guaranteed-months">備註</label><textarea class="check-note" id="note-guaranteed-months" rows="2" placeholder="記錄 HR 回覆、金額或待確認事項"></textarea></li>
             <li class="check-item"><label class="check-label" for="check-performance"><input class="check-control" id="check-performance" type="checkbox"><span>績效獎金公式、門檻與歷年發放</span></label><label class="note-label" for="note-performance">備註</label><textarea class="check-note" id="note-performance" rows="2" placeholder="記錄 Target、計算公式與實際發放"></textarea></li>
             <li class="check-item"><label class="check-label" for="check-sign-on"><input class="check-control" id="check-sign-on" type="checkbox"><span>到職獎金與提前離職返還條款</span></label><label class="note-label" for="note-sign-on">備註</label><textarea class="check-note" id="note-sign-on" rows="2" placeholder="記錄金額、發放時間與返還條件"></textarea></li>
-            <li class="check-item"><label class="check-label" for="check-equity"><input class="check-control" id="check-equity" type="checkbox"><span>RSU、股票或員工認股的 Vesting</span></label><label class="note-label" for="note-equity">備註</label><textarea class="check-note" id="note-equity" rows="2" placeholder="記錄數量、價格、歸屬與離職規則"></textarea></li>
+            <li class="check-item"><label class="check-label" for="check-festival-gifts"><input class="check-control" id="check-festival-gifts" type="checkbox"><span>三節禮金／禮券的金額、資格與是否保證</span></label><label class="note-label" for="note-festival-gifts">備註</label><textarea class="check-note" id="note-festival-gifts" rows="2" placeholder="記錄各節金額、形式、發放時間、到職資格與是否列入薪資"></textarea></li>
+            <li class="check-item"><label class="check-label" for="check-equity"><input class="check-control" id="check-equity" type="checkbox"><span>股票／RSU／員工認股的授予、估值與 Vesting</span></label><label class="note-label" for="note-equity">備註</label><textarea class="check-note" id="note-equity" rows="2" placeholder="記錄數量、估值基準、Cliff、Vesting、稅務與離職處理"></textarea></li>
+            <li class="check-item"><label class="check-label" for="check-stock-trust"><input class="check-control" id="check-stock-trust" type="checkbox"><span>員工持股信託的提撥、閉鎖期與離職規則</span></label><label class="note-label" for="note-stock-trust">備註</label><textarea class="check-note" id="note-stock-trust" rows="2" placeholder="記錄員工提撥、公司相對提撥、買入方式、費用、閉鎖期與領回條件"></textarea></li>
             <li class="check-item"><label class="check-label" for="check-level-title"><input class="check-control" id="check-level-title" type="checkbox"><span>職級、職稱與實際責任範圍</span></label><label class="note-label" for="note-level-title">備註</label><textarea class="check-note" id="note-level-title" rows="2" placeholder="記錄職級、Scope、管理人數與匯報線"></textarea></li>
             <li class="check-item"><label class="check-label" for="check-overtime-oncall"><input class="check-control" id="check-overtime-oncall" type="checkbox"><span>加班、輪班與 On-call 補償</span></label><label class="note-label" for="note-overtime-oncall">備註</label><textarea class="check-note" id="note-overtime-oncall" rows="2" placeholder="記錄頻率、工時、補休與津貼方式"></textarea></li>
             <li class="check-item"><label class="check-label" for="check-review-promotion"><input class="check-control" id="check-review-promotion" type="checkbox"><span>調薪與升遷評估週期</span></label><label class="note-label" for="note-review-promotion">備註</label><textarea class="check-note" id="note-review-promotion" rows="2" placeholder="記錄評估月份、資格與升遷標準"></textarea></li>
@@ -1409,7 +1428,10 @@
         const recurring = guaranteed + variable;
         const firstYear = recurring + input.signOnBonus;
         const variableRatio = recurring > 0 ? variable / recurring * 100 : 0;
-        return { performance, guaranteed, variable, recurring, firstYear, variableRatio };
+        const recurringMonthlyEquivalent = input.guaranteedMonths > 0
+          ? recurring / input.guaranteedMonths
+          : null;
+        return { performance, guaranteed, variable, recurring, firstYear, variableRatio, recurringMonthlyEquivalent };
       };
 
       const requiredMonthly = (target, input) => {
@@ -1472,6 +1494,12 @@
         document.getElementById("variableTotal").textContent = `${format(actual.variable, 1)} 萬`;
         document.getElementById("firstYearTotal").textContent = `${format(actual.firstYear, 1)} 萬`;
         document.getElementById("variableRatio").textContent = `${format(actual.variableRatio, 1)}%`;
+        document.getElementById("recurringMonthlyEquivalentLabel").textContent = input.guaranteedMonths > 0
+          ? `總包月均值（第二年起 TC ÷ ${format(input.guaranteedMonths, 1)} 個月）`
+          : "總包月均值（保證薪資月數需大於 0）";
+        document.getElementById("recurringMonthlyEquivalent").textContent = actual.recurringMonthlyEquivalent === null
+          ? "無法換算"
+          : `${format(actual.recurringMonthlyEquivalent, 2)} 萬／月`;
         document.getElementById("summaryStatus").textContent = conservativeStatus.label;
         document.getElementById("summaryDifference").textContent = delta >= 0
           ? `已高於保守目標 ${format(delta, 1)} 萬元`
@@ -1642,7 +1670,9 @@
             ["固定保證年薪", `${format(actual.guaranteed, 1)} 萬`],
             ["年度浮動薪酬", `${format(actual.variable, 1)} 萬`],
             ["第一年總包", `${format(actual.firstYear, 1)} 萬`],
-            ["第二年起總包", `${format(actual.recurring, 1)} 萬`]
+            ["第二年起總包", `${format(actual.recurring, 1)} 萬`],
+            ["總包月均值", actual.recurringMonthlyEquivalent === null ? "無法換算" : `${format(actual.recurringMonthlyEquivalent, 2)} 萬／月`],
+            ["月均換算基準", actual.recurringMonthlyEquivalent === null ? "保證月數需大於 0" : `第二年起 TC ÷ ${format(input.guaranteedMonths, 1)} 個月`]
           ]);
 
           sectionTitle("二、三種談判目標", "達標月薪以第二年起的年度總包為基準");
@@ -1831,6 +1861,8 @@
           `- 到職獎金（僅第一年）：${format(input.signOnBonus, 1)} 萬元`,
           `- 第一年 Total Compensation：${format(actual.firstYear, 1)} 萬元`,
           `- 第二年起 Total Compensation：${format(actual.recurring, 1)} 萬元`,
+          `- 總包月均值：${actual.recurringMonthlyEquivalent === null ? "無法換算（保證薪資月數需大於 0）" : `${format(actual.recurringMonthlyEquivalent, 2)} 萬元／月（第二年起 TC ÷ ${format(input.guaranteedMonths, 1)} 個月）`}`,
+          "- 月均值說明：包含浮動報酬，僅供跨方案比較，不代表每月固定薪資。",
           `- 浮動薪酬占比：${format(actual.variableRatio, 1)}%`,
           "",
           "## 二、談判目標",
