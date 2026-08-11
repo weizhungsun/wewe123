@@ -350,6 +350,41 @@
     .goal-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
     .field-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 
+    .compensation-ratio-planner {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      gap: 0.8rem;
+      align-items: stretch;
+      margin-top: 0.9rem;
+      padding: 0.9rem;
+      border: 1px solid #c7d2e2;
+      border-radius: var(--radius-md);
+      background: #f4f7fb;
+    }
+
+    .ratio-readout {
+      display: grid;
+      align-content: center;
+      min-height: 76px;
+      padding: 0.75rem 0.9rem;
+      border: 1px solid #d8c89f;
+      border-radius: var(--radius-sm);
+      background: #fffaf0;
+    }
+
+    .ratio-readout span {
+      color: var(--muted);
+      font-size: 0.72rem;
+      font-weight: 700;
+    }
+
+    .ratio-readout strong {
+      margin-top: 0.18rem;
+      color: var(--navy);
+      font-size: 1.15rem;
+      font-variant-numeric: tabular-nums;
+    }
+
     .field { min-width: 0; }
 
     .field label {
@@ -798,6 +833,50 @@
       text-align: right;
     }
 
+    .scenario-compensation-mix {
+      margin-bottom: 0.9rem;
+      padding: 0.75rem;
+      border: 1px solid #decda8;
+      border-radius: var(--radius-sm);
+      background: #fbf5e9;
+    }
+
+    .scenario-compensation-mix > strong {
+      display: block;
+      margin-bottom: 0.45rem;
+      color: #76561d;
+      font-size: 0.72rem;
+    }
+
+    .scenario-compensation-mix dl {
+      display: grid;
+      gap: 0.4rem;
+      margin: 0;
+    }
+
+    .scenario-compensation-mix dl div {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 0.7rem;
+      align-items: baseline;
+    }
+
+    .scenario-compensation-mix dt {
+      color: var(--muted);
+      font-size: 0.7rem;
+    }
+
+    .scenario-compensation-mix dd {
+      margin: 0;
+      color: var(--ink);
+      font-size: 0.74rem;
+      font-weight: 780;
+      font-variant-numeric: tabular-nums;
+      text-align: right;
+    }
+
+    .scenario-compensation-mix .field-note { display: block; }
+
     .scenario-list {
       display: grid;
       gap: 0.55rem;
@@ -1152,6 +1231,7 @@
       .input-panel, .summary-body, .summary-hero { padding: 1.05rem; }
       .scenario-section, .support-section, .notes-section { padding: 1rem; border-radius: var(--radius-md); }
       .goal-grid, .field-grid, .metric-grid { grid-template-columns: 1fr; }
+      .compensation-ratio-planner { grid-template-columns: 1fr; }
       .monthly-estimate-grid { grid-template-columns: 1fr; }
       .monthly-estimate span { min-height: 0; }
       .monthly-estimate-head { display: block; }
@@ -1316,6 +1396,16 @@
               </div>
             </div>
           </div>
+          <div class="compensation-ratio-planner">
+            <div class="ratio-readout" aria-live="polite">
+              <span>目前固定薪酬（依保證薪資月數）</span>
+              <strong id="currentFixedPercent">175.0 萬（70.0%）</strong>
+            </div>
+            <div class="ratio-readout" aria-live="polite">
+              <span>目前動態薪酬（依浮動配置）</span>
+              <strong id="currentVariablePercent">75.0 萬（30.0%）</strong>
+            </div>
+          </div>
           <p class="goal-validation" id="goalValidation" aria-live="polite"></p>
         </fieldset>
 
@@ -1325,7 +1415,7 @@
             <div class="field">
               <label for="monthlySalary">固定月薪</label>
               <div class="input-wrap">
-                <input id="monthlySalary" name="monthlySalary" type="number" min="0" step="0.1" value="16.5" inputmode="decimal">
+                <input id="monthlySalary" name="monthlySalary" type="number" min="0" step="0.1" value="12.5" inputmode="decimal">
                 <span class="unit">萬元</span>
               </div>
             </div>
@@ -1335,6 +1425,7 @@
                 <input id="guaranteedMonths" name="guaranteedMonths" type="number" min="0" step="0.5" value="14" inputmode="decimal">
                 <span class="unit">個月</span>
               </div>
+              <p class="field-note">固定保證年薪依此月數計算</p>
             </div>
             <div class="field">
               <label for="otherFixed">其他固定報酬</label>
@@ -1362,7 +1453,7 @@
             <div class="field">
               <label for="performanceBonus" id="performanceBonusLabel">績效獎金月數</label>
               <div class="input-wrap">
-                <input id="performanceBonus" name="performanceBonus" type="number" min="0" step="0.1" value="1" inputmode="decimal">
+                <input id="performanceBonus" name="performanceBonus" type="number" min="0" step="0.1" value="6" inputmode="decimal">
                 <span class="unit" id="performanceBonusUnit">個月</span>
               </div>
             </div>
@@ -1396,8 +1487,8 @@
         <div class="summary-hero">
           <div>
             <span class="label" id="summaryTitle">第二年起預估 Total Compensation</span>
-            <p class="hero-number"><span id="recurringTotal">247.5</span><small>萬元／年</small></p>
-            <p class="hero-sub" id="summaryDifference">已高於保守目標 7.5 萬元</p>
+            <p class="hero-number"><span id="recurringTotal">250.0</span><small>萬元／年</small></p>
+            <p class="hero-sub" id="summaryDifference">已高於保守目標 10.0 萬元</p>
           </div>
           <div class="status-badge" id="summaryStatus">已達標</div>
         </div>
@@ -1406,19 +1497,15 @@
           <div class="metric-grid">
             <div class="metric">
               <span>固定保證年薪</span>
-              <strong id="guaranteedTotal">231.0 萬</strong>
+              <strong id="guaranteedTotal">175.0 萬（70.0%）</strong>
             </div>
             <div class="metric">
               <span>年度浮動薪酬</span>
-              <strong id="variableTotal">16.5 萬</strong>
+              <strong id="variableTotal">75.0 萬（30.0%）</strong>
             </div>
-            <div class="metric">
+            <div class="metric metric-wide">
               <span>第一年總包</span>
-              <strong id="firstYearTotal">247.5 萬</strong>
-            </div>
-            <div class="metric">
-              <span>浮動薪酬占比</span>
-              <strong id="variableRatio">6.7%</strong>
+              <strong id="firstYearTotal">250.0 萬</strong>
             </div>
             <div class="metric metric-wide monthly-estimate-card">
               <div class="monthly-estimate-head">
@@ -1428,23 +1515,23 @@
               <div class="monthly-estimate-grid">
                 <div class="monthly-estimate">
                   <span>平均 12 個月</span>
-                  <strong id="resultMonthly12">20.63 萬／月</strong>
+                  <strong id="resultMonthly12">20.83 萬／月</strong>
                   <small>第二年起 TC ÷ 12</small>
                 </div>
                 <div class="monthly-estimate">
                   <span id="resultGuaranteedLabel">依保證 14 個月</span>
-                  <strong id="resultMonthlyGuaranteed">17.68 萬／月</strong>
+                  <strong id="resultMonthlyGuaranteed">17.86 萬／月</strong>
                   <small id="resultGuaranteedFormula">第二年起 TC ÷ 14</small>
                 </div>
                 <div class="monthly-estimate">
-                  <span id="resultCompMonthsLabel">依保證＋績效 15 個月</span>
-                  <strong id="resultMonthlyCompMonths">16.50 萬／月</strong>
-                  <small id="resultCompMonthsFormula">第二年起 TC ÷ 15</small>
+                  <span id="resultCompMonthsLabel">依保證＋績效 20 個月</span>
+                  <strong id="resultMonthlyCompMonths">12.50 萬／月</strong>
+                  <small id="resultCompMonthsFormula">第二年起 TC ÷ 20</small>
                 </div>
                 <div class="monthly-estimate">
                   <span>依固定月薪反推年薪月數</span>
-                  <strong id="resultEquivalentMonths">約 15.00 個月／年</strong>
-                  <small id="resultEquivalentMonthsFormula">247.5 ÷ 固定月薪 16.5</small>
+                  <strong id="resultEquivalentMonths">約 20.00 個月／年</strong>
+                  <small id="resultEquivalentMonthsFormula">250.0 ÷ 固定月薪 12.5</small>
                 </div>
               </div>
             </div>
@@ -1453,14 +1540,14 @@
           <div class="progress-area">
             <div class="progress-head">
               <span>保守目標達成度</span>
-              <strong id="progressLabel">103.1%</strong>
+              <strong id="progressLabel">104.2%</strong>
             </div>
-            <div class="progress-track" role="progressbar" aria-label="保守目標達成度" aria-valuemin="0" aria-valuemax="100" aria-valuenow="100" aria-valuetext="103.1%" id="progressTrack">
+            <div class="progress-track" role="progressbar" aria-label="保守目標達成度" aria-valuemin="0" aria-valuemax="100" aria-valuenow="100" aria-valuetext="104.2%" id="progressTrack">
               <div class="progress-fill" id="progressFill"></div>
             </div>
           </div>
 
-          <div class="risk-note" id="riskNote">目前浮動薪酬占比低於 20%，薪酬結構相對穩定；仍應確認績效獎金的實際發放條件。</div>
+          <div class="risk-note" id="riskNote">浮動薪酬占比 30.0%，風險偏高。請確認獎金、RSU 與分紅是否保證，以及歷年實際發放情況。</div>
         </div>
       </section>
     </div>
@@ -1663,6 +1750,31 @@
 
       const monthlyEstimateText = (value) => value === null ? "不適用" : `${format(value, 2)} 萬`;
 
+      const compensationMixFor = (fixedAmount, variableAmount) => {
+        const safeFixedAmount = Math.max(0, fixedAmount);
+        const safeVariableAmount = Math.max(0, variableAmount);
+        const total = safeFixedAmount + safeVariableAmount;
+        return {
+          fixedAmount: safeFixedAmount,
+          variableAmount: safeVariableAmount,
+          fixedPercent: total > 0 ? safeFixedAmount / total * 100 : 0,
+          variablePercent: total > 0 ? safeVariableAmount / total * 100 : 0
+        };
+      };
+
+      const targetCompensationMixFor = (target, actual) => {
+        const safeTarget = Math.max(0, target);
+        const fixedAmount = Math.min(actual.guaranteed, safeTarget);
+        const variableAmount = Math.max(0, safeTarget - fixedAmount);
+        return {
+          fixedAmount,
+          variableAmount,
+          fixedPercent: safeTarget > 0 ? fixedAmount / safeTarget * 100 : 0,
+          variablePercent: safeTarget > 0 ? variableAmount / safeTarget * 100 : 0,
+          fixedExceedsTarget: actual.guaranteed > safeTarget
+        };
+      };
+
       const signedFormat = (value) => {
         const safe = Number.isFinite(value) ? value : 0;
         const prefix = safe > 0 ? "+" : safe < 0 ? "−" : "";
@@ -1683,7 +1795,8 @@
         const firstYear = recurring + input.signOnBonus;
         const variableRatio = recurring > 0 ? variable / recurring * 100 : 0;
         const monthlyEstimates = monthlyEstimatesFor(recurring, input);
-        return { performance, guaranteed, variable, recurring, firstYear, variableRatio, monthlyEstimates };
+        const compensationMix = compensationMixFor(guaranteed, variable);
+        return { performance, guaranteed, variable, recurring, firstYear, variableRatio, monthlyEstimates, compensationMix };
       };
 
       const requiredMonthly = (target, input) => {
@@ -1702,8 +1815,8 @@
 
       const createScenarioCard = (name, target, color, input, actual) => {
         const neededMonthly = requiredMonthly(target, input);
-        const projected = calculate(input, neededMonthly);
         const targetMonthly = monthlyEstimatesFor(target, input);
+        const targetMix = targetCompensationMixFor(target, actual);
         const compMonthsMatchesFixed = targetMonthly.perCompensationMonths !== null
           && format(targetMonthly.perCompensationMonths, 2) === format(neededMonthly, 2);
         const delta = actual.recurring - target;
@@ -1727,10 +1840,16 @@
               <div><dt>依固定月薪 ${format(input.monthlySalary, 1)} 萬反推</dt><dd>${targetMonthly.equivalentSalaryMonths === null ? "不適用" : `約 ${format(targetMonthly.equivalentSalaryMonths, 2)} 個月／年`}</dd></div>
             </dl>
           </div>
+          <div class="scenario-compensation-mix">
+            <strong>依目前固定薪酬推算</strong>
+            <dl>
+              <div><dt>固定薪酬</dt><dd>${format(targetMix.fixedAmount, 1)} 萬（${format(targetMix.fixedPercent, 1)}%）</dd></div>
+              <div><dt>目標所需動態薪酬</dt><dd>${format(targetMix.variableAmount, 1)} 萬（${format(targetMix.variablePercent, 1)}%）</dd></div>
+            </dl>
+            ${targetMix.fixedExceedsTarget ? '<small class="field-note">目前固定薪酬已高於此目標。</small>' : ""}
+          </div>
           <dl class="scenario-list">
-            <div><dt>固定保證收入</dt><dd>${format(projected.guaranteed, 1)} 萬</dd></div>
-            <div><dt>預估浮動收入</dt><dd>${format(projected.variable, 1)} 萬</dd></div>
-            <div><dt>目前方案差額</dt><dd class="${delta >= 0 ? "delta-positive" : "delta-negative"}">${signedFormat(delta)}</dd></div>
+            <div><dt>依目前動態配置差額</dt><dd class="${delta >= 0 ? "delta-positive" : "delta-negative"}">${signedFormat(delta)}</dd></div>
           </dl>`;
         return article;
       };
@@ -1783,10 +1902,11 @@
         const progress = input.goalConservative > 0 ? actual.recurring / input.goalConservative * 100 : 100;
 
         document.getElementById("recurringTotal").textContent = format(actual.recurring, 1);
-        document.getElementById("guaranteedTotal").textContent = `${format(actual.guaranteed, 1)} 萬`;
-        document.getElementById("variableTotal").textContent = `${format(actual.variable, 1)} 萬`;
+        document.getElementById("guaranteedTotal").textContent = `${format(actual.guaranteed, 1)} 萬（${format(actual.compensationMix.fixedPercent, 1)}%）`;
+        document.getElementById("variableTotal").textContent = `${format(actual.variable, 1)} 萬（${format(actual.variableRatio, 1)}%）`;
         document.getElementById("firstYearTotal").textContent = `${format(actual.firstYear, 1)} 萬`;
-        document.getElementById("variableRatio").textContent = `${format(actual.variableRatio, 1)}%`;
+        document.getElementById("currentFixedPercent").textContent = `${format(actual.guaranteed, 1)} 萬（${format(actual.compensationMix.fixedPercent, 1)}%）`;
+        document.getElementById("currentVariablePercent").textContent = `${format(actual.variable, 1)} 萬（${format(actual.compensationMix.variablePercent, 1)}%）`;
         document.getElementById("resultMonthly12").textContent = `${monthlyEstimateText(actual.monthlyEstimates.per12)}／月`;
         document.getElementById("resultGuaranteedLabel").textContent = input.guaranteedMonths > 0
           ? `依保證 ${formatMonths(input.guaranteedMonths)} 個月`
@@ -1977,12 +2097,11 @@
             ["績效獎金", `${format(actual.performance, 1)} 萬／年`],
             ["到職獎金", `${format(input.signOnBonus, 1)} 萬（僅第一年）`],
             ["RSU／員工分紅", `${format(input.equity, 1)} 萬／年`],
-            ["其他浮動報酬", `${format(input.otherVariable, 1)} 萬／年`],
-            ["浮動薪酬占比", `${format(actual.variableRatio, 1)}%`]
+            ["其他浮動報酬", `${format(input.otherVariable, 1)} 萬／年`]
           ]);
           informationGrid([
-            ["固定保證年薪", `${format(actual.guaranteed, 1)} 萬`],
-            ["年度浮動薪酬", `${format(actual.variable, 1)} 萬`],
+            ["固定保證年薪", `${format(actual.guaranteed, 1)} 萬（${format(actual.compensationMix.fixedPercent, 1)}%）`],
+            ["年度浮動薪酬", `${format(actual.variable, 1)} 萬（${format(actual.variableRatio, 1)}%）`],
             ["第一年總包", `${format(actual.firstYear, 1)} 萬`],
             ["第二年起總包", `${format(actual.recurring, 1)} 萬`],
             ["TC ÷ 12 個月", `${format(actual.monthlyEstimates.per12, 2)} 萬／月`],
@@ -1992,15 +2111,16 @@
             ["TC 相當固定月薪月數", actual.monthlyEstimates.equivalentSalaryMonths === null ? "不適用" : `約 ${format(actual.monthlyEstimates.equivalentSalaryMonths, 2)} 個月／年`]
           ]);
 
-          sectionTitle("二、三種談判目標", "比較三種月均口徑，並依目前薪酬結構反推固定月薪");
+          sectionTitle("二、三種談判目標", "以目前固定薪酬推算目標所需動態薪酬，差額納入目前浮動配置");
           [input.goalConservative, input.goalTarget, input.goalIdeal].forEach((target, index) => {
             const targetMonthly = monthlyEstimatesFor(target, input);
             const neededMonthly = requiredMonthly(target, input);
+            const targetMix = targetCompensationMixFor(target, actual);
             const compMonthsMatchesFixed = targetMonthly.perCompensationMonths !== null
               && format(targetMonthly.perCompensationMonths, 2) === format(neededMonthly, 2);
             const cardWidth = (contentWidth - 44) / 3;
             const x = left + index * (cardWidth + 22);
-            reportRoundedRect(ctx, x, y, cardWidth, 390, 20, "#fffdf8");
+            reportRoundedRect(ctx, x, y, cardWidth, 460, 20, "#fffdf8");
             ctx.fillStyle = scenarioColors[index];
             ctx.fillRect(x, y, cardWidth, 7);
             ctx.fillStyle = "#657086";
@@ -2018,16 +2138,18 @@
               : `÷ 保證＋績效 ${formatMonths(targetMonthly.compensationMonths)} 月：${targetMonthly.perCompensationMonths === null ? "不適用" : `${format(targetMonthly.perCompensationMonths, 2)} 萬／月`}`,
               x + 25, y + 225);
             ctx.fillText(`月薪反推：${targetMonthly.equivalentSalaryMonths === null ? "不適用" : `約 ${format(targetMonthly.equivalentSalaryMonths, 2)} 月／年`}`, x + 25, y + 262);
+            ctx.fillText(`固定：${format(targetMix.fixedAmount, 1)} 萬（${format(targetMix.fixedPercent, 1)}%）`, x + 25, y + 305);
+            ctx.fillText(`所需動態：${format(targetMix.variableAmount, 1)} 萬（${format(targetMix.variablePercent, 1)}%）`, x + 25, y + 342);
             ctx.fillStyle = "#17284b";
             ctx.font = `700 19px ${reportFont}`;
             if (!compMonthsMatchesFixed) {
-              ctx.fillText(`反推固定月薪 ${format(neededMonthly, 2)} 萬`, x + 25, y + 305);
+              ctx.fillText(`反推固定月薪 ${format(neededMonthly, 2)} 萬`, x + 25, y + 385);
             }
             const targetDelta = actual.recurring - target;
             ctx.fillStyle = targetDelta >= 0 ? "#14745a" : "#a23b3b";
-            ctx.fillText(`目前差額 ${signedFormat(targetDelta)}`, x + 25, y + 348);
+            ctx.fillText(`目前差額 ${signedFormat(targetDelta)}`, x + 25, y + 428);
           });
-          y += 438;
+          y += 508;
 
           sectionTitle("三、可直接對 HR 說");
           const talkText = document.getElementById("talkText").textContent;
@@ -2157,11 +2279,13 @@
         const scenarios = [input.goalConservative, input.goalTarget, input.goalIdeal].map((target, index) => {
           const neededMonthly = requiredMonthly(target, input);
           const monthlyEstimates = monthlyEstimatesFor(target, input);
+          const compensationMix = targetCompensationMixFor(target, actual);
           return {
             name: scenarioNames[index],
             target,
             neededMonthly,
             monthlyEstimates,
+            compensationMix,
             compMonthsMatchesFixed: monthlyEstimates.perCompensationMonths !== null
               && format(monthlyEstimates.perCompensationMonths, 2) === format(neededMonthly, 2),
             delta: actual.recurring - target,
@@ -2182,8 +2306,10 @@
           `- 月均估算（目標 TC ÷ 保證 ${formatMonths(scenario.monthlyEstimates.guaranteedMonths)} 個月）：${scenario.monthlyEstimates.perGuaranteed === null ? "不適用" : `${format(scenario.monthlyEstimates.perGuaranteed, 2)} 萬元／月`}`,
           `- 月均估算（${scenario.monthlyEstimates.compensationMonths === null ? "績效獎金目前以金額輸入" : `目標 TC ÷ 保證＋績效 ${formatMonths(scenario.monthlyEstimates.compensationMonths)} 個月`}）：${scenario.monthlyEstimates.perCompensationMonths === null ? "不適用" : `${format(scenario.monthlyEstimates.perCompensationMonths, 2)} 萬元／月`}`,
           `- 依固定月薪 ${format(input.monthlySalary, 1)} 萬元反推：${scenario.monthlyEstimates.equivalentSalaryMonths === null ? "不適用" : `約 ${format(scenario.monthlyEstimates.equivalentSalaryMonths, 2)} 個月／年`}`,
+          `- 固定薪酬：${format(scenario.compensationMix.fixedAmount, 1)} 萬元（${format(scenario.compensationMix.fixedPercent, 1)}%）`,
+          `- 目標所需動態薪酬：${format(scenario.compensationMix.variableAmount, 1)} 萬元（${format(scenario.compensationMix.variablePercent, 1)}%）`,
           scenario.compMonthsMatchesFixed ? "" : `- 依目前薪酬結構反推固定月薪：${format(scenario.neededMonthly, 2)} 萬元`,
-          `- 目前第二年起總包差額：${signedFormat(scenario.delta)}`,
+          `- 依目前動態配置計算的總包差額：${signedFormat(scenario.delta)}`,
           `- 狀態：${scenario.status}`
         ].filter(Boolean).join("\n")).join("\n\n");
         const industryMarkdown = industry.items.map((item) => `- ${item}`).join("\n");
@@ -2199,8 +2325,8 @@
           "## 一、薪資結構",
           `- 固定月薪：${format(input.monthlySalary, 2)} 萬元`,
           `- 保證薪資月數：${format(input.guaranteedMonths, 1)} 個月`,
-          `- 固定保證年薪：${format(actual.guaranteed, 1)} 萬元`,
-          `- 年度浮動薪酬：${format(actual.variable, 1)} 萬元`,
+          `- 固定保證年薪：${format(actual.guaranteed, 1)} 萬元（${format(actual.compensationMix.fixedPercent, 1)}%）`,
+          `- 年度浮動薪酬：${format(actual.variable, 1)} 萬元（${format(actual.variableRatio, 1)}%）`,
           `- 到職獎金（僅第一年）：${format(input.signOnBonus, 1)} 萬元`,
           `- 第一年 Total Compensation：${format(actual.firstYear, 1)} 萬元`,
           `- 第二年起 Total Compensation：${format(actual.recurring, 1)} 萬元`,
@@ -2209,7 +2335,6 @@
           `- 月均估算（${actual.monthlyEstimates.compensationMonths === null ? "績效獎金目前以金額輸入" : `第二年起 TC ÷ 保證＋績效 ${formatMonths(actual.monthlyEstimates.compensationMonths)} 個月`}）：${actual.monthlyEstimates.perCompensationMonths === null ? "不適用" : `${format(actual.monthlyEstimates.perCompensationMonths, 2)} 萬元／月`}`,
           `- 依固定月薪 ${format(input.monthlySalary, 1)} 萬元反推：${actual.monthlyEstimates.equivalentSalaryMonths === null ? "不適用" : `約 ${format(actual.monthlyEstimates.equivalentSalaryMonths, 2)} 個月／年`}`,
           "- 月均估算說明：包含浮動報酬，僅供跨方案比較，不代表契約固定月薪。",
-          `- 浮動薪酬占比：${format(actual.variableRatio, 1)}%`,
           "",
           "## 二、談判目標",
           scenarioMarkdown,
@@ -2345,10 +2470,23 @@
             && state.fields.goalConservative === "250"
             && state.fields.goalTarget === "260"
             && state.fields.goalIdeal === "270";
+          const migratedOldMonthlyDefault = state.fields
+            && ["16.5", "12"].includes(state.fields.monthlySalary);
+          const migratedOldPerformanceDefault = state.fields
+            && state.fields.bonusMode === "months"
+            && state.fields.performanceBonus === "1";
           if (migratedOldGoalDefaults) {
             state.fields.goalConservative = "240";
             state.fields.goalTarget = "250";
             state.fields.goalIdeal = "260";
+          }
+          if (migratedOldMonthlyDefault) {
+            state.fields.monthlySalary = "12.5";
+          }
+          if (migratedOldPerformanceDefault) {
+            state.fields.performanceBonus = "6";
+          }
+          if (migratedOldGoalDefaults || migratedOldMonthlyDefault || migratedOldPerformanceDefault) {
             localStorage.setItem(storageKey, JSON.stringify(state));
           }
           ids.forEach((id) => {
@@ -2363,8 +2501,8 @@
             control.checked = savedItem.checked === true;
             checklistNotes[index].value = typeof savedItem.note === "string" ? savedItem.note : "";
           });
-          document.getElementById("storageStatus").textContent = migratedOldGoalDefaults
-            ? "已套用新版預設目標：保守 240、目標 250、理想 260 萬元。"
+          document.getElementById("storageStatus").textContent = migratedOldGoalDefaults || migratedOldMonthlyDefault || migratedOldPerformanceDefault
+            ? "已套用新版預設：固定月薪 12.5 萬元、績效獎金 6 個月，目標為 240／250／260 萬元。"
             : "已還原上次儲存在此瀏覽器的資料。";
           return true;
         } catch (_) {
