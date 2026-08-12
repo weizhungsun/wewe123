@@ -24,6 +24,7 @@
       --red: #a23b3b;
       --red-soft: #fae3e1;
       --shadow: 0 18px 50px rgba(23, 40, 75, 0.09);
+      --shadow-soft: 0 12px 34px rgba(23, 40, 75, 0.07);
       --radius-lg: 24px;
       --radius-md: 16px;
       --radius-sm: 10px;
@@ -189,7 +190,8 @@
     }
 
     #salaryWorkspace,
-    #scenarioSection,
+    #salaryTabs,
+    #comparisonPanel,
     #supportSection,
     #notesSection { scroll-margin-top: 5.5rem; }
 
@@ -386,6 +388,139 @@
     }
 
     .field { min-width: 0; }
+
+    .global-settings { margin-bottom: 1rem; }
+
+    .salary-tabs {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 0.4rem;
+      margin-bottom: 1rem;
+      padding: 0.4rem;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-md);
+      background: #e9edf3;
+    }
+
+    .salary-flow-header {
+      display: flex;
+      justify-content: space-between;
+      gap: 1rem;
+      align-items: end;
+      margin: 1.35rem 0 0.65rem;
+    }
+
+    .salary-flow-header strong {
+      display: block;
+      color: var(--navy);
+      font-size: 1rem;
+    }
+
+    .salary-flow-header span {
+      display: block;
+      margin-top: 0.15rem;
+      color: var(--muted);
+      font-size: 0.76rem;
+    }
+
+    .salary-tabs button {
+      min-height: 46px;
+      border: 0;
+      border-radius: var(--radius-sm);
+      background: transparent;
+      color: var(--muted);
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    .salary-tabs button[aria-selected="true"] {
+      background: #fff;
+      color: var(--navy);
+      box-shadow: 0 4px 14px rgba(23,40,75,.1);
+    }
+
+    .salary-tab-panel[hidden] { display: none !important; }
+    .salary-tab-panel { margin-bottom: 1.4rem; }
+    .panel-actions { display: flex; gap: 0.45rem; flex-wrap: wrap; justify-content: flex-end; }
+
+    .comparison-panel {
+      padding: 1.3rem;
+      border: 1px solid #bcc9da;
+      border-radius: var(--radius-lg);
+      background: #edf3f9;
+      box-shadow: var(--shadow-soft);
+    }
+
+    .comparison-overview {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 0.75rem;
+      margin-bottom: 1rem;
+    }
+
+    .comparison-insight {
+      margin: 0 0 1rem;
+      padding: 0.8rem 0.95rem;
+      border-left: 4px solid #5873a4;
+      border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+      background: #f7f9fc;
+      color: #3f4b61;
+      font-size: 0.78rem;
+      font-weight: 700;
+    }
+
+    .comparison-insight.is-positive { border-left-color: var(--green); background: var(--green-soft); color: #175f4d; }
+    .comparison-insight.is-negative { border-left-color: var(--red); background: var(--red-soft); color: #7e302f; }
+
+    .comparison-highlight {
+      min-width: 0;
+      padding: 0.9rem 1rem;
+      border: 1px solid #cbd5e2;
+      border-radius: var(--radius-md);
+      background: #fff;
+    }
+
+    .comparison-highlight > span {
+      display: block;
+      color: var(--muted);
+      font-size: 0.72rem;
+      font-weight: 720;
+    }
+
+    .comparison-highlight strong {
+      display: block;
+      margin-top: 0.2rem;
+      color: var(--navy);
+      font-size: 1.25rem;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .comparison-highlight small {
+      display: block;
+      margin-top: 0.25rem;
+      color: var(--muted);
+      font-size: 0.68rem;
+    }
+
+    .comparison-scroll-hint {
+      display: none;
+      margin: 0 0 0.45rem;
+      color: var(--muted);
+      font-size: 0.7rem;
+      font-weight: 700;
+    }
+
+    .comparison-table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: var(--radius-md); background: #fff; }
+    .comparison-table { width: 100%; min-width: 780px; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+    .comparison-table th, .comparison-table td { padding: 0.75rem 0.8rem; border-bottom: 1px solid var(--line); text-align: right; }
+    .comparison-table th:first-child, .comparison-table td:first-child { text-align: left; }
+    .comparison-table thead th { background: #f4f6f9; color: var(--muted); font-size: 0.72rem; }
+    .comparison-table tbody th { color: var(--ink); font-size: 0.76rem; }
+    .comparison-table td { color: var(--navy); font-size: 0.76rem; font-weight: 720; }
+    .comparison-table .delta-positive { color: var(--green); }
+    .comparison-table .delta-negative { color: var(--red); }
+    .comparison-table .comparison-group th { background: #f8f1e3; color: #74571f; letter-spacing: .04em; }
+    .benchmark-heading { margin-top: 1.5rem; }
 
     .field label {
       display: block;
@@ -775,6 +910,12 @@
       letter-spacing: -0.04em;
     }
 
+    .scenario-top .scenario-target {
+      margin: 0;
+      font-size: 1.3rem;
+      white-space: nowrap;
+    }
+
     .scenario-target small {
       color: var(--muted);
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
@@ -903,6 +1044,44 @@
       font-weight: 760;
       font-variant-numeric: tabular-nums;
       text-align: right;
+    }
+
+    .benchmark-scheme {
+      margin-top: 0.75rem;
+      padding: 0.8rem;
+      border: 1px solid #dce1e8;
+      border-radius: var(--radius-sm);
+      background: #f8fafc;
+    }
+
+    .benchmark-scheme.target { border-color: #d8c9a5; background: #fffaf0; }
+
+    .benchmark-scheme-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 0.5rem;
+      align-items: center;
+    }
+
+    .benchmark-scheme-head > span:first-child {
+      color: var(--muted);
+      font-size: 0.72rem;
+      font-weight: 800;
+    }
+
+    .benchmark-scheme strong {
+      display: block;
+      margin-top: 0.45rem;
+      color: var(--navy);
+      font-size: 1.1rem;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .benchmark-scheme small {
+      display: block;
+      margin-top: 0.15rem;
+      font-size: 0.7rem;
+      font-weight: 720;
     }
 
     .delta-positive { color: var(--green) !important; }
@@ -1217,6 +1396,7 @@
       .scenario-grid { grid-template-columns: 1fr; }
       .support-grid { grid-template-columns: 1fr; }
       .notes-layout { grid-template-columns: 1fr; }
+      .comparison-overview { grid-template-columns: 1fr; }
       .section-title-row { align-items: start; }
       .section-title-row p { text-align: left; }
     }
@@ -1226,19 +1406,35 @@
       .app-shell { width: min(1180px, calc(100% - 1.1rem - env(safe-area-inset-left) - env(safe-area-inset-right))); }
       .header-inner { padding: calc(2.6rem + env(safe-area-inset-top)) 0 2.25rem; }
       .app-shell { padding-top: 1rem; }
-      .section-nav { top: 0.45rem; margin-inline: -0.1rem; border-radius: var(--radius-md); }
+      .section-nav { position: static; margin-inline: -0.1rem; border-radius: var(--radius-md); }
       .section-nav a { flex: 0 0 auto; min-height: 42px; padding-inline: 0.75rem; }
       .input-panel, .summary-body, .summary-hero { padding: 1.05rem; }
       .scenario-section, .support-section, .notes-section { padding: 1rem; border-radius: var(--radius-md); }
       .goal-grid, .field-grid, .metric-grid { grid-template-columns: 1fr; }
+      .salary-tabs { position: sticky; top: 0.45rem; z-index: 10; }
+      .salary-tabs button { min-height: 42px; font-size: 0.75rem; }
+      .salary-flow-header { display: block; }
+      .comparison-scroll-hint { display: block; }
+      .comparison-table th:first-child,
+      .comparison-table td:first-child {
+        position: sticky;
+        left: 0;
+        z-index: 1;
+        background: #fff;
+        box-shadow: 1px 0 0 var(--line);
+      }
+      .comparison-table thead th:first-child { z-index: 2; background: #f4f6f9; }
+      .comparison-table .comparison-group th { position: static; box-shadow: none; background: #f8f1e3; }
+      .panel-actions { justify-content: flex-start; margin-top: 0.6rem; }
       .compensation-ratio-planner { grid-template-columns: 1fr; }
       .monthly-estimate-grid { grid-template-columns: 1fr; }
       .monthly-estimate span { min-height: 0; }
       .monthly-estimate-head { display: block; }
       .monthly-estimate-head > small { margin-top: 0.25rem; text-align: left; }
       .export-toolbar { display: block; }
-      .export-actions { display: grid; grid-template-columns: 1fr; margin-top: 0.7rem; }
-      .export-button { width: 100%; min-height: 48px; }
+      .export-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); margin-top: 0.7rem; }
+      .export-button { width: 100%; min-height: 46px; padding-inline: 0.55rem; font-size: 0.72rem; }
+      #clearAllData { grid-column: 1 / -1; }
       .confirm-grid { grid-template-columns: 1fr; }
       .check-note { min-height: 64px; font-size: 16px; }
       .summary-hero { grid-template-columns: 1fr; }
@@ -1277,9 +1473,13 @@
       .confirm-grid li { break-inside: avoid; }
       .check-note { min-height: 12mm; resize: none; background: #fff; }
       .input-wrap input, .input-wrap select { min-height: 9mm; padding-block: 1.5mm; }
-      .scenario-section { break-before: auto; margin-top: 6mm; }
+      .comparison-panel { break-before: page; margin-top: 6mm; }
       .support-section, .notes-section { break-before: page; margin-top: 0; }
-      .scenario-section, .support-section, .notes-section { padding: 0; border: 0; background: #fff; box-shadow: none; }
+      .comparison-panel, .support-section, .notes-section { padding: 0; border: 0; background: #fff; box-shadow: none; }
+      .salary-tabs { display: none; }
+      .salary-tab-panel[hidden] { display: block !important; }
+      .comparison-table { min-width: 0; font-size: 6.5pt; }
+      .comparison-table th, .comparison-table td { padding: 1.5mm; }
       .scenario-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 3mm; }
       .scenario-card { margin-bottom: 0; padding: 3mm; font-size: 7pt; }
       .scenario-target { margin-top: 3mm; font-size: 18pt; }
@@ -1318,7 +1518,7 @@
       <div>
         <p class="eyebrow">Compensation Briefing Tool</p>
         <h1>薪資談判，不只看一個數字。</h1>
-        <p class="header-copy">把固定薪、獎金與一次性項目拆清楚，在 HR 問到期望薪資時，立即知道方案離目標還有多遠。</p>
+        <p class="header-copy">把現在薪資與目標薪資分開拆解，立即看懂固定、浮動、第一年總包與長期差額。</p>
       </div>
       <div class="privacy-chip" aria-label="離線工具，資料僅儲存在目前瀏覽器">離線運作 · 僅存本機</div>
     </div>
@@ -1326,8 +1526,8 @@
 
   <main class="app-shell" id="calculator">
     <nav class="section-nav" aria-label="頁面區塊快速導覽">
-      <a class="is-active" href="#salaryWorkspace" data-section-link="salaryWorkspace" aria-current="location">計算與結果</a>
-      <a href="#scenarioSection" data-section-link="scenarioSection">三種目標</a>
+      <a class="is-active" href="#salaryWorkspace" data-section-link="salaryWorkspace" aria-current="location">共同設定</a>
+      <a href="#salaryTabs" data-section-link="salaryTabs">薪酬方案</a>
       <a href="#supportSection" data-section-link="supportSection">面談輔助</a>
       <a href="#notesSection" data-section-link="notesSection">備忘與 Q&amp;A</a>
     </nav>
@@ -1336,7 +1536,7 @@
       <p id="storageStatus" aria-live="polite">輸入內容會自動儲存在此瀏覽器，不會上傳薪資資料。</p>
       <div class="export-actions">
         <button class="export-button secondary" type="button" id="exportPdf">列印／另存 PDF</button>
-        <button class="export-button" type="button" id="exportImage">下載完整報告 PNG</button>
+        <button class="export-button secondary" type="button" id="exportImage">下載完整報告 PNG</button>
         <button class="export-button secondary" type="button" id="downloadMarkdown">下載 Markdown</button>
         <button class="export-button secondary" type="button" id="copyResults">複製完整結果</button>
         <button class="export-button secondary danger" type="button" id="clearAllData">清除所有資料</button>
@@ -1344,14 +1544,13 @@
       <p class="export-feedback" aria-live="polite" id="exportStatus"></p>
     </div>
 
-    <div class="workspace" id="salaryWorkspace">
-      <form class="panel input-panel" id="salaryForm" novalidate>
+    <form id="salaryForm" novalidate>
+      <section class="panel input-panel global-settings" id="salaryWorkspace" aria-labelledby="globalSettingsTitle">
         <div class="section-heading">
           <div>
-            <h2>薪酬條件</h2>
-            <p>所有金額以新台幣「萬元」輸入</p>
+            <h2 id="globalSettingsTitle">共同設定</h2>
+            <p>產業、日期與三種談判基準會套用到兩套薪酬方案</p>
           </div>
-          <button class="text-button" type="reset">回復預設</button>
         </div>
 
         <fieldset class="field-group">
@@ -1368,197 +1567,161 @@
               </div>
               <p class="field-note">用於調整談判備忘，不會改變薪資公式</p>
             </div>
+            <div class="field">
+              <label for="datePlannerStart">基準日期</label>
+              <div class="input-wrap">
+                <input id="datePlannerStart" name="datePlannerStart" type="date">
+              </div>
+              <p class="field-note">預設為今天，基準日視為 D+0</p>
+            </div>
+            <div class="field">
+              <label for="datePlannerOffset">經過天數</label>
+              <div class="input-wrap">
+                <input id="datePlannerOffset" name="datePlannerOffset" type="number" min="0" max="3650" step="1" value="45" inputmode="numeric">
+                <span class="unit">天</span>
+              </div>
+            </div>
+            <div class="ratio-readout" aria-live="polite">
+              <span id="datePlannerLabel">D+45 到期日</span>
+              <strong id="datePlannerResult">—</strong>
+            </div>
           </div>
         </fieldset>
 
         <fieldset class="field-group">
-          <legend>談判目標</legend>
+          <legend>年度 TC 基準</legend>
           <div class="goal-grid">
             <div class="field">
-              <label for="goalConservative">保守目標</label>
+              <label for="goalConservative">保守基準</label>
               <div class="input-wrap">
                 <input id="goalConservative" name="goalConservative" type="number" min="0" step="1" value="240" inputmode="decimal">
                 <span class="unit">萬元</span>
               </div>
             </div>
             <div class="field">
-              <label for="goalTarget">目標上緣</label>
+              <label for="goalTarget">目標基準</label>
               <div class="input-wrap">
                 <input id="goalTarget" name="goalTarget" type="number" min="0" step="1" value="250" inputmode="decimal">
                 <span class="unit">萬元</span>
               </div>
             </div>
             <div class="field">
-              <label for="goalIdeal">理想條件</label>
+              <label for="goalIdeal">理想基準</label>
               <div class="input-wrap">
                 <input id="goalIdeal" name="goalIdeal" type="number" min="0" step="1" value="260" inputmode="decimal">
                 <span class="unit">萬元</span>
               </div>
             </div>
           </div>
-          <div class="compensation-ratio-planner">
-            <div class="ratio-readout" aria-live="polite">
-              <span>目前固定薪酬（依保證薪資月數）</span>
-              <strong id="currentFixedPercent">175.0 萬（70.0%）</strong>
-            </div>
-            <div class="ratio-readout" aria-live="polite">
-              <span>目前動態薪酬（依浮動配置）</span>
-              <strong id="currentVariablePercent">75.0 萬（30.0%）</strong>
-            </div>
-          </div>
           <p class="goal-validation" id="goalValidation" aria-live="polite"></p>
         </fieldset>
+      </section>
 
-        <fieldset class="field-group">
-          <legend>固定與保證收入</legend>
-          <div class="field-grid">
-            <div class="field">
-              <label for="monthlySalary">固定月薪</label>
-              <div class="input-wrap">
-                <input id="monthlySalary" name="monthlySalary" type="number" min="0" step="0.1" value="12.5" inputmode="decimal">
-                <span class="unit">萬元</span>
-              </div>
-            </div>
-            <div class="field">
-              <label for="guaranteedMonths">保證薪資月數</label>
-              <div class="input-wrap">
-                <input id="guaranteedMonths" name="guaranteedMonths" type="number" min="0" step="0.5" value="14" inputmode="decimal">
-                <span class="unit">個月</span>
-              </div>
-              <p class="field-note">固定保證年薪依此月數計算</p>
-            </div>
-            <div class="field">
-              <label for="otherFixed">其他固定報酬</label>
-              <div class="input-wrap">
-                <input id="otherFixed" name="otherFixed" type="number" min="0" step="0.1" value="0" inputmode="decimal">
-                <span class="unit">萬元／年</span>
-              </div>
-              <p class="field-note">僅填契約中明確保證的年度報酬</p>
-            </div>
-          </div>
-        </fieldset>
+      <div class="salary-flow-header">
+        <div><strong>薪酬方案</strong><span>依序確認現在薪資、設定目標薪資，再比較差異</span></div>
+      </div>
+      <div class="salary-tabs" id="salaryTabs" role="tablist" aria-label="薪酬方案" aria-orientation="horizontal">
+        <button id="currentTab" type="button" role="tab" aria-selected="true" aria-controls="currentPanel" tabindex="0" data-tab="currentPanel">1．現在薪資</button>
+        <button id="targetTab" type="button" role="tab" aria-selected="false" aria-controls="targetPanel" tabindex="-1" data-tab="targetPanel">2．目標薪資</button>
+        <button id="comparisonTab" type="button" role="tab" aria-selected="false" aria-controls="comparisonPanel" tabindex="-1" data-tab="comparisonPanel">3．方案比較</button>
+      </div>
 
-        <fieldset class="field-group">
-          <legend>浮動與一次性收入</legend>
-          <div class="field-grid">
-            <div class="field">
-              <label for="bonusMode">績效獎金輸入方式</label>
-              <div class="input-wrap">
-                <select id="bonusMode" name="bonusMode">
-                  <option value="months" selected>以月數計算</option>
-                  <option value="amount">直接輸入金額</option>
-                </select>
-              </div>
+      <section id="currentPanel" class="salary-tab-panel" role="tabpanel" aria-labelledby="currentTab" tabindex="0">
+        <div class="workspace">
+          <article class="panel input-panel">
+            <div class="section-heading">
+              <div><h2>現在薪資</h2><p>所有金額以新台幣「萬元」輸入</p></div>
+              <button class="text-button" type="button" id="resetCurrent">回復預設</button>
             </div>
-            <div class="field">
-              <label for="performanceBonus" id="performanceBonusLabel">績效獎金月數</label>
-              <div class="input-wrap">
-                <input id="performanceBonus" name="performanceBonus" type="number" min="0" step="0.1" value="6" inputmode="decimal">
-                <span class="unit" id="performanceBonusUnit">個月</span>
-              </div>
-            </div>
-            <div class="field">
-              <label for="signOnBonus">到職獎金（Sign-on Bonus）</label>
-              <div class="input-wrap">
-                <input id="signOnBonus" name="signOnBonus" type="number" min="0" step="0.1" value="0" inputmode="decimal">
-                <span class="unit">萬元</span>
-              </div>
-              <p class="field-note">一次性到職獎金，只計入第一年；需確認服務期限與提前離職返還條款</p>
-            </div>
-            <div class="field">
-              <label for="equity">RSU／員工分紅</label>
-              <div class="input-wrap">
-                <input id="equity" name="equity" type="number" min="0" step="0.1" value="0" inputmode="decimal">
-                <span class="unit">萬元／年</span>
-              </div>
-            </div>
-            <div class="field">
-              <label for="otherVariable">其他浮動報酬</label>
-              <div class="input-wrap">
-                <input id="otherVariable" name="otherVariable" type="number" min="0" step="0.1" value="0" inputmode="decimal">
-                <span class="unit">萬元／年</span>
-              </div>
-            </div>
-          </div>
-        </fieldset>
-      </form>
 
-      <section class="panel summary-panel" aria-labelledby="summaryTitle" aria-live="polite">
-        <div class="summary-hero">
-          <div>
-            <span class="label" id="summaryTitle">第二年起預估 Total Compensation</span>
-            <p class="hero-number"><span id="recurringTotal">250.0</span><small>萬元／年</small></p>
-            <p class="hero-sub" id="summaryDifference">已高於保守目標 10.0 萬元</p>
-          </div>
-          <div class="status-badge" id="summaryStatus">已達標</div>
-        </div>
-
-        <div class="summary-body">
-          <div class="metric-grid">
-            <div class="metric">
-              <span>固定保證年薪</span>
-              <strong id="guaranteedTotal">175.0 萬（70.0%）</strong>
-            </div>
-            <div class="metric">
-              <span>年度浮動薪酬</span>
-              <strong id="variableTotal">75.0 萬（30.0%）</strong>
-            </div>
-            <div class="metric metric-wide">
-              <span>第一年總包</span>
-              <strong id="firstYearTotal">250.0 萬</strong>
-            </div>
-            <div class="metric metric-wide monthly-estimate-card">
-              <div class="monthly-estimate-head">
-                <span>目前結果的月均估算</span>
-                <small>以第二年起 TC 換算，包含浮動報酬，不代表固定月薪。</small>
+            <fieldset class="field-group">
+              <legend>固定與保證收入</legend>
+              <div class="field-grid">
+                <div class="field"><label for="monthlySalary">固定月薪</label><div class="input-wrap"><input id="monthlySalary" name="monthlySalary" type="number" min="0" step="0.1" value="12.5" inputmode="decimal"><span class="unit">萬元</span></div></div>
+                <div class="field"><label for="guaranteedMonths">保證薪資月數</label><div class="input-wrap"><input id="guaranteedMonths" name="guaranteedMonths" type="number" min="0" step="0.5" value="14" inputmode="decimal"><span class="unit">個月</span></div><p class="field-note">固定保證年薪依此月數計算</p></div>
+                <div class="field"><label for="otherFixed">其他固定報酬</label><div class="input-wrap"><input id="otherFixed" name="otherFixed" type="number" min="0" step="0.1" value="0" inputmode="decimal"><span class="unit">萬元／年</span></div><p class="field-note">僅填契約中明確保證的年度報酬</p></div>
               </div>
-              <div class="monthly-estimate-grid">
-                <div class="monthly-estimate">
-                  <span>平均 12 個月</span>
-                  <strong id="resultMonthly12">20.83 萬／月</strong>
-                  <small>第二年起 TC ÷ 12</small>
-                </div>
-                <div class="monthly-estimate">
-                  <span id="resultGuaranteedLabel">依保證 14 個月</span>
-                  <strong id="resultMonthlyGuaranteed">17.86 萬／月</strong>
-                  <small id="resultGuaranteedFormula">第二年起 TC ÷ 14</small>
-                </div>
-                <div class="monthly-estimate">
-                  <span id="resultCompMonthsLabel">依保證＋績效 20 個月</span>
-                  <strong id="resultMonthlyCompMonths">12.50 萬／月</strong>
-                  <small id="resultCompMonthsFormula">第二年起 TC ÷ 20</small>
-                </div>
-                <div class="monthly-estimate">
-                  <span>依固定月薪反推年薪月數</span>
-                  <strong id="resultEquivalentMonths">約 20.00 個月／年</strong>
-                  <small id="resultEquivalentMonthsFormula">250.0 ÷ 固定月薪 12.5</small>
-                </div>
+            </fieldset>
+            <fieldset class="field-group">
+              <legend>浮動與一次性收入</legend>
+              <div class="field-grid">
+                <div class="field"><label for="bonusMode">績效獎金輸入方式</label><div class="input-wrap"><select id="bonusMode" name="bonusMode"><option value="months" selected>以月數計算</option><option value="amount">直接輸入金額</option></select></div></div>
+                <div class="field"><label for="performanceBonus" id="performanceBonusLabel">績效獎金月數</label><div class="input-wrap"><input id="performanceBonus" name="performanceBonus" type="number" min="0" step="0.1" value="6" inputmode="decimal"><span class="unit" id="performanceBonusUnit">個月</span></div></div>
+                <div class="field"><label for="signOnBonus">到職獎金（Sign-on Bonus）</label><div class="input-wrap"><input id="signOnBonus" name="signOnBonus" type="number" min="0" step="0.1" value="0" inputmode="decimal"><span class="unit">萬元</span></div><p class="field-note">只計入第一年；需確認返還條款</p></div>
+                <div class="field"><label for="equity">RSU／員工分紅</label><div class="input-wrap"><input id="equity" name="equity" type="number" min="0" step="0.1" value="0" inputmode="decimal"><span class="unit">萬元／年</span></div></div>
+                <div class="field"><label for="otherVariable">其他浮動報酬</label><div class="input-wrap"><input id="otherVariable" name="otherVariable" type="number" min="0" step="0.1" value="0" inputmode="decimal"><span class="unit">萬元／年</span></div></div>
               </div>
+            </fieldset>
+          </article>
+          <section class="panel summary-panel" aria-labelledby="currentSummaryTitle">
+            <div class="summary-hero"><div><span class="label" id="currentSummaryTitle">現在薪資－第二年起 TC</span><p class="hero-number" aria-live="polite"><span id="recurringTotal">250.0</span><small>萬元／年</small></p><p class="hero-sub" id="summaryDifference">已高於保守基準 10.0 萬元</p></div><div class="status-badge" id="summaryStatus">已達標</div></div>
+            <div class="summary-body">
+              <div class="metric-grid">
+                <div class="metric"><span>固定保證年薪</span><strong id="guaranteedTotal">175.0 萬（70.0%）</strong></div>
+                <div class="metric"><span>年度浮動薪酬</span><strong id="variableTotal">75.0 萬（30.0%）</strong></div>
+                <div class="metric metric-wide"><span>第一年 TC（含一次性到職獎金）</span><strong id="firstYearTotal">250.0 萬</strong></div>
+                <div class="metric metric-wide monthly-estimate-card"><div class="monthly-estimate-head"><span>現在方案的月均估算</span><small>包含浮動報酬，不代表固定月薪。</small></div><div class="monthly-estimate-grid">
+                  <div class="monthly-estimate"><span>平均 12 個月</span><strong id="resultMonthly12">20.83 萬／月</strong><small>第二年起 TC ÷ 12</small></div>
+                  <div class="monthly-estimate"><span id="resultGuaranteedLabel">依保證 14 個月</span><strong id="resultMonthlyGuaranteed">17.86 萬／月</strong><small id="resultGuaranteedFormula">第二年起 TC ÷ 14</small></div>
+                  <div class="monthly-estimate"><span id="resultCompMonthsLabel">依保證＋績效 20 個月</span><strong id="resultMonthlyCompMonths">12.50 萬／月</strong><small id="resultCompMonthsFormula">第二年起 TC ÷ 20</small></div>
+                  <div class="monthly-estimate"><span>TC 相當固定月薪月數</span><strong id="resultEquivalentMonths">約 20.00 個月／年</strong><small id="resultEquivalentMonthsFormula">250.0 ÷ 固定月薪 12.5</small></div>
+                </div></div>
+              </div>
+              <div class="progress-area"><div class="progress-head"><span>保守基準達成度</span><strong id="progressLabel">104.2%</strong></div><div class="progress-track" role="progressbar" aria-label="現在方案保守基準達成度" aria-valuemin="0" aria-valuemax="100" aria-valuenow="100" aria-valuetext="104.2%" id="progressTrack"><div class="progress-fill" id="progressFill"></div></div></div>
+              <div class="risk-note" id="riskNote">浮動薪酬占比 30.0%，需確認獎金發放條件。</div>
             </div>
-          </div>
-
-          <div class="progress-area">
-            <div class="progress-head">
-              <span>保守目標達成度</span>
-              <strong id="progressLabel">104.2%</strong>
-            </div>
-            <div class="progress-track" role="progressbar" aria-label="保守目標達成度" aria-valuemin="0" aria-valuemax="100" aria-valuenow="100" aria-valuetext="104.2%" id="progressTrack">
-              <div class="progress-fill" id="progressFill"></div>
-            </div>
-          </div>
-
-          <div class="risk-note" id="riskNote">浮動薪酬占比 30.0%，風險偏高。請確認獎金、RSU 與分紅是否保證，以及歷年實際發放情況。</div>
+          </section>
         </div>
       </section>
-    </div>
 
-    <section class="scenario-section" id="scenarioSection" aria-labelledby="scenarioTitle">
-      <div class="section-title-row">
-        <h2 id="scenarioTitle">三種談判方案</h2>
-        <p>以第二年起的年度總包為基準，一次性到職獎金不應用來支撐長期薪資目標。</p>
-      </div>
-      <div class="scenario-grid" id="scenarioGrid"></div>
-    </section>
+      <section id="targetPanel" class="salary-tab-panel" role="tabpanel" aria-labelledby="targetTab" tabindex="0" hidden>
+        <div class="workspace">
+          <article class="panel input-panel">
+            <div class="section-heading"><div><h2>目標薪資</h2><p>首次開啟會複製現在方案，之後可獨立調整</p></div><div class="panel-actions"><button class="text-button" type="button" id="copyCurrentToTarget">重新複製現在方案</button><button class="text-button" type="button" id="resetTarget">回復預設</button></div></div>
+            <fieldset class="field-group"><legend>固定與保證收入</legend><div class="field-grid">
+              <div class="field"><label for="targetMonthlySalary">固定月薪</label><div class="input-wrap"><input id="targetMonthlySalary" name="targetMonthlySalary" type="number" min="0" step="0.1" value="12.5" inputmode="decimal"><span class="unit">萬元</span></div></div>
+              <div class="field"><label for="targetGuaranteedMonths">保證薪資月數</label><div class="input-wrap"><input id="targetGuaranteedMonths" name="targetGuaranteedMonths" type="number" min="0" step="0.5" value="14" inputmode="decimal"><span class="unit">個月</span></div><p class="field-note">固定保證年薪依此月數計算</p></div>
+              <div class="field"><label for="targetOtherFixed">其他固定報酬</label><div class="input-wrap"><input id="targetOtherFixed" name="targetOtherFixed" type="number" min="0" step="0.1" value="0" inputmode="decimal"><span class="unit">萬元／年</span></div><p class="field-note">僅填契約中明確保證的年度報酬</p></div>
+            </div></fieldset>
+            <fieldset class="field-group"><legend>浮動與一次性收入</legend><div class="field-grid">
+              <div class="field"><label for="targetBonusMode">績效獎金輸入方式</label><div class="input-wrap"><select id="targetBonusMode" name="targetBonusMode"><option value="months" selected>以月數計算</option><option value="amount">直接輸入金額</option></select></div></div>
+              <div class="field"><label for="targetPerformanceBonus" id="targetPerformanceBonusLabel">績效獎金月數</label><div class="input-wrap"><input id="targetPerformanceBonus" name="targetPerformanceBonus" type="number" min="0" step="0.1" value="6" inputmode="decimal"><span class="unit" id="targetPerformanceBonusUnit">個月</span></div></div>
+              <div class="field"><label for="targetSignOnBonus">到職獎金（Sign-on Bonus）</label><div class="input-wrap"><input id="targetSignOnBonus" name="targetSignOnBonus" type="number" min="0" step="0.1" value="0" inputmode="decimal"><span class="unit">萬元</span></div><p class="field-note">只計入第一年；需確認返還條款</p></div>
+              <div class="field"><label for="targetEquity">RSU／員工分紅</label><div class="input-wrap"><input id="targetEquity" name="targetEquity" type="number" min="0" step="0.1" value="0" inputmode="decimal"><span class="unit">萬元／年</span></div></div>
+              <div class="field"><label for="targetOtherVariable">其他浮動報酬</label><div class="input-wrap"><input id="targetOtherVariable" name="targetOtherVariable" type="number" min="0" step="0.1" value="0" inputmode="decimal"><span class="unit">萬元／年</span></div></div>
+            </div></fieldset>
+          </article>
+          <section class="panel summary-panel" aria-labelledby="targetSummaryTitle">
+            <div class="summary-hero"><div><span class="label" id="targetSummaryTitle">目標薪資－第二年起 TC</span><p class="hero-number" aria-live="polite"><span id="targetRecurringTotal">250.0</span><small>萬元／年</small></p><p class="hero-sub" id="targetSummaryDifference">已達目標基準</p></div><div class="status-badge" id="targetSummaryStatus">已達標</div></div>
+            <div class="summary-body"><div class="metric-grid">
+              <div class="metric"><span>固定保證年薪</span><strong id="targetGuaranteedTotal">175.0 萬（70.0%）</strong></div>
+              <div class="metric"><span>年度浮動薪酬</span><strong id="targetVariableTotal">75.0 萬（30.0%）</strong></div>
+              <div class="metric metric-wide"><span>第一年 TC（含一次性到職獎金）</span><strong id="targetFirstYearTotal">250.0 萬</strong></div>
+              <div class="metric metric-wide monthly-estimate-card"><div class="monthly-estimate-head"><span>目標方案的月均估算</span><small>包含浮動報酬，不代表固定月薪。</small></div><div class="monthly-estimate-grid">
+                <div class="monthly-estimate"><span>平均 12 個月</span><strong id="targetResultMonthly12">20.83 萬／月</strong><small>第二年起 TC ÷ 12</small></div>
+                <div class="monthly-estimate"><span id="targetResultGuaranteedLabel">依保證 14 個月</span><strong id="targetResultMonthlyGuaranteed">17.86 萬／月</strong><small id="targetResultGuaranteedFormula">第二年起 TC ÷ 14</small></div>
+                <div class="monthly-estimate"><span id="targetResultCompMonthsLabel">依保證＋績效 20 個月</span><strong id="targetResultMonthlyCompMonths">12.50 萬／月</strong><small id="targetResultCompMonthsFormula">第二年起 TC ÷ 20</small></div>
+                <div class="monthly-estimate"><span>TC 相當固定月薪月數</span><strong id="targetResultEquivalentMonths">約 20.00 個月／年</strong><small id="targetResultEquivalentMonthsFormula">250.0 ÷ 固定月薪 12.5</small></div>
+              </div></div>
+            </div><div class="progress-area"><div class="progress-head"><span>目標基準達成度</span><strong id="targetProgressLabel">100.0%</strong></div><div class="progress-track" role="progressbar" aria-label="目標方案目標基準達成度" aria-valuemin="0" aria-valuemax="100" aria-valuenow="100" aria-valuetext="100.0%" id="targetProgressTrack"><div class="progress-fill" id="targetProgressFill"></div></div></div><div class="risk-note" id="targetRiskNote">浮動薪酬占比 30.0%，需確認獎金發放條件。</div></div>
+          </section>
+        </div>
+      </section>
+
+      <section id="comparisonPanel" class="salary-tab-panel comparison-panel" role="tabpanel" aria-labelledby="comparisonTab" tabindex="0" hidden>
+        <div class="section-title-row"><h2>方案比較</h2><p>差額統一為「目標薪資－現在薪資」，正數代表目標方案增加。</p></div>
+        <p class="comparison-insight" id="comparisonInsight" aria-live="polite">兩套方案目前相同。請先到「目標薪資」調整希望談到的條件。</p>
+        <div class="comparison-overview" aria-label="方案比較重點摘要">
+          <div class="comparison-highlight"><span>第二年起 TC 差額</span><strong id="comparisonRecurringDelta">0.0 萬</strong><small id="comparisonRecurringRoute">250.0 → 250.0 萬</small></div>
+          <div class="comparison-highlight"><span>固定月薪差額</span><strong id="comparisonMonthlyDelta">0.00 萬／月</strong><small id="comparisonMonthlyRoute">12.50 → 12.50 萬／月</small></div>
+          <div class="comparison-highlight"><span>第一年 TC 差額</span><strong id="comparisonFirstYearDelta">0.0 萬</strong><small id="comparisonFirstYearRoute">250.0 → 250.0 萬</small></div>
+        </div>
+        <p class="comparison-scroll-hint" aria-hidden="true">左右滑動表格，可查看差額與增減幅。</p>
+        <div class="comparison-table-wrap"><table class="comparison-table"><caption class="visually-hidden">現在薪資與目標薪資完整比較</caption><thead><tr><th scope="col">項目</th><th scope="col">現在薪資</th><th scope="col">目標薪資</th><th scope="col">差額</th><th scope="col">增減幅</th></tr></thead><tbody id="comparisonTableBody"></tbody></table></div>
+        <div class="section-title-row benchmark-heading"><h2>三種談判基準</h2><p>每張卡同時比較兩套方案的第二年起 TC。</p></div>
+        <div class="scenario-grid" id="scenarioGrid"></div>
+      </section>
+    </form>
 
     <section class="support-section" id="supportSection" aria-labelledby="supportTitle">
       <div class="section-title-row">
@@ -1671,15 +1834,44 @@
       "use strict";
 
       const form = document.getElementById("salaryForm");
-      const ids = [
-        "industry", "goalConservative", "goalTarget", "goalIdeal", "monthlySalary",
-        "guaranteedMonths", "otherFixed", "bonusMode", "performanceBonus",
-        "signOnBonus", "equity", "otherVariable"
-      ];
+      const globalIds = ["industry", "datePlannerStart", "datePlannerOffset", "goalConservative", "goalTarget", "goalIdeal"];
+      const salaryKeys = ["monthlySalary", "guaranteedMonths", "otherFixed", "bonusMode", "performanceBonus", "signOnBonus", "equity", "otherVariable"];
+      const currentFieldMap = Object.fromEntries(salaryKeys.map((key) => [key, key]));
+      const targetFieldMap = {
+        monthlySalary: "targetMonthlySalary",
+        guaranteedMonths: "targetGuaranteedMonths",
+        otherFixed: "targetOtherFixed",
+        bonusMode: "targetBonusMode",
+        performanceBonus: "targetPerformanceBonus",
+        signOnBonus: "targetSignOnBonus",
+        equity: "targetEquity",
+        otherVariable: "targetOtherVariable"
+      };
+      const currentFieldIds = Object.values(currentFieldMap);
+      const targetFieldIds = Object.values(targetFieldMap);
+      const ids = [...globalIds, ...currentFieldIds, ...targetFieldIds];
       const fields = Object.fromEntries(ids.map((id) => [id, document.getElementById(id)]));
-      const scenarioNames = ["保守方案", "目標方案", "理想方案"];
+      const scenarioNames = ["保守基準", "目標基準", "理想基準"];
       const scenarioColors = ["#c28d2f", "#48689e", "#14745a"];
-      const stringFields = new Set(["industry", "bonusMode"]);
+      const stringFields = new Set(["industry", "datePlannerStart", "bonusMode", "targetBonusMode"]);
+      const defaultGlobal = {
+        industry: "manufacturing",
+        datePlannerStart: "",
+        datePlannerOffset: "45",
+        goalConservative: "240",
+        goalTarget: "250",
+        goalIdeal: "260"
+      };
+      const defaultSalary = {
+        monthlySalary: "12.5",
+        guaranteedMonths: "14",
+        otherFixed: "0",
+        bonusMode: "months",
+        performanceBonus: "6",
+        signOnBonus: "0",
+        equity: "0",
+        otherVariable: "0"
+      };
       const industryContent = {
         manufacturing: {
           label: "製造業",
@@ -1729,6 +1921,39 @@
         }).format(safe);
       };
 
+      const todayDateValue = () => {
+        const parts = Object.fromEntries(new Intl.DateTimeFormat("en-US", {
+          timeZone: "Asia/Taipei",
+          year: "numeric",
+          month: "2-digit",
+          day: "2-digit"
+        }).formatToParts(new Date()).map(({ type, value }) => [type, value]));
+        return `${parts.year}-${parts.month}-${parts.day}`;
+      };
+
+      const datePlanFor = (dateValue, offsetValue) => {
+        const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(dateValue);
+        if (!match) return null;
+        const year = Number(match[1]);
+        const month = Number(match[2]);
+        const day = Number(match[3]);
+        const result = new Date(Date.UTC(year, month - 1, day));
+        if (result.getUTCFullYear() !== year || result.getUTCMonth() !== month - 1 || result.getUTCDate() !== day) return null;
+        const offset = Math.max(0, Math.min(3650, Math.trunc(offsetValue)));
+        result.setUTCDate(result.getUTCDate() + offset);
+        const dateText = new Intl.DateTimeFormat("zh-TW", {
+          timeZone: "UTC",
+          year: "numeric",
+          month: "2-digit",
+          day: "2-digit"
+        }).format(result);
+        const weekday = new Intl.DateTimeFormat("zh-TW", {
+          timeZone: "UTC",
+          weekday: "long"
+        }).format(result);
+        return { offset, display: `${dateText}（${weekday}）` };
+      };
+
       const formatMonths = (value) => Number.isInteger(value) ? format(value, 0) : format(value, 1);
 
       const monthlyEstimatesFor = (total, input) => {
@@ -1762,34 +1987,51 @@
         };
       };
 
-      const targetCompensationMixFor = (target, actual) => {
-        const safeTarget = Math.max(0, target);
-        const fixedAmount = Math.min(actual.guaranteed, safeTarget);
-        const variableAmount = Math.max(0, safeTarget - fixedAmount);
-        return {
-          fixedAmount,
-          variableAmount,
-          fixedPercent: safeTarget > 0 ? fixedAmount / safeTarget * 100 : 0,
-          variablePercent: safeTarget > 0 ? variableAmount / safeTarget * 100 : 0,
-          fixedExceedsTarget: actual.guaranteed > safeTarget
-        };
-      };
-
       const signedFormat = (value) => {
         const safe = Number.isFinite(value) ? value : 0;
         const prefix = safe > 0 ? "+" : safe < 0 ? "−" : "";
         return `${prefix}${format(Math.abs(safe), 1)} 萬`;
       };
 
-      const getInput = () => Object.fromEntries(
-        ids.map((id) => [id, stringFields.has(id) ? fields[id].value : safeNumber(fields[id].value)])
+      const getGlobalInput = () => Object.fromEntries(
+        globalIds.map((id) => [id, stringFields.has(id) ? fields[id].value : safeNumber(fields[id].value)])
       );
 
-      const calculate = (input, monthlyOverride = input.monthlySalary) => {
+      const getSalaryInput = (scheme) => {
+        const map = scheme === "target" ? targetFieldMap : currentFieldMap;
+        return Object.fromEntries(salaryKeys.map((key) => {
+          const id = map[key];
+          return [key, stringFields.has(id) ? fields[id].value : safeNumber(fields[id].value)];
+        }));
+      };
+
+      const setGlobalFields = (values = {}) => {
+        globalIds.forEach((id) => {
+          const value = values[id];
+          if (value === undefined || value === null) return;
+          fields[id].value = String(value);
+        });
+      };
+
+      const setSalaryFields = (scheme, values = {}) => {
+        const map = scheme === "target" ? targetFieldMap : currentFieldMap;
+        salaryKeys.forEach((key) => {
+          const value = values[key];
+          if (value === undefined || value === null) return;
+          fields[map[key]].value = String(value);
+        });
+      };
+
+      const salaryValuesForStorage = (scheme) => {
+        const map = scheme === "target" ? targetFieldMap : currentFieldMap;
+        return Object.fromEntries(salaryKeys.map((key) => [key, fields[map[key]].value]));
+      };
+
+      const calculate = (input) => {
         const performance = input.bonusMode === "months"
-          ? monthlyOverride * input.performanceBonus
+          ? input.monthlySalary * input.performanceBonus
           : input.performanceBonus;
-        const guaranteed = monthlyOverride * input.guaranteedMonths + input.otherFixed;
+        const guaranteed = input.monthlySalary * input.guaranteedMonths + input.otherFixed;
         const variable = performance + input.equity + input.otherVariable;
         const recurring = guaranteed + variable;
         const firstYear = recurring + input.signOnBonus;
@@ -1799,66 +2041,48 @@
         return { performance, guaranteed, variable, recurring, firstYear, variableRatio, monthlyEstimates, compensationMix };
       };
 
-      const requiredMonthly = (target, input) => {
-        const fixedNonMonthly = input.otherFixed + input.equity + input.otherVariable;
-        const fixedBonusAmount = input.bonusMode === "amount" ? input.performanceBonus : 0;
-        const salaryMonths = input.guaranteedMonths + (input.bonusMode === "months" ? input.performanceBonus : 0);
-        if (salaryMonths <= 0) return 0;
-        return Math.max(0, (target - fixedNonMonthly - fixedBonusAmount) / salaryMonths);
-      };
-
       const statusFor = (total, target) => {
         if (target <= 0 || total >= target) return { label: "已達標", className: "state-met", key: "met" };
-        if (target - total <= target * 0.05) return { label: "接近目標", className: "state-near", key: "near" };
+        if (target - total <= target * 0.05) return { label: "接近基準", className: "state-near", key: "near" };
         return { label: "尚有差距", className: "state-below", key: "below" };
       };
 
-      const createScenarioCard = (name, target, color, input, actual) => {
-        const neededMonthly = requiredMonthly(target, input);
-        const targetMonthly = monthlyEstimatesFor(target, input);
-        const targetMix = targetCompensationMixFor(target, actual);
-        const compMonthsMatchesFixed = targetMonthly.perCompensationMonths !== null
-          && format(targetMonthly.perCompensationMonths, 2) === format(neededMonthly, 2);
-        const delta = actual.recurring - target;
-        const status = statusFor(actual.recurring, target);
+      const createScenarioCard = (name, target, color, currentActual, targetActual) => {
+        const currentDelta = currentActual.recurring - target;
+        const targetDelta = targetActual.recurring - target;
+        const currentStatus = statusFor(currentActual.recurring, target);
+        const targetStatus = statusFor(targetActual.recurring, target);
         const article = document.createElement("article");
         article.className = "scenario-card";
         article.style.setProperty("--scenario-color", color);
         article.innerHTML = `
           <div class="scenario-top">
             <span class="scenario-name">${name}</span>
-            <span class="scenario-state ${status.className}">${status.label}</span>
+            <span class="scenario-target">${format(target, 0)} <small>萬元／年</small></span>
           </div>
-          <p class="scenario-target">${format(target, 0)} <small>萬元／年</small></p>
-          ${compMonthsMatchesFixed ? "" : `<p class="scenario-needed">依目前薪酬結構反推固定月薪 <strong>${format(neededMonthly, 2)} 萬</strong></p>`}
-          <div class="scenario-monthly-estimates">
-            <strong>目標總包的月均估算</strong>
-            <dl>
-              <div><dt>平均 12 個月</dt><dd>${monthlyEstimateText(targetMonthly.per12)}／月</dd></div>
-              <div><dt>依保證 ${formatMonths(targetMonthly.guaranteedMonths)} 個月</dt><dd>${monthlyEstimateText(targetMonthly.perGuaranteed)}${targetMonthly.perGuaranteed === null ? "" : "／月"}</dd></div>
-              <div><dt>${targetMonthly.compensationMonths === null ? "保證＋績效月數" : `依保證＋績效 ${formatMonths(targetMonthly.compensationMonths)} 個月`}</dt><dd>${monthlyEstimateText(targetMonthly.perCompensationMonths)}${targetMonthly.perCompensationMonths === null ? "" : "／月"}</dd></div>
-              <div><dt>依固定月薪 ${format(input.monthlySalary, 1)} 萬反推</dt><dd>${targetMonthly.equivalentSalaryMonths === null ? "不適用" : `約 ${format(targetMonthly.equivalentSalaryMonths, 2)} 個月／年`}</dd></div>
-            </dl>
+          <div class="benchmark-scheme current">
+            <div class="benchmark-scheme-head"><span>現在薪資</span><span class="scenario-state ${currentStatus.className}">${currentStatus.label}</span></div>
+            <strong>${format(currentActual.recurring, 1)} 萬</strong>
+            <small class="${currentDelta >= 0 ? "delta-positive" : "delta-negative"}">距基準 ${signedFormat(currentDelta)}</small>
           </div>
-          <div class="scenario-compensation-mix">
-            <strong>依目前固定薪酬推算</strong>
-            <dl>
-              <div><dt>固定薪酬</dt><dd>${format(targetMix.fixedAmount, 1)} 萬（${format(targetMix.fixedPercent, 1)}%）</dd></div>
-              <div><dt>目標所需動態薪酬</dt><dd>${format(targetMix.variableAmount, 1)} 萬（${format(targetMix.variablePercent, 1)}%）</dd></div>
-            </dl>
-            ${targetMix.fixedExceedsTarget ? '<small class="field-note">目前固定薪酬已高於此目標。</small>' : ""}
-          </div>
-          <dl class="scenario-list">
-            <div><dt>依目前動態配置差額</dt><dd class="${delta >= 0 ? "delta-positive" : "delta-negative"}">${signedFormat(delta)}</dd></div>
-          </dl>`;
+          <div class="benchmark-scheme target">
+            <div class="benchmark-scheme-head"><span>目標薪資</span><span class="scenario-state ${targetStatus.className}">${targetStatus.label}</span></div>
+            <strong>${format(targetActual.recurring, 1)} 萬</strong>
+            <small class="${targetDelta >= 0 ? "delta-positive" : "delta-negative"}">距基準 ${signedFormat(targetDelta)}</small>
+          </div>`;
         return article;
       };
 
-      const updateBonusMode = () => {
-        const usesMonths = fields.bonusMode.value === "months";
-        document.getElementById("performanceBonusLabel").textContent = usesMonths ? "績效獎金月數" : "績效獎金金額";
-        document.getElementById("performanceBonusUnit").textContent = usesMonths ? "個月" : "萬元／年";
-        fields.performanceBonus.step = usesMonths ? "0.1" : "0.5";
+      const updateBonusModes = () => {
+        [
+          { mode: "bonusMode", value: "performanceBonus", label: "performanceBonusLabel", unit: "performanceBonusUnit" },
+          { mode: "targetBonusMode", value: "targetPerformanceBonus", label: "targetPerformanceBonusLabel", unit: "targetPerformanceBonusUnit" }
+        ].forEach((config) => {
+          const usesMonths = fields[config.mode].value === "months";
+          document.getElementById(config.label).textContent = usesMonths ? "績效獎金月數" : "績效獎金金額";
+          document.getElementById(config.unit).textContent = usesMonths ? "個月" : "萬元／年";
+          fields[config.value].step = usesMonths ? "0.1" : "0.5";
+        });
       };
 
       const updateGoalValidation = (input) => {
@@ -1868,12 +2092,12 @@
         if (input.goalConservative > input.goalTarget) {
           invalidIds.add("goalConservative");
           invalidIds.add("goalTarget");
-          issues.push("保守目標不可高於目標上緣");
+          issues.push("保守基準不可高於目標基準");
         }
         if (input.goalTarget > input.goalIdeal) {
           invalidIds.add("goalTarget");
           invalidIds.add("goalIdeal");
-          issues.push("目標上緣不可高於理想條件");
+          issues.push("目標基準不可高於理想基準");
         }
         ["goalConservative", "goalTarget", "goalIdeal"].forEach((id) => {
           const invalid = invalidIds.has(id);
@@ -1887,74 +2111,66 @@
           }
         });
         validation.textContent = issues.length > 0
-          ? `請調整談判目標順序：${issues.join("；")}。`
+          ? `請調整年度 TC 基準順序：${issues.join("；")}。`
           : "";
       };
 
-      const update = () => {
-        updateBonusMode();
-        const input = getInput();
-        updateGoalValidation(input);
-        const actual = calculate(input);
-        const industry = industryContent[input.industry] || industryContent.manufacturing;
-        const conservativeStatus = statusFor(actual.recurring, input.goalConservative);
-        const delta = actual.recurring - input.goalConservative;
-        const progress = input.goalConservative > 0 ? actual.recurring / input.goalConservative * 100 : 100;
+      const summaryIds = {
+        current: {
+          recurring: "recurringTotal", guaranteed: "guaranteedTotal", variable: "variableTotal", firstYear: "firstYearTotal",
+          per12: "resultMonthly12", guaranteedLabel: "resultGuaranteedLabel", perGuaranteed: "resultMonthlyGuaranteed", guaranteedFormula: "resultGuaranteedFormula",
+          compLabel: "resultCompMonthsLabel", perComp: "resultMonthlyCompMonths", compFormula: "resultCompMonthsFormula",
+          equivalent: "resultEquivalentMonths", equivalentFormula: "resultEquivalentMonthsFormula", status: "summaryStatus", difference: "summaryDifference",
+          progressLabel: "progressLabel", progressTrack: "progressTrack", progressFill: "progressFill", risk: "riskNote"
+        },
+        target: {
+          recurring: "targetRecurringTotal", guaranteed: "targetGuaranteedTotal", variable: "targetVariableTotal", firstYear: "targetFirstYearTotal",
+          per12: "targetResultMonthly12", guaranteedLabel: "targetResultGuaranteedLabel", perGuaranteed: "targetResultMonthlyGuaranteed", guaranteedFormula: "targetResultGuaranteedFormula",
+          compLabel: "targetResultCompMonthsLabel", perComp: "targetResultMonthlyCompMonths", compFormula: "targetResultCompMonthsFormula",
+          equivalent: "targetResultEquivalentMonths", equivalentFormula: "targetResultEquivalentMonthsFormula", status: "targetSummaryStatus", difference: "targetSummaryDifference",
+          progressLabel: "targetProgressLabel", progressTrack: "targetProgressTrack", progressFill: "targetProgressFill", risk: "targetRiskNote"
+        }
+      };
 
-        document.getElementById("recurringTotal").textContent = format(actual.recurring, 1);
-        document.getElementById("guaranteedTotal").textContent = `${format(actual.guaranteed, 1)} 萬（${format(actual.compensationMix.fixedPercent, 1)}%）`;
-        document.getElementById("variableTotal").textContent = `${format(actual.variable, 1)} 萬（${format(actual.variableRatio, 1)}%）`;
-        document.getElementById("firstYearTotal").textContent = `${format(actual.firstYear, 1)} 萬`;
-        document.getElementById("currentFixedPercent").textContent = `${format(actual.guaranteed, 1)} 萬（${format(actual.compensationMix.fixedPercent, 1)}%）`;
-        document.getElementById("currentVariablePercent").textContent = `${format(actual.variable, 1)} 萬（${format(actual.compensationMix.variablePercent, 1)}%）`;
-        document.getElementById("resultMonthly12").textContent = `${monthlyEstimateText(actual.monthlyEstimates.per12)}／月`;
-        document.getElementById("resultGuaranteedLabel").textContent = input.guaranteedMonths > 0
-          ? `依保證 ${formatMonths(input.guaranteedMonths)} 個月`
-          : "依保證月數";
-        document.getElementById("resultMonthlyGuaranteed").textContent = actual.monthlyEstimates.perGuaranteed === null
-          ? "不適用"
-          : `${monthlyEstimateText(actual.monthlyEstimates.perGuaranteed)}／月`;
-        document.getElementById("resultGuaranteedFormula").textContent = input.guaranteedMonths > 0
-          ? `第二年起 TC ÷ ${formatMonths(input.guaranteedMonths)}`
-          : "保證薪資月數需大於 0";
-        document.getElementById("resultCompMonthsLabel").textContent = actual.monthlyEstimates.compensationMonths === null
-          ? "依保證＋績效月數"
-          : `依保證＋績效 ${formatMonths(actual.monthlyEstimates.compensationMonths)} 個月`;
-        document.getElementById("resultMonthlyCompMonths").textContent = actual.monthlyEstimates.perCompensationMonths === null
-          ? "不適用"
-          : `${monthlyEstimateText(actual.monthlyEstimates.perCompensationMonths)}／月`;
-        document.getElementById("resultCompMonthsFormula").textContent = actual.monthlyEstimates.compensationMonths === null
-          ? "績效獎金目前以金額輸入"
-          : actual.monthlyEstimates.compensationMonths > 0
-            ? `第二年起 TC ÷ ${formatMonths(actual.monthlyEstimates.compensationMonths)}`
-            : "合計月數需大於 0";
-        document.getElementById("resultEquivalentMonths").textContent = actual.monthlyEstimates.equivalentSalaryMonths === null
-          ? "不適用"
-          : `約 ${format(actual.monthlyEstimates.equivalentSalaryMonths, 2)} 個月／年`;
-        document.getElementById("resultEquivalentMonthsFormula").textContent = input.monthlySalary > 0
-          ? `${format(actual.recurring, 1)} ÷ 固定月薪 ${format(input.monthlySalary, 1)}`
-          : "固定月薪需大於 0";
-        document.getElementById("summaryStatus").textContent = conservativeStatus.label;
-        document.getElementById("summaryDifference").textContent = delta >= 0
-          ? `已高於保守目標 ${format(delta, 1)} 萬元`
-          : `距離保守目標尚差 ${format(Math.abs(delta), 1)} 萬元`;
-
+      const renderSummary = (scheme, input, actual, benchmark, benchmarkLabel) => {
+        const idsForScheme = summaryIds[scheme];
+        const status = statusFor(actual.recurring, benchmark);
+        const delta = actual.recurring - benchmark;
+        const progress = benchmark > 0 ? actual.recurring / benchmark * 100 : 100;
+        document.getElementById(idsForScheme.recurring).textContent = format(actual.recurring, 1);
+        document.getElementById(idsForScheme.guaranteed).textContent = `${format(actual.guaranteed, 1)} 萬（${format(actual.compensationMix.fixedPercent, 1)}%）`;
+        document.getElementById(idsForScheme.variable).textContent = `${format(actual.variable, 1)} 萬（${format(actual.variableRatio, 1)}%）`;
+        document.getElementById(idsForScheme.firstYear).textContent = `${format(actual.firstYear, 1)} 萬`;
+        document.getElementById(idsForScheme.per12).textContent = `${monthlyEstimateText(actual.monthlyEstimates.per12)}／月`;
+        document.getElementById(idsForScheme.guaranteedLabel).textContent = input.guaranteedMonths > 0 ? `依保證 ${formatMonths(input.guaranteedMonths)} 個月` : "依保證月數";
+        document.getElementById(idsForScheme.perGuaranteed).textContent = actual.monthlyEstimates.perGuaranteed === null ? "不適用" : `${monthlyEstimateText(actual.monthlyEstimates.perGuaranteed)}／月`;
+        document.getElementById(idsForScheme.guaranteedFormula).textContent = input.guaranteedMonths > 0 ? `第二年起 TC ÷ ${formatMonths(input.guaranteedMonths)}` : "保證薪資月數需大於 0";
+        document.getElementById(idsForScheme.compLabel).textContent = actual.monthlyEstimates.compensationMonths === null ? "依保證＋績效月數" : `依保證＋績效 ${formatMonths(actual.monthlyEstimates.compensationMonths)} 個月`;
+        document.getElementById(idsForScheme.perComp).textContent = actual.monthlyEstimates.perCompensationMonths === null ? "不適用" : `${monthlyEstimateText(actual.monthlyEstimates.perCompensationMonths)}／月`;
+        document.getElementById(idsForScheme.compFormula).textContent = actual.monthlyEstimates.compensationMonths === null ? "績效獎金目前以金額輸入" : `第二年起 TC ÷ ${formatMonths(actual.monthlyEstimates.compensationMonths)}`;
+        document.getElementById(idsForScheme.equivalent).textContent = actual.monthlyEstimates.equivalentSalaryMonths === null ? "不適用" : `約 ${format(actual.monthlyEstimates.equivalentSalaryMonths, 2)} 個月／年`;
+        document.getElementById(idsForScheme.equivalentFormula).textContent = input.monthlySalary > 0 ? `${format(actual.recurring, 1)} ÷ 固定月薪 ${format(input.monthlySalary, 1)}` : "固定月薪需大於 0";
+        document.getElementById(idsForScheme.status).textContent = status.label;
+        document.getElementById(idsForScheme.difference).textContent = Math.abs(delta) < 0.0001
+          ? `正好達到${benchmarkLabel}`
+          : delta > 0
+            ? `已高於${benchmarkLabel} ${format(delta, 1)} 萬元`
+            : `距離${benchmarkLabel}尚差 ${format(Math.abs(delta), 1)} 萬元`;
         const progressDisplay = Math.max(0, Math.min(progress, 100));
-        const progressFill = document.getElementById("progressFill");
+        const progressFill = document.getElementById(idsForScheme.progressFill);
         progressFill.style.width = `${progressDisplay}%`;
-        progressFill.style.background = conservativeStatus.key === "met" ? "#4db88f" : conservativeStatus.key === "near" ? "#d6a64b" : "#c96555";
-        document.getElementById("progressLabel").textContent = `${format(progress, 1)}%`;
-        const progressTrack = document.getElementById("progressTrack");
+        progressFill.style.background = status.key === "met" ? "#4db88f" : status.key === "near" ? "#d6a64b" : "#c96555";
+        document.getElementById(idsForScheme.progressLabel).textContent = `${format(progress, 1)}%`;
+        const progressTrack = document.getElementById(idsForScheme.progressTrack);
         progressTrack.setAttribute("aria-valuenow", String(Math.round(progressDisplay)));
         progressTrack.setAttribute("aria-valuetext", `${format(progress, 1)}%`);
-
-        const riskNote = document.getElementById("riskNote");
+        const riskNote = document.getElementById(idsForScheme.risk);
         if (actual.variableRatio >= 30) {
-          riskNote.textContent = `浮動薪酬占比 ${format(actual.variableRatio, 1)}%，風險偏高。請確認獎金、RSU 與分紅是否保證，以及歷年實際發放情況。`;
+          riskNote.textContent = `浮動薪酬占比 ${format(actual.variableRatio, 1)}%，占比較高。請確認獎金、RSU 與分紅是否保證，以及歷年實際發放情況。`;
           riskNote.style.background = "var(--red-soft)";
           riskNote.style.color = "#762d2d";
         } else if (actual.variableRatio >= 20) {
-          riskNote.textContent = `浮動薪酬占比 ${format(actual.variableRatio, 1)}%，需要特別確認績效門檻、發放時點與到職比例。`;
+          riskNote.textContent = `浮動薪酬占比 ${format(actual.variableRatio, 1)}%，需要留意績效門檻、發放時點與到職比例。`;
           riskNote.style.background = "var(--orange-soft)";
           riskNote.style.color = "#7d4519";
         } else {
@@ -1962,40 +2178,151 @@
           riskNote.style.background = "var(--gold-soft)";
           riskNote.style.color = "#6c4f17";
         }
+      };
+
+      const signedValue = (value, unit, digits = 1) => {
+        const prefix = value > 0 ? "+" : value < 0 ? "−" : "";
+        return `${prefix}${format(Math.abs(value), digits)}${unit}`;
+      };
+
+      const percentageChange = (current, target) => {
+        if (current === null || target === null) return "不適用";
+        if (current === 0) return target === 0 ? "0%" : "不適用";
+        const change = (target - current) / current * 100;
+        const prefix = change > 0 ? "+" : change < 0 ? "−" : "";
+        return `${prefix}${format(Math.abs(change), 1)}%`;
+      };
+
+      const comparisonRowsFor = (currentInput, targetInput, currentActual, targetActual) => [
+        { group: "固定薪酬" },
+        { label: "固定月薪", current: currentInput.monthlySalary, target: targetInput.monthlySalary, unit: " 萬／月", digits: 2 },
+        { label: "保證月數", current: currentInput.guaranteedMonths, target: targetInput.guaranteedMonths, unit: " 個月", digits: 1 },
+        { label: "其他固定報酬", current: currentInput.otherFixed, target: targetInput.otherFixed, unit: " 萬", digits: 1 },
+        { label: "固定保證年薪與占比", current: currentActual.guaranteed, target: targetActual.guaranteed, unit: " 萬", digits: 1, currentSuffix: `（${format(currentActual.compensationMix.fixedPercent, 1)}%）`, targetSuffix: `（${format(targetActual.compensationMix.fixedPercent, 1)}%）` },
+        { group: "浮動與一次性薪酬" },
+        { label: "績效獎金", current: currentActual.performance, target: targetActual.performance, unit: " 萬", digits: 1 },
+        { label: "RSU／分紅", current: currentInput.equity, target: targetInput.equity, unit: " 萬", digits: 1 },
+        { label: "其他浮動報酬", current: currentInput.otherVariable, target: targetInput.otherVariable, unit: " 萬", digits: 1 },
+        { label: "年度浮動薪酬與占比", current: currentActual.variable, target: targetActual.variable, unit: " 萬", digits: 1, currentSuffix: `（${format(currentActual.variableRatio, 1)}%）`, targetSuffix: `（${format(targetActual.variableRatio, 1)}%）` },
+        { label: "到職獎金", current: currentInput.signOnBonus, target: targetInput.signOnBonus, unit: " 萬", digits: 1 },
+        { group: "總包與月均估算" },
+        { label: "第一年 TC", current: currentActual.firstYear, target: targetActual.firstYear, unit: " 萬", digits: 1 },
+        { label: "第二年起 TC", current: currentActual.recurring, target: targetActual.recurring, unit: " 萬", digits: 1 },
+        { label: "TC ÷ 12", current: currentActual.monthlyEstimates.per12, target: targetActual.monthlyEstimates.per12, unit: " 萬／月", digits: 2 },
+        { label: "TC ÷ 保證月數", current: currentActual.monthlyEstimates.perGuaranteed, target: targetActual.monthlyEstimates.perGuaranteed, unit: " 萬／月", digits: 2 },
+        { label: "TC ÷ 保證＋績效月數", current: currentActual.monthlyEstimates.perCompensationMonths, target: targetActual.monthlyEstimates.perCompensationMonths, unit: " 萬／月", digits: 2 },
+        { label: "TC 相當固定月薪月數", current: currentActual.monthlyEstimates.equivalentSalaryMonths, target: targetActual.monthlyEstimates.equivalentSalaryMonths, unit: " 個月／年", digits: 2 }
+      ];
+
+      const comparisonDisplay = (value, row, side) => value === null
+        ? "不適用"
+        : `${format(value, row.digits)}${row.unit}${side === "current" ? row.currentSuffix || "" : row.targetSuffix || ""}`;
+
+      const renderComparisonTable = (rows) => {
+        const body = document.getElementById("comparisonTableBody");
+        body.replaceChildren();
+        rows.forEach((row) => {
+          const tr = document.createElement("tr");
+          if (row.group) {
+            tr.className = "comparison-group";
+            tr.innerHTML = `<th colspan="5" scope="rowgroup">${row.group}</th>`;
+          } else {
+            const delta = row.current === null || row.target === null ? null : row.target - row.current;
+            const deltaClass = delta === null || delta === 0 ? "" : delta > 0 ? "delta-positive" : "delta-negative";
+            tr.innerHTML = `<th scope="row">${row.label}</th><td>${comparisonDisplay(row.current, row, "current")}</td><td>${comparisonDisplay(row.target, row, "target")}</td><td class="${deltaClass}">${delta === null ? "不適用" : signedValue(delta, row.unit, row.digits)}</td><td>${percentageChange(row.current, row.target)}</td>`;
+          }
+          body.appendChild(tr);
+        });
+      };
+
+      const renderComparisonOverview = (currentInput, targetInput, currentActual, targetActual) => {
+        const items = [
+          {
+            deltaId: "comparisonRecurringDelta",
+            routeId: "comparisonRecurringRoute",
+            current: currentActual.recurring,
+            target: targetActual.recurring,
+            unit: " 萬",
+            digits: 1
+          },
+          {
+            deltaId: "comparisonMonthlyDelta",
+            routeId: "comparisonMonthlyRoute",
+            current: currentInput.monthlySalary,
+            target: targetInput.monthlySalary,
+            unit: " 萬／月",
+            digits: 2
+          },
+          {
+            deltaId: "comparisonFirstYearDelta",
+            routeId: "comparisonFirstYearRoute",
+            current: currentActual.firstYear,
+            target: targetActual.firstYear,
+            unit: " 萬",
+            digits: 1
+          }
+        ];
+        items.forEach((item) => {
+          const delta = item.target - item.current;
+          const deltaElement = document.getElementById(item.deltaId);
+          deltaElement.textContent = signedValue(delta, item.unit, item.digits);
+          deltaElement.classList.toggle("delta-positive", delta > 0);
+          deltaElement.classList.toggle("delta-negative", delta < 0);
+          document.getElementById(item.routeId).textContent = `${format(item.current, item.digits)} → ${format(item.target, item.digits)}${item.unit}`;
+        });
+
+        const insight = document.getElementById("comparisonInsight");
+        const schemesMatch = salaryKeys.every((key) => currentInput[key] === targetInput[key]);
+        const recurringDelta = targetActual.recurring - currentActual.recurring;
+        insight.classList.remove("is-positive", "is-negative");
+        if (schemesMatch) {
+          insight.textContent = "兩套方案目前相同。請先到「目標薪資」調整希望談到的條件，再回來查看差額。";
+        } else if (Math.abs(recurringDelta) < 0.0001) {
+          insight.textContent = "兩套方案的第二年起 TC 相同，但固定與浮動結構不同；請查看下方明細確認風險差異。";
+        } else if (recurringDelta > 0) {
+          insight.classList.add("is-positive");
+          insight.textContent = `目標方案的第二年起 TC 增加 ${format(recurringDelta, 1)} 萬元（${percentageChange(currentActual.recurring, targetActual.recurring)}）。`;
+        } else {
+          insight.classList.add("is-negative");
+          insight.textContent = `目標方案的第二年起 TC 低於現在方案 ${format(Math.abs(recurringDelta), 1)} 萬元，請確認是否符合預期。`;
+        }
+      };
+
+      const update = () => {
+        updateBonusModes();
+        const globalInput = getGlobalInput();
+        const currentInput = getSalaryInput("current");
+        const targetInput = getSalaryInput("target");
+        const datePlan = datePlanFor(globalInput.datePlannerStart, globalInput.datePlannerOffset);
+        updateGoalValidation(globalInput);
+        const currentActual = calculate(currentInput);
+        const targetActual = calculate(targetInput);
+        const industry = industryContent[globalInput.industry] || industryContent.manufacturing;
+
+        document.getElementById("datePlannerLabel").textContent = `D+${datePlan ? datePlan.offset : Math.trunc(globalInput.datePlannerOffset)} 到期日`;
+        document.getElementById("datePlannerResult").textContent = datePlan ? datePlan.display : "請選擇有效日期";
+        renderSummary("current", currentInput, currentActual, globalInput.goalConservative, "保守基準");
+        renderSummary("target", targetInput, targetActual, globalInput.goalTarget, "目標基準");
+        renderComparisonOverview(currentInput, targetInput, currentActual, targetActual);
+        renderComparisonTable(comparisonRowsFor(currentInput, targetInput, currentActual, targetActual));
 
         const scenarioGrid = document.getElementById("scenarioGrid");
         scenarioGrid.replaceChildren();
-        [input.goalConservative, input.goalTarget, input.goalIdeal].forEach((target, index) => {
-          scenarioGrid.appendChild(createScenarioCard(scenarioNames[index], target, scenarioColors[index], input, actual));
+        [globalInput.goalConservative, globalInput.goalTarget, globalInput.goalIdeal].forEach((target, index) => {
+          scenarioGrid.appendChild(createScenarioCard(scenarioNames[index], target, scenarioColors[index], currentActual, targetActual));
         });
 
         const industryNote = document.getElementById("industryNote");
         industryNote.innerHTML = `<strong>${industry.title}</strong><ul>${industry.items.map((item) => `<li>${item}</li>`).join("")}</ul>`;
 
         const roleDescription = industry.talkLabel ? `這個${industry.talkLabel}職務` : "這個職務";
-        const talkText = `以我目前對${roleDescription}內容與責任範圍的理解，我期待整體年薪落在 ${format(input.goalConservative, 0)} 至 ${format(input.goalTarget, 0)} 萬元。如果角色具備完整的策略 Ownership、團隊管理與跨部門決策權，整體薪酬可再往 ${format(input.goalIdeal, 0)} 萬元討論。我會綜合評估固定薪資、保證獎金、績效分紅與實際職務 Scope，也希望了解公司目前核定的職級與薪資區間。`;
+        const talkText = `以我目前對${roleDescription}內容與責任範圍的理解，我期待整體年薪落在 ${format(globalInput.goalConservative, 0)} 至 ${format(globalInput.goalTarget, 0)} 萬元。如果角色具備完整的策略 Ownership、團隊管理與跨部門決策權，整體薪酬可再往 ${format(globalInput.goalIdeal, 0)} 萬元討論。我會綜合評估固定薪資、保證獎金、績效分紅與實際職務 Scope，也希望了解公司目前核定的職級與薪資區間。`;
         document.getElementById("talkText").textContent = talkText;
-        document.getElementById("offerReadout").innerHTML = `目前輸入方案：固定保證 <strong>${format(actual.guaranteed, 1)} 萬</strong>、第二年起總包 <strong>${format(actual.recurring, 1)} 萬</strong>${input.signOnBonus > 0 ? `、第一年含到職獎金為 <strong>${format(actual.firstYear, 1)} 萬</strong>` : ""}。`;
+        const comparisonDelta = targetActual.recurring - currentActual.recurring;
+        document.getElementById("offerReadout").innerHTML = `現在方案第二年起 TC <strong>${format(currentActual.recurring, 1)} 萬</strong>；目標方案 <strong>${format(targetActual.recurring, 1)} 萬</strong>，差額 <strong>${signedFormat(comparisonDelta)}</strong>。`;
       };
 
       const reportFont = '-apple-system, BlinkMacSystemFont, "Noto Sans TC", "Segoe UI", sans-serif';
-
-      const reportRoundedRect = (ctx, x, y, width, height, radius, color) => {
-        const r = Math.min(radius, width / 2, height / 2);
-        ctx.beginPath();
-        ctx.moveTo(x + r, y);
-        ctx.lineTo(x + width - r, y);
-        ctx.quadraticCurveTo(x + width, y, x + width, y + r);
-        ctx.lineTo(x + width, y + height - r);
-        ctx.quadraticCurveTo(x + width, y + height, x + width - r, y + height);
-        ctx.lineTo(x + r, y + height);
-        ctx.quadraticCurveTo(x, y + height, x, y + height - r);
-        ctx.lineTo(x, y + r);
-        ctx.quadraticCurveTo(x, y, x + r, y);
-        ctx.closePath();
-        ctx.fillStyle = color;
-        ctx.fill();
-      };
 
       const reportLines = (ctx, text, maxWidth) => {
         const lines = [];
@@ -2013,260 +2340,36 @@
         return lines;
       };
 
-      const reportWrappedText = (ctx, text, x, y, maxWidth, lineHeight) => {
-        const lines = reportLines(ctx, text, maxWidth);
-        lines.forEach((line, index) => ctx.fillText(line, x, y + index * lineHeight));
-        return y + lines.length * lineHeight;
-      };
-
-      const downloadFullPageImage = async () => {
-        const status = document.getElementById("exportStatus");
-        status.textContent = "正在產生完整報告 PNG…";
-
-        try {
-          const input = getInput();
-          const actual = calculate(input);
-          const industry = industryContent[input.industry] || industryContent.manufacturing;
-          const source = document.createElement("canvas");
-          source.width = 1400;
-          source.height = 10000;
-          const ctx = source.getContext("2d");
-          const left = 90;
-          const contentWidth = 1220;
-          let y = 0;
-
-          ctx.fillStyle = "#f4f1ea";
-          ctx.fillRect(0, 0, source.width, source.height);
-          const headerGradient = ctx.createLinearGradient(0, 0, 1400, 340);
-          headerGradient.addColorStop(0, "#17284b");
-          headerGradient.addColorStop(1, "#294474");
-          ctx.fillStyle = headerGradient;
-          ctx.fillRect(0, 0, 1400, 340);
-          ctx.fillStyle = "#f4cc78";
-          ctx.font = `800 23px ${reportFont}`;
-          ctx.fillText("COMPENSATION BRIEFING TOOL", left, 75);
-          ctx.fillStyle = "#ffffff";
-          ctx.font = `800 62px ${reportFont}`;
-          ctx.fillText("薪資談判完整報告", left, 160);
-          ctx.fillStyle = "#cbd5e5";
-          ctx.font = `500 27px ${reportFont}`;
-          ctx.fillText(`${industry.label} · 所有金額為新台幣萬元`, left, 214);
-          ctx.font = `700 28px ${reportFont}`;
-          ctx.fillText(`第二年起總包 ${format(actual.recurring, 1)} 萬／第一年總包 ${format(actual.firstYear, 1)} 萬`, left, 278);
-          y = 410;
-
-          const sectionTitle = (title, subtitle = "") => {
-            ctx.fillStyle = "#17233c";
-            ctx.font = `800 38px ${reportFont}`;
-            ctx.fillText(title, left, y);
-            if (subtitle) {
-              ctx.fillStyle = "#657086";
-              ctx.font = `500 22px ${reportFont}`;
-              ctx.fillText(subtitle, left, y + 38);
-              y += 68;
-            } else {
-              y += 38;
-            }
-            y += 28;
-          };
-
-          const informationGrid = (items) => {
-            const gap = 22;
-            const boxWidth = (contentWidth - gap) / 2;
-            items.forEach(([label, value], index) => {
-              const column = index % 2;
-              const row = Math.floor(index / 2);
-              const x = left + column * (boxWidth + gap);
-              const boxY = y + row * 118;
-              reportRoundedRect(ctx, x, boxY, boxWidth, 96, 18, "#fffdf8");
-              ctx.fillStyle = "#657086";
-              ctx.font = `650 20px ${reportFont}`;
-              ctx.fillText(label, x + 24, boxY + 34);
-              ctx.fillStyle = "#17284b";
-              ctx.font = `800 31px ${reportFont}`;
-              ctx.fillText(value, x + 24, boxY + 74);
-            });
-            y += Math.ceil(items.length / 2) * 118 + 28;
-          };
-
-          sectionTitle("一、薪酬結構", "固定、浮動與一次性收入分開計算");
-          informationGrid([
-            ["固定月薪", `${format(input.monthlySalary, 1)} 萬`],
-            ["保證薪資月數", `${format(input.guaranteedMonths, 1)} 個月`],
-            ["其他固定報酬", `${format(input.otherFixed, 1)} 萬／年`],
-            ["績效獎金", `${format(actual.performance, 1)} 萬／年`],
-            ["到職獎金", `${format(input.signOnBonus, 1)} 萬（僅第一年）`],
-            ["RSU／員工分紅", `${format(input.equity, 1)} 萬／年`],
-            ["其他浮動報酬", `${format(input.otherVariable, 1)} 萬／年`]
-          ]);
-          informationGrid([
-            ["固定保證年薪", `${format(actual.guaranteed, 1)} 萬（${format(actual.compensationMix.fixedPercent, 1)}%）`],
-            ["年度浮動薪酬", `${format(actual.variable, 1)} 萬（${format(actual.variableRatio, 1)}%）`],
-            ["第一年總包", `${format(actual.firstYear, 1)} 萬`],
-            ["第二年起總包", `${format(actual.recurring, 1)} 萬`],
-            ["TC ÷ 12 個月", `${format(actual.monthlyEstimates.per12, 2)} 萬／月`],
-            [`TC ÷ 保證 ${formatMonths(input.guaranteedMonths)} 月`, actual.monthlyEstimates.perGuaranteed === null ? "不適用" : `${format(actual.monthlyEstimates.perGuaranteed, 2)} 萬／月`],
-            [actual.monthlyEstimates.compensationMonths === null ? "TC ÷ 保證＋績效月數" : `TC ÷ 保證＋績效 ${formatMonths(actual.monthlyEstimates.compensationMonths)} 月`, actual.monthlyEstimates.perCompensationMonths === null ? "不適用" : `${format(actual.monthlyEstimates.perCompensationMonths, 2)} 萬／月`],
-            ["月均估算說明", "包含浮動報酬，非固定月薪"],
-            ["TC 相當固定月薪月數", actual.monthlyEstimates.equivalentSalaryMonths === null ? "不適用" : `約 ${format(actual.monthlyEstimates.equivalentSalaryMonths, 2)} 個月／年`]
-          ]);
-
-          sectionTitle("二、三種談判目標", "以目前固定薪酬推算目標所需動態薪酬，差額納入目前浮動配置");
-          [input.goalConservative, input.goalTarget, input.goalIdeal].forEach((target, index) => {
-            const targetMonthly = monthlyEstimatesFor(target, input);
-            const neededMonthly = requiredMonthly(target, input);
-            const targetMix = targetCompensationMixFor(target, actual);
-            const compMonthsMatchesFixed = targetMonthly.perCompensationMonths !== null
-              && format(targetMonthly.perCompensationMonths, 2) === format(neededMonthly, 2);
-            const cardWidth = (contentWidth - 44) / 3;
-            const x = left + index * (cardWidth + 22);
-            reportRoundedRect(ctx, x, y, cardWidth, 460, 20, "#fffdf8");
-            ctx.fillStyle = scenarioColors[index];
-            ctx.fillRect(x, y, cardWidth, 7);
-            ctx.fillStyle = "#657086";
-            ctx.font = `700 21px ${reportFont}`;
-            ctx.fillText(scenarioNames[index], x + 25, y + 48);
-            ctx.fillStyle = "#17233c";
-            ctx.font = `800 44px ${reportFont}`;
-            ctx.fillText(`${format(target, 0)} 萬`, x + 25, y + 104);
-            ctx.fillStyle = "#465066";
-            ctx.font = `600 19px ${reportFont}`;
-            ctx.fillText(`÷ 12 月：${format(targetMonthly.per12, 2)} 萬／月`, x + 25, y + 151);
-            ctx.fillText(`÷ 保證 ${formatMonths(input.guaranteedMonths)} 月：${targetMonthly.perGuaranteed === null ? "不適用" : `${format(targetMonthly.perGuaranteed, 2)} 萬／月`}`, x + 25, y + 188);
-            ctx.fillText(targetMonthly.compensationMonths === null
-              ? "÷ 保證＋績效月數：不適用"
-              : `÷ 保證＋績效 ${formatMonths(targetMonthly.compensationMonths)} 月：${targetMonthly.perCompensationMonths === null ? "不適用" : `${format(targetMonthly.perCompensationMonths, 2)} 萬／月`}`,
-              x + 25, y + 225);
-            ctx.fillText(`月薪反推：${targetMonthly.equivalentSalaryMonths === null ? "不適用" : `約 ${format(targetMonthly.equivalentSalaryMonths, 2)} 月／年`}`, x + 25, y + 262);
-            ctx.fillText(`固定：${format(targetMix.fixedAmount, 1)} 萬（${format(targetMix.fixedPercent, 1)}%）`, x + 25, y + 305);
-            ctx.fillText(`所需動態：${format(targetMix.variableAmount, 1)} 萬（${format(targetMix.variablePercent, 1)}%）`, x + 25, y + 342);
-            ctx.fillStyle = "#17284b";
-            ctx.font = `700 19px ${reportFont}`;
-            if (!compMonthsMatchesFixed) {
-              ctx.fillText(`反推固定月薪 ${format(neededMonthly, 2)} 萬`, x + 25, y + 385);
-            }
-            const targetDelta = actual.recurring - target;
-            ctx.fillStyle = targetDelta >= 0 ? "#14745a" : "#a23b3b";
-            ctx.fillText(`目前差額 ${signedFormat(targetDelta)}`, x + 25, y + 428);
-          });
-          y += 508;
-
-          sectionTitle("三、可直接對 HR 說");
-          const talkText = document.getElementById("talkText").textContent;
-          ctx.font = `600 25px ${reportFont}`;
-          const talkLines = reportLines(ctx, talkText, contentWidth - 60);
-          const talkHeight = talkLines.length * 39 + 60;
-          reportRoundedRect(ctx, left, y, contentWidth, talkHeight, 20, "#fffdf8");
-          ctx.fillStyle = "#d6a64b";
-          ctx.fillRect(left, y, 7, talkHeight);
-          ctx.fillStyle = "#39445a";
-          reportWrappedText(ctx, talkText, left + 35, y + 42, contentWidth - 70, 39);
-          y += talkHeight + 40;
-
-          sectionTitle("四、談薪至少確認");
-          const checks = Array.from(document.querySelectorAll(".check-item")).map((item) => ({
-            label: item.querySelector(".check-label span").textContent.trim(),
-            checked: item.querySelector(".check-control").checked,
-            note: item.querySelector(".check-note").value.trim()
-          }));
-          checks.forEach(({ label, checked, note }) => {
-            ctx.font = `700 24px ${reportFont}`;
-            const labelLines = reportLines(ctx, label, contentWidth - 100);
-            const noteText = note ? `備註：${note}` : "備註：—";
-            ctx.font = `500 22px ${reportFont}`;
-            const noteLines = reportLines(ctx, noteText, contentWidth - 70);
-            const itemHeight = 30 + labelLines.length * 35 + 12 + noteLines.length * 32 + 26;
-            reportRoundedRect(ctx, left, y, contentWidth, itemHeight, 14, checked ? "#eef7f3" : "#fffdf8");
-            ctx.fillStyle = checked ? "#14745a" : "#8a93a2";
-            ctx.font = `800 27px ${reportFont}`;
-            ctx.fillText(checked ? "✓" : "□", left + 25, y + 42);
-            ctx.fillStyle = "#354056";
-            ctx.font = `700 24px ${reportFont}`;
-            const noteY = reportWrappedText(ctx, label, left + 68, y + 41, contentWidth - 100, 35);
-            ctx.fillStyle = note ? "#525c70" : "#8a93a2";
-            ctx.font = `500 22px ${reportFont}`;
-            reportWrappedText(ctx, noteText, left + 35, noteY + 12, contentWidth - 70, 32);
-            y += itemHeight + 14;
-          });
-          y += 18;
-
-          sectionTitle(`五、${industry.title}`);
-          ctx.font = `600 24px ${reportFont}`;
-          industry.items.forEach((item) => {
-            const lines = reportLines(ctx, item, contentWidth - 82);
-            const itemHeight = Math.max(66, lines.length * 35 + 30);
-            reportRoundedRect(ctx, left, y, contentWidth, itemHeight, 14, "#f7e9c7");
-            ctx.fillStyle = "#8b671e";
-            ctx.fillText("•", left + 25, y + 39);
-            ctx.fillStyle = "#5b4a28";
-            reportWrappedText(ctx, item, left + 58, y + 38, contentWidth - 82, 35);
-            y += itemHeight + 14;
-          });
-          y += 26;
-
-          sectionTitle("六、HR 常見問題與回答方向", "完整收錄頁面中的所有問答");
-          const questionAnswers = Array.from(document.querySelectorAll(".qa-list details")).map((detail) => ({
-            question: detail.querySelector("summary").textContent.trim(),
-            answer: detail.querySelector(".qa-answer").textContent.trim()
-          }));
-          questionAnswers.forEach(({ question, answer }) => {
-            ctx.font = `800 25px ${reportFont}`;
-            const questionLines = reportLines(ctx, question, contentWidth - 60);
-            ctx.font = `500 23px ${reportFont}`;
-            const answerLines = reportLines(ctx, answer, contentWidth - 60);
-            const cardHeight = 32 + questionLines.length * 38 + 16 + answerLines.length * 34 + 30;
-            reportRoundedRect(ctx, left, y, contentWidth, cardHeight, 18, "#fffdf8");
-            ctx.fillStyle = "#17233c";
-            ctx.font = `800 25px ${reportFont}`;
-            let textY = reportWrappedText(ctx, question, left + 30, y + 42, contentWidth - 60, 38);
-            ctx.fillStyle = "#525c70";
-            ctx.font = `500 23px ${reportFont}`;
-            reportWrappedText(ctx, answer, left + 30, textY + 12, contentWidth - 60, 34);
-            y += cardHeight + 18;
-          });
-          y += 26;
-
-          sectionTitle("七、核心原則");
-          const principle = document.querySelector(".principle-bar p").textContent.trim();
-          ctx.font = `700 26px ${reportFont}`;
-          const principleLines = reportLines(ctx, principle, contentWidth - 70);
-          const principleHeight = principleLines.length * 40 + 62;
-          reportRoundedRect(ctx, left, y, contentWidth, principleHeight, 18, "#e8e2d7");
-          ctx.fillStyle = "#17284b";
-          reportWrappedText(ctx, principle, left + 35, y + 45, contentWidth - 70, 40);
-          y += principleHeight + 70;
-
-          ctx.fillStyle = "#7d8492";
-          ctx.font = `500 19px ${reportFont}`;
-          ctx.fillText("本報告僅供薪資談判準備；實際條件以正式 Offer、聘僱契約及公司書面規範為準。", left, y);
-          y += 70;
-
-          const output = document.createElement("canvas");
-          output.width = source.width;
-          output.height = Math.ceil(y);
-          output.getContext("2d").drawImage(source, 0, 0, source.width, output.height, 0, 0, source.width, output.height);
-          const pngBlob = await new Promise((resolve) => output.toBlob(resolve, "image/png"));
-          if (!pngBlob) throw new Error("PNG 編碼失敗");
-          const pngUrl = URL.createObjectURL(pngBlob);
-          const link = document.createElement("a");
-          link.href = pngUrl;
-          link.download = `薪資談判完整報告-${new Date().toISOString().slice(0, 10)}.png`;
-          document.body.appendChild(link);
-          link.click();
-          link.remove();
-          window.setTimeout(() => URL.revokeObjectURL(pngUrl), 1000);
-          status.textContent = `完整報告 PNG 已下載（${output.width} × ${output.height}）。`;
-        } catch (_) {
-          status.textContent = "完整報告 PNG 產生失敗，請改用 PDF 匯出。";
-        }
-      };
+      const schemeMarkdown = (title, input, actual) => [
+        `## ${title}`,
+        `- 固定月薪：${format(input.monthlySalary, 2)} 萬元／月`,
+        `- 保證薪資月數：${format(input.guaranteedMonths, 1)} 個月`,
+        `- 其他固定報酬：${format(input.otherFixed, 1)} 萬元／年`,
+        `- 績效獎金：${format(actual.performance, 1)} 萬元／年（${input.bonusMode === "months" ? `${format(input.performanceBonus, 1)} 個月` : "以金額輸入"}）`,
+        `- RSU／員工分紅：${format(input.equity, 1)} 萬元／年`,
+        `- 其他浮動報酬：${format(input.otherVariable, 1)} 萬元／年`,
+        `- 固定保證年薪：${format(actual.guaranteed, 1)} 萬元（${format(actual.compensationMix.fixedPercent, 1)}%）`,
+        `- 年度浮動薪酬：${format(actual.variable, 1)} 萬元（${format(actual.variableRatio, 1)}%）`,
+        `- 到職獎金（僅第一年）：${format(input.signOnBonus, 1)} 萬元`,
+        `- 第一年 TC：${format(actual.firstYear, 1)} 萬元`,
+        `- 第二年起 TC：${format(actual.recurring, 1)} 萬元`,
+        `- TC ÷ 12：${format(actual.monthlyEstimates.per12, 2)} 萬元／月`,
+        `- TC ÷ 保證月數：${actual.monthlyEstimates.perGuaranteed === null ? "不適用" : `${format(actual.monthlyEstimates.perGuaranteed, 2)} 萬元／月`}`,
+        `- TC ÷ 保證＋績效月數：${actual.monthlyEstimates.perCompensationMonths === null ? "不適用（績效獎金以金額輸入）" : `${format(actual.monthlyEstimates.perCompensationMonths, 2)} 萬元／月`}`,
+        `- TC 相當固定月薪月數：${actual.monthlyEstimates.equivalentSalaryMonths === null ? "不適用" : `${format(actual.monthlyEstimates.equivalentSalaryMonths, 2)} 個月／年`}`,
+        ""
+      ].join("\n");
 
       const buildMarkdownReport = () => {
-        const input = getInput();
-        const actual = calculate(input);
-        const industry = industryContent[input.industry] || industryContent.manufacturing;
-        const talkText = document.getElementById("talkText").textContent.trim();
-        const principle = document.querySelector(".principle-bar p").textContent.trim();
+        initializeTargetIfNeeded();
+        const globalInput = getGlobalInput();
+        const currentInput = getSalaryInput("current");
+        const targetInput = getSalaryInput("target");
+        const currentActual = calculate(currentInput);
+        const targetActual = calculate(targetInput);
+        const datePlan = datePlanFor(globalInput.datePlannerStart, globalInput.datePlannerOffset);
+        const industry = industryContent[globalInput.industry] || industryContent.manufacturing;
+        const comparisonRows = comparisonRowsFor(currentInput, targetInput, currentActual, targetActual);
         const checks = Array.from(document.querySelectorAll(".check-item")).map((item) => ({
           label: item.querySelector(".check-label span").textContent.trim(),
           checked: item.querySelector(".check-control").checked,
@@ -2276,87 +2379,133 @@
           question: detail.querySelector("summary").textContent.trim(),
           answer: detail.querySelector(".qa-answer").textContent.trim()
         }));
-        const scenarios = [input.goalConservative, input.goalTarget, input.goalIdeal].map((target, index) => {
-          const neededMonthly = requiredMonthly(target, input);
-          const monthlyEstimates = monthlyEstimatesFor(target, input);
-          const compensationMix = targetCompensationMixFor(target, actual);
-          return {
-            name: scenarioNames[index],
-            target,
-            neededMonthly,
-            monthlyEstimates,
-            compensationMix,
-            compMonthsMatchesFixed: monthlyEstimates.perCompensationMonths !== null
-              && format(monthlyEstimates.perCompensationMonths, 2) === format(neededMonthly, 2),
-            delta: actual.recurring - target,
-            status: statusFor(actual.recurring, target).label
-          };
-        });
-        const quotedTalk = talkText.split("\n").map((line) => `> ${line}`).join("\n");
-        const checklistMarkdown = checks.map(({ label, checked, note }) => {
-          const noteLines = note
-            ? note.split("\n").map((line) => `  - 備註：${line}`).join("\n")
-            : "  - 備註：—";
-          return `- [${checked ? "x" : " "}] ${label}\n${noteLines}`;
+        const comparisonMarkdown = comparisonRows.map((row) => {
+          if (row.group) return `| **${row.group}** |  |  |  |  |`;
+          const delta = row.current === null || row.target === null ? null : row.target - row.current;
+          return `| ${row.label} | ${comparisonDisplay(row.current, row, "current")} | ${comparisonDisplay(row.target, row, "target")} | ${delta === null ? "不適用" : signedValue(delta, row.unit, row.digits)} | ${percentageChange(row.current, row.target)} |`;
         }).join("\n");
-        const scenarioMarkdown = scenarios.map((scenario) => [
-          `### ${scenario.name}`,
-          `- 目標總包：${format(scenario.target, 1)} 萬元`,
-          `- 月均估算（目標 TC ÷ 12 個月）：${format(scenario.monthlyEstimates.per12, 2)} 萬元／月`,
-          `- 月均估算（目標 TC ÷ 保證 ${formatMonths(scenario.monthlyEstimates.guaranteedMonths)} 個月）：${scenario.monthlyEstimates.perGuaranteed === null ? "不適用" : `${format(scenario.monthlyEstimates.perGuaranteed, 2)} 萬元／月`}`,
-          `- 月均估算（${scenario.monthlyEstimates.compensationMonths === null ? "績效獎金目前以金額輸入" : `目標 TC ÷ 保證＋績效 ${formatMonths(scenario.monthlyEstimates.compensationMonths)} 個月`}）：${scenario.monthlyEstimates.perCompensationMonths === null ? "不適用" : `${format(scenario.monthlyEstimates.perCompensationMonths, 2)} 萬元／月`}`,
-          `- 依固定月薪 ${format(input.monthlySalary, 1)} 萬元反推：${scenario.monthlyEstimates.equivalentSalaryMonths === null ? "不適用" : `約 ${format(scenario.monthlyEstimates.equivalentSalaryMonths, 2)} 個月／年`}`,
-          `- 固定薪酬：${format(scenario.compensationMix.fixedAmount, 1)} 萬元（${format(scenario.compensationMix.fixedPercent, 1)}%）`,
-          `- 目標所需動態薪酬：${format(scenario.compensationMix.variableAmount, 1)} 萬元（${format(scenario.compensationMix.variablePercent, 1)}%）`,
-          scenario.compMonthsMatchesFixed ? "" : `- 依目前薪酬結構反推固定月薪：${format(scenario.neededMonthly, 2)} 萬元`,
-          `- 依目前動態配置計算的總包差額：${signedFormat(scenario.delta)}`,
-          `- 狀態：${scenario.status}`
-        ].filter(Boolean).join("\n")).join("\n\n");
+        const benchmarkMarkdown = [globalInput.goalConservative, globalInput.goalTarget, globalInput.goalIdeal].map((benchmark, index) => {
+          const currentDelta = currentActual.recurring - benchmark;
+          const targetDelta = targetActual.recurring - benchmark;
+          return [
+            `### ${scenarioNames[index]}：${format(benchmark, 1)} 萬元`,
+            `- 現在薪資：${format(currentActual.recurring, 1)} 萬元；${statusFor(currentActual.recurring, benchmark).label}；差額 ${signedFormat(currentDelta)}`,
+            `- 目標薪資：${format(targetActual.recurring, 1)} 萬元；${statusFor(targetActual.recurring, benchmark).label}；差額 ${signedFormat(targetDelta)}`
+          ].join("\n");
+        }).join("\n\n");
+        const checklistMarkdown = checks.map(({ label, checked, note }) => `- [${checked ? "x" : " "}] ${label}\n  - 備註：${note || "—"}`).join("\n");
         const industryMarkdown = industry.items.map((item) => `- ${item}`).join("\n");
         const qaMarkdown = questionAnswers.map(({ question, answer }) => `### ${question}\n${answer}`).join("\n\n");
+        const talkText = document.getElementById("talkText").textContent.trim().split("\n").map((line) => `> ${line}`).join("\n");
+        const principle = document.querySelector(".principle-bar p").textContent.trim();
 
         return [
           "# 薪資談判完整報告",
           "",
           `- 產業類型：${industry.label}`,
           `- 產生日期：${new Intl.DateTimeFormat("zh-TW", { dateStyle: "medium" }).format(new Date())}`,
+          `- 時程規劃：${globalInput.datePlannerStart || "未設定"} 起算 D+${datePlan ? datePlan.offset : Math.trunc(globalInput.datePlannerOffset)}，${datePlan ? datePlan.display : "日期無效"}`,
+          `- TC 基準：保守 ${format(globalInput.goalConservative, 1)}／目標 ${format(globalInput.goalTarget, 1)}／理想 ${format(globalInput.goalIdeal, 1)} 萬元`,
           "- 金額單位：新台幣萬元",
           "",
-          "## 一、薪資結構",
-          `- 固定月薪：${format(input.monthlySalary, 2)} 萬元`,
-          `- 保證薪資月數：${format(input.guaranteedMonths, 1)} 個月`,
-          `- 固定保證年薪：${format(actual.guaranteed, 1)} 萬元（${format(actual.compensationMix.fixedPercent, 1)}%）`,
-          `- 年度浮動薪酬：${format(actual.variable, 1)} 萬元（${format(actual.variableRatio, 1)}%）`,
-          `- 到職獎金（僅第一年）：${format(input.signOnBonus, 1)} 萬元`,
-          `- 第一年 Total Compensation：${format(actual.firstYear, 1)} 萬元`,
-          `- 第二年起 Total Compensation：${format(actual.recurring, 1)} 萬元`,
-          `- 月均估算（第二年起 TC ÷ 12 個月）：${format(actual.monthlyEstimates.per12, 2)} 萬元／月`,
-          `- 月均估算（第二年起 TC ÷ 保證 ${formatMonths(actual.monthlyEstimates.guaranteedMonths)} 個月）：${actual.monthlyEstimates.perGuaranteed === null ? "不適用" : `${format(actual.monthlyEstimates.perGuaranteed, 2)} 萬元／月`}`,
-          `- 月均估算（${actual.monthlyEstimates.compensationMonths === null ? "績效獎金目前以金額輸入" : `第二年起 TC ÷ 保證＋績效 ${formatMonths(actual.monthlyEstimates.compensationMonths)} 個月`}）：${actual.monthlyEstimates.perCompensationMonths === null ? "不適用" : `${format(actual.monthlyEstimates.perCompensationMonths, 2)} 萬元／月`}`,
-          `- 依固定月薪 ${format(input.monthlySalary, 1)} 萬元反推：${actual.monthlyEstimates.equivalentSalaryMonths === null ? "不適用" : `約 ${format(actual.monthlyEstimates.equivalentSalaryMonths, 2)} 個月／年`}`,
-          "- 月均估算說明：包含浮動報酬，僅供跨方案比較，不代表契約固定月薪。",
+          schemeMarkdown("一、現在薪資", currentInput, currentActual),
+          schemeMarkdown("二、目標薪資", targetInput, targetActual),
+          "## 三、方案比較",
+          "| 項目 | 現在薪資 | 目標薪資 | 差額（目標－現在） | 增減幅 |",
+          "| --- | ---: | ---: | ---: | ---: |",
+          comparisonMarkdown,
           "",
-          "## 二、談判目標",
-          scenarioMarkdown,
+          "## 四、保守／目標／理想 TC 基準",
+          benchmarkMarkdown,
           "",
-          "## 三、可直接對 HR 說",
-          quotedTalk,
+          "## 五、可直接對 HR 說",
+          talkText,
           "",
-          "## 四、談薪 Checklist",
+          "## 六、談薪 Checklist",
           checklistMarkdown,
           "",
-          `## 五、${industry.title}`,
+          `## 七、${industry.title}`,
           industryMarkdown,
           "",
-          "## 六、HR 常見問題與回答方向",
+          "## 八、HR 常見問題與回答方向",
           qaMarkdown,
           "",
-          "## 七、核心原則",
+          "## 九、核心原則",
           principle,
           "",
           "---",
           "本報告僅供薪資談判準備；實際條件以正式 Offer、聘僱契約及公司書面規範為準。"
         ].join("\n");
+      };
+
+      const downloadFullPageImage = async () => {
+        const status = document.getElementById("exportStatus");
+        status.textContent = "正在產生完整報告 PNG…";
+        try {
+          const markdown = buildMarkdownReport();
+          const width = 1400;
+          const padding = 90;
+          const maxWidth = width - padding * 2;
+          const measuringCanvas = document.createElement("canvas");
+          const measuringContext = measuringCanvas.getContext("2d");
+          const layout = [];
+          let height = 90;
+          markdown.split("\n").forEach((rawLine) => {
+            const isH1 = rawLine.startsWith("# ");
+            const isH2 = rawLine.startsWith("## ");
+            const isH3 = rawLine.startsWith("### ");
+            const isDivider = rawLine === "---";
+            const text = rawLine.replace(/^#{1,3}\s+/, "").replace(/^>\s?/, "").replace(/^\|\s?/, "").replace(/\s?\|$/, "");
+            const fontSize = isH1 ? 54 : isH2 ? 36 : isH3 ? 28 : 22;
+            const weight = isH1 || isH2 || isH3 ? 800 : 500;
+            const lineHeight = isH1 ? 72 : isH2 ? 52 : isH3 ? 42 : 34;
+            const before = isH1 ? 0 : isH2 ? 30 : isH3 ? 18 : rawLine === "" ? 10 : 0;
+            measuringContext.font = `${weight} ${fontSize}px ${reportFont}`;
+            const wrapped = rawLine === "" ? [""] : reportLines(measuringContext, isDivider ? "────────────────────────────────────────" : text, maxWidth);
+            layout.push({ wrapped, fontSize, weight, lineHeight, before, isH1, isH2, isH3, isDivider, rawLine });
+            height += before + wrapped.length * lineHeight;
+          });
+          height += 90;
+          const canvas = document.createElement("canvas");
+          canvas.width = width;
+          canvas.height = Math.ceil(height);
+          const ctx = canvas.getContext("2d");
+          ctx.fillStyle = "#f4f1ea";
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+          let y = 90;
+          layout.forEach((item) => {
+            y += item.before;
+            if (item.isH1) {
+              ctx.fillStyle = "#17284b";
+            } else if (item.isH2) {
+              ctx.fillStyle = "#294474";
+            } else if (item.isH3) {
+              ctx.fillStyle = "#17233c";
+            } else if (item.isDivider) {
+              ctx.fillStyle = "#c8c1b4";
+            } else {
+              ctx.fillStyle = item.rawLine.startsWith(">") ? "#525c70" : "#354056";
+            }
+            ctx.font = `${item.weight} ${item.fontSize}px ${reportFont}`;
+            item.wrapped.forEach((line) => {
+              ctx.fillText(line, padding, y + item.lineHeight * 0.78);
+              y += item.lineHeight;
+            });
+          });
+          const pngBlob = await new Promise((resolve) => canvas.toBlob(resolve, "image/png"));
+          if (!pngBlob) throw new Error("PNG 編碼失敗");
+          const pngUrl = URL.createObjectURL(pngBlob);
+          const link = document.createElement("a");
+          link.href = pngUrl;
+          link.download = `薪資談判完整報告-${new Date().toISOString().slice(0, 10)}.png`;
+          document.body.appendChild(link);
+          link.click();
+          link.remove();
+          window.setTimeout(() => URL.revokeObjectURL(pngUrl), 1000);
+          status.textContent = `完整報告 PNG 已下載（${canvas.width} × ${canvas.height}）。`;
+        } catch (_) {
+          status.textContent = "完整報告 PNG 產生失敗，請改用 PDF 匯出。";
+        }
       };
 
       const copyText = async (text) => {
@@ -2401,13 +2550,56 @@
       const sectionNavTargets = sectionNavLinks
         .map((link) => document.getElementById(link.dataset.sectionLink))
         .filter(Boolean);
-      const storageKey = "salary-negotiation-calculator-state-v1";
+      const storageKey = "salary-negotiation-calculator-state-v2";
+      const legacyStorageKey = "salary-negotiation-calculator-state-v1";
       let suppressSave = false;
       let navUpdatePending = false;
+      let targetInitialized = false;
+
+      const initializeTargetIfNeeded = () => {
+        if (targetInitialized) return false;
+        setSalaryFields("target", salaryValuesForStorage("current"));
+        targetInitialized = true;
+        update();
+        saveState();
+        return true;
+      };
+
+      const tabs = Array.from(document.querySelectorAll('[role="tab"]'));
+      const tabPanels = Array.from(document.querySelectorAll('[role="tabpanel"]'));
+      const activateTab = (tab, moveFocus = false) => {
+        if ((tab.id === "targetTab" || tab.id === "comparisonTab") && initializeTargetIfNeeded()) {
+          document.getElementById("storageStatus").textContent = "目標方案已首次從現在方案完整建立，後續將獨立保存。";
+        }
+        tabs.forEach((item) => {
+          const selected = item === tab;
+          item.setAttribute("aria-selected", String(selected));
+          item.tabIndex = selected ? 0 : -1;
+        });
+        tabPanels.forEach((panel) => {
+          panel.hidden = panel.id !== tab.getAttribute("aria-controls");
+        });
+        if (moveFocus) tab.focus();
+      };
+
+      tabs.forEach((tab, index) => {
+        tab.addEventListener("click", () => activateTab(tab));
+        tab.addEventListener("keydown", (event) => {
+          let nextIndex = null;
+          if (event.key === "ArrowRight") nextIndex = (index + 1) % tabs.length;
+          if (event.key === "ArrowLeft") nextIndex = (index - 1 + tabs.length) % tabs.length;
+          if (event.key === "Home") nextIndex = 0;
+          if (event.key === "End") nextIndex = tabs.length - 1;
+          if (nextIndex === null) return;
+          event.preventDefault();
+          activateTab(tabs[nextIndex], true);
+        });
+      });
 
       const updateSectionNavigation = () => {
         let activeId = sectionNavTargets[0] ? sectionNavTargets[0].id : "";
         sectionNavTargets.forEach((section) => {
+          if (section.hidden) return;
           if (section.getBoundingClientRect().top <= 150) activeId = section.id;
         });
         sectionNavLinks.forEach((link) => {
@@ -2445,8 +2637,10 @@
       const saveState = () => {
         if (suppressSave) return;
         const state = {
-          version: 1,
-          fields: Object.fromEntries(ids.map((id) => [id, fields[id].value])),
+          version: 2,
+          global: Object.fromEntries(globalIds.map((id) => [id, fields[id].value])),
+          current: salaryValuesForStorage("current"),
+          target: { ...salaryValuesForStorage("target"), _initialized: targetInitialized },
           checklist: Object.fromEntries(checklistControls.map((control, index) => [control.id, {
             checked: control.checked,
             note: checklistNotes[index].value
@@ -2460,50 +2654,50 @@
         }
       };
 
+      const restoreChecklist = (checklist = {}) => {
+        checklistControls.forEach((control, index) => {
+          const savedItem = checklist[control.id];
+          if (!savedItem || typeof savedItem !== "object") return;
+          control.checked = savedItem.checked === true;
+          checklistNotes[index].value = typeof savedItem.note === "string" ? savedItem.note : "";
+        });
+      };
+
+      const applyDefaults = () => {
+        setGlobalFields({ ...defaultGlobal, datePlannerStart: todayDateValue() });
+        setSalaryFields("current", defaultSalary);
+        setSalaryFields("target", defaultSalary);
+      };
+
       const restoreState = () => {
         try {
           const rawState = localStorage.getItem(storageKey);
-          if (!rawState) return false;
-          const state = JSON.parse(rawState);
-          if (!state || state.version !== 1) return false;
-          const migratedOldGoalDefaults = state.fields
-            && state.fields.goalConservative === "250"
-            && state.fields.goalTarget === "260"
-            && state.fields.goalIdeal === "270";
-          const migratedOldMonthlyDefault = state.fields
-            && ["16.5", "12"].includes(state.fields.monthlySalary);
-          const migratedOldPerformanceDefault = state.fields
-            && state.fields.bonusMode === "months"
-            && state.fields.performanceBonus === "1";
-          if (migratedOldGoalDefaults) {
-            state.fields.goalConservative = "240";
-            state.fields.goalTarget = "250";
-            state.fields.goalIdeal = "260";
+          if (rawState) {
+            const state = JSON.parse(rawState);
+            if (state && state.version === 2) {
+              setGlobalFields(state.global);
+              setSalaryFields("current", state.current);
+              setSalaryFields("target", state.target);
+              targetInitialized = state.target && state.target._initialized === false ? false : true;
+              restoreChecklist(state.checklist);
+              document.getElementById("storageStatus").textContent = "已還原現在與目標兩套薪酬資料。";
+              return true;
+            }
           }
-          if (migratedOldMonthlyDefault) {
-            state.fields.monthlySalary = "12.5";
-          }
-          if (migratedOldPerformanceDefault) {
-            state.fields.performanceBonus = "6";
-          }
-          if (migratedOldGoalDefaults || migratedOldMonthlyDefault || migratedOldPerformanceDefault) {
-            localStorage.setItem(storageKey, JSON.stringify(state));
-          }
-          ids.forEach((id) => {
-            const savedValue = state.fields && state.fields[id];
-            if (typeof savedValue !== "string") return;
-            if (fields[id].tagName === "SELECT" && !Array.from(fields[id].options).some((option) => option.value === savedValue)) return;
-            fields[id].value = savedValue;
-          });
-          checklistControls.forEach((control, index) => {
-            const savedItem = state.checklist && state.checklist[control.id];
-            if (!savedItem || typeof savedItem !== "object") return;
-            control.checked = savedItem.checked === true;
-            checklistNotes[index].value = typeof savedItem.note === "string" ? savedItem.note : "";
-          });
-          document.getElementById("storageStatus").textContent = migratedOldGoalDefaults || migratedOldMonthlyDefault || migratedOldPerformanceDefault
-            ? "已套用新版預設：固定月薪 12.5 萬元、績效獎金 6 個月，目標為 240／250／260 萬元。"
-            : "已還原上次儲存在此瀏覽器的資料。";
+
+          const legacyRawState = localStorage.getItem(legacyStorageKey);
+          if (!legacyRawState) return false;
+          const legacyState = JSON.parse(legacyRawState);
+          if (!legacyState || legacyState.version !== 1 || !legacyState.fields) return false;
+          const legacyGlobal = Object.fromEntries(globalIds.map((id) => [id, legacyState.fields[id] ?? fields[id].value]));
+          const legacyCurrent = Object.fromEntries(salaryKeys.map((key) => [key, legacyState.fields[key] ?? defaultSalary[key]]));
+          setGlobalFields(legacyGlobal);
+          setSalaryFields("current", legacyCurrent);
+          setSalaryFields("target", { ...legacyCurrent });
+          targetInitialized = true;
+          restoreChecklist(legacyState.checklist);
+          document.getElementById("storageStatus").textContent = "已將舊版薪酬完整遷移為現在方案，並首次複製為目標方案。";
+          saveState();
           return true;
         } catch (_) {
           document.getElementById("storageStatus").textContent = "無法讀取先前資料，已使用頁面預設值。";
@@ -2511,9 +2705,16 @@
         }
       };
 
-      form.addEventListener("input", () => { update(); saveState(); });
-      form.addEventListener("change", () => { update(); saveState(); });
-      form.addEventListener("reset", () => window.setTimeout(() => { update(); saveState(); }, 0));
+      form.addEventListener("input", (event) => {
+        if (targetFieldIds.includes(event.target.id)) targetInitialized = true;
+        update();
+        saveState();
+      });
+      form.addEventListener("change", (event) => {
+        if (targetFieldIds.includes(event.target.id)) targetInitialized = true;
+        update();
+        saveState();
+      });
       checklistControls.forEach((control) => control.addEventListener("change", () => {
         updateChecklistProgress();
         saveState();
@@ -2525,11 +2726,39 @@
         });
       });
 
+      document.getElementById("copyCurrentToTarget").addEventListener("click", () => {
+        if (!window.confirm("確定要以現在薪資完整覆蓋目標薪資嗎？目標方案目前的輸入將被取代。")) return;
+        setSalaryFields("target", salaryValuesForStorage("current"));
+        targetInitialized = true;
+        update();
+        saveState();
+        document.getElementById("storageStatus").textContent = "已從現在方案複製至目標方案，兩套資料後續仍獨立修改。";
+      });
+
+      document.getElementById("resetCurrent").addEventListener("click", () => {
+        setSalaryFields("current", defaultSalary);
+        update();
+        saveState();
+        document.getElementById("storageStatus").textContent = "現在薪資已回復預設值。";
+      });
+
+      document.getElementById("resetTarget").addEventListener("click", () => {
+        setSalaryFields("target", defaultSalary);
+        targetInitialized = true;
+        update();
+        saveState();
+        document.getElementById("storageStatus").textContent = "目標薪資已回復預設值。";
+      });
+
       document.getElementById("clearAllData").addEventListener("click", () => {
         if (!window.confirm("確定要清除所有薪資輸入、Checklist 勾選與備註嗎？此動作無法復原。")) return;
         suppressSave = true;
-        try { localStorage.removeItem(storageKey); } catch (_) { /* Storage may be unavailable. */ }
-        form.reset();
+        try {
+          localStorage.removeItem(storageKey);
+          localStorage.removeItem(legacyStorageKey);
+        } catch (_) { /* Storage may be unavailable. */ }
+        applyDefaults();
+        targetInitialized = false;
         checklistControls.forEach((control) => { control.checked = false; });
         checklistNotes.forEach((note) => {
           note.value = "";
@@ -2562,6 +2791,7 @@
       });
 
       document.getElementById("exportPdf").addEventListener("click", () => {
+        initializeTargetIfNeeded();
         document.getElementById("exportStatus").textContent = "已開啟列印視窗；請選擇另存為 PDF。";
         window.print();
       });
@@ -2592,6 +2822,7 @@
         });
       });
 
+      applyDefaults();
       restoreState();
       checklistNotes.forEach(resizeChecklistNote);
       updateChecklistProgress();
