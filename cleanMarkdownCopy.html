@@ -2,235 +2,141 @@
 <html lang="zh-Hant">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Markdown 清理工具</title>
   <style>
-    body {
-      font-family: sans-serif;
-      margin: 2rem;
-      background: #f2f2f2;
+    :root { color-scheme:light; --ink:#202b3d; --muted:#68758a; --line:#dde3eb; --accent:#2459d3; --soft:#eef3ff; }
+    * { box-sizing:border-box; }
+    body { margin:0; padding:32px; background:#f5f6f8; color:var(--ink); font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Microsoft JhengHei",sans-serif; line-height:1.6; }
+    button,textarea,input { font:inherit; }
+    button { cursor:pointer; -webkit-tap-highlight-color:transparent; }
+    button:focus-visible,textarea:focus-visible,input:focus-visible { outline:3px solid #94b4ff; outline-offset:3px; }
+    .app { max-width:1440px; margin:0 auto; }
+    .page-header { display:flex; align-items:center; justify-content:space-between; gap:20px; margin-bottom:24px; }
+    h1 { font-size:25px; line-height:1.3; letter-spacing:-.03em; margin:0 0 6px; }
+    .page-header p,.section-caption { margin:0; color:var(--muted); font-size:13px; }
+    .utility-actions,.action-buttons { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+    .button { display:inline-flex; align-items:center; justify-content:center; gap:8px; min-height:34px; padding:6px 11px; border:1px solid var(--line); border-radius:9px; background:white; color:var(--ink); font-size:13px; font-weight:600; line-height:1.4; transition:background 120ms,border-color 120ms; }
+    .button:hover { background:#f0f3f8; border-color:#b8c4d5; }
+    .button[aria-expanded="true"] { background:var(--soft); border-color:#b9cafd; color:var(--accent); }
+    .button-primary { background:var(--accent); border-color:var(--accent); color:white; }
+    .button-primary:hover { background:#1b47b0; border-color:#1b47b0; }
+    .icon { width:15px; height:15px; flex:0 0 auto; fill:none; stroke:currentColor; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
+    .controls { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px 20px; border:1px solid var(--line); border-radius:10px; background:white; padding:12px 14px; margin-bottom:16px; }
+    .mode-selector { display:flex; align-items:center; gap:12px; flex-wrap:wrap; min-width:0; }
+    .mode-selector h2 { font-size:12px; color:var(--muted); margin:0; font-weight:500; }
+    .mode-grid { display:flex; flex-wrap:wrap; gap:6px; }
+    .mode-button { min-height:34px; padding:6px 12px; border:1px solid var(--line); border-radius:7px; background:white; color:var(--ink); font-size:13px; font-weight:500; line-height:1.5; transition:background 120ms,border-color 120ms; }
+    .mode-button:hover { border-color:#a8bce8; background:#fafbff; }
+    .mode-button[aria-pressed="true"] { border-color:var(--accent); background:var(--soft); color:var(--accent); font-weight:600; }
+    .sr-only { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip-path:inset(50%); white-space:nowrap; border:0; }
+    .help-panel,.options-panel { display:none; padding:20px; margin:0 0 20px; border:1px solid var(--line); border-radius:12px; background:white; position:relative; }
+    .help-panel.open,.options-panel.open { display:block; }
+    .help-panel h3,.options-panel h3 { margin:0 48px 16px 0; font-size:16px; }
+    .close { position:absolute; right:12px; top:12px; min-width:36px; min-height:36px; border:0; border-radius:8px; color:var(--muted); background:#f2f4f7; }
+    .close:hover { color:var(--ink); background:#e8ecf2; }
+    .help-panel .section { margin:14px 0; font-size:14px; }
+    .help-panel p { margin:5px 0; color:var(--muted); }
+    .help-panel ul { margin:6px 0; padding-left:22px; color:var(--muted); }
+    .options-panel .row { display:flex; align-items:flex-start; gap:10px; margin:14px 0; font-size:14px; }
+    .options-panel .row input { margin:5px 0 0; accent-color:var(--accent); }
+    .options-panel label { cursor:pointer; }
+    .summary { background:#f7f8fb; border:1px solid #edf0f4; border-radius:8px; padding:10px 14px; font-size:13px; }
+    #optionsSummary { color:var(--muted); }
+    .editor-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:20px; }
+    .editor { min-width:0; border:1px solid var(--line); border-radius:12px; overflow:hidden; background:white; }
+    .editor-header { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:14px 18px; border-bottom:1px solid #edf0f4; }
+    .editor-header label { font-size:14px; font-weight:650; }
+    .editor-tag { font-size:11px; color:var(--muted); letter-spacing:.07em; }
+    textarea { display:block; width:100%; height:440px; min-height:240px; padding:18px; border:0; border-radius:0; resize:vertical; color:var(--ink); background:white; font-family:"SFMono-Regular",Consolas,"Microsoft JhengHei",monospace; font-size:14px; line-height:1.75; tab-size:4; }
+    textarea::placeholder { color:#9aa5b5; }
+    textarea:focus-visible { outline-offset:-3px; }
+    #outputText { background:#fcfdff; }
+    .toast { position:fixed; bottom:24px; left:50%; transform:translateX(-50%); max-width:calc(100vw - 32px); padding:12px 20px; border-radius:10px; color:white; background:#26344b; font-size:14px; box-shadow:0 8px 24px #1c2a4426; z-index:100; }
+    @media (max-width:900px) {
+      body { padding:24px; }
+      .editor-grid { grid-template-columns:1fr; }
+      textarea { height:320px; }
     }
-    textarea {
-      width: 100%;
-      height: 300px;
-      font-family: monospace;
-      font-size: 14px;
-      padding: 1rem;
-      border-radius: 6px;
-      border: 1px solid #ccc;
-      resize: vertical;
+    @media (max-width:600px) {
+      body { padding:18px 14px; }
+      .page-header { align-items:flex-start; flex-direction:column; gap:10px; margin-bottom:14px; }
+      h1 { font-size:21px; }
+      .controls { padding:10px; gap:10px; }
+      .mode-selector { gap:7px; }
+      .mode-selector h2 { width:100%; }
+      .mode-button { min-height:36px; padding:6px 10px; }
+      .button { min-height:36px; }
+      .help-panel,.options-panel { padding:16px; }
+      .editor-header { padding:12px 14px; }
+      textarea { padding:14px; }
     }
-    .btn-group {
-      margin-bottom: 1rem;
-    }
-    .btn-group button {
-      padding: 0.5rem 1rem;
-      background-color: #007bff;
-      color: white;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-    }
-    .btn-wrap {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      margin-right: 0.5rem;
-    }
-    .help-icon {
-      width: 18px;
-      height: 18px;
-      border-radius: 999px;
-      border: 1px solid #007bff;
-      background: #fff;
-      color: #007bff;
-      font-weight: 700;
-      font-size: 12px;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      cursor: help;
-      position: relative;
-      user-select: none;
-    }
-    .help-icon::after {
-      content: attr(data-tooltip);
-      position: absolute;
-      top: calc(100% + 10px);
-      left: 50%;
-      transform: translateX(-50%);
-      background: #111;
-      color: #fff;
-      padding: 10px 12px;
-      border-radius: 8px;
-      font-weight: 400;
-      font-size: 12px;
-      line-height: 1.4;
-      width: 340px;
-      max-width: min(340px, 70vw);
-      white-space: normal;
-      opacity: 0;
-      pointer-events: none;
-      box-shadow: 0 10px 22px rgba(0,0,0,0.25);
-      transition: opacity 120ms ease;
-      z-index: 1000;
-    }
-    .help-icon::before {
-      content: "";
-      position: absolute;
-      top: calc(100% + 4px);
-      left: 50%;
-      transform: translateX(-50%);
-      border: 6px solid transparent;
-      border-bottom-color: #111;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 120ms ease;
-      z-index: 1000;
-    }
-    .help-icon:hover::after,
-    .help-icon:focus::after,
-    .help-icon:hover::before,
-    .help-icon:focus::before {
-      opacity: 1;
-    }
-    .btn-group button:hover {
-      background-color: #0056b3;
-    }
-    label {
-      font-weight: bold;
-    }
-    .section {
-      margin-bottom: 2rem;
-    }
-    .toast {
-      position: fixed;
-      bottom: 20px;
-      right: 20px;
-      background: #333;
-      color: #fff;
-      padding: 8px 12px;
-      border-radius: 4px;
-      opacity: 0.9;
-      font-size: 14px;
-      z-index: 9999;
-    }
-    /* Help panel on the right */
-    .help-toggle {
-      position: fixed;
-      right: 16px;
-      top: 16px;
-      background: #00aaff;
-      color: white;
-      border: none;
-      border-radius: 6px;
-      padding: 8px 12px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.15);
-      cursor: pointer;
-      z-index: 120;
-    }
-    .options-toggle {
-      position: fixed;
-      right: 16px;
-      top: 56px;
-      background: #6c757d;
-      color: white;
-      border: none;
-      border-radius: 6px;
-      padding: 8px 12px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.15);
-      cursor: pointer;
-      z-index: 120;
-    }
-    .help-panel {
-      position: fixed;
-      right: 16px;
-      top: 96px;
-      width: 360px;
-      max-height: 70vh;
-      overflow: auto;
-      background: white;
-      border-radius: 8px;
-      padding: 1rem;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.25);
-      z-index: 119;
-      display: none;
-    }
-    .help-panel.open { display: block; }
-    .help-panel h3 { margin-top: 0; }
-    .help-panel .section { margin-bottom: 8px; }
-    .help-panel button.close { position: absolute; right: 8px; top: 8px; background: #eee; border: none; padding: 6px 8px; border-radius: 4px; cursor: pointer; }
-
-    .options-panel {
-      position: fixed;
-      right: 16px;
-      top: 96px;
-      width: 360px;
-      max-height: 70vh;
-      overflow: auto;
-      background: white;
-      border-radius: 8px;
-      padding: 1rem;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.25);
-      z-index: 119;
-      display: none;
-    }
-    .options-panel.open { display: block; }
-    .options-panel h3 { margin-top: 0; }
-    .options-panel .row { display: flex; align-items: flex-start; gap: 10px; margin: 10px 0; }
-    .options-panel .row input { margin-top: 2px; }
-    .options-panel .summary { background: #f6f7f9; border: 1px solid #e6e8ee; border-radius: 8px; padding: 10px 12px; font-size: 13px; line-height: 1.5; }
-    .options-panel button.close { position: absolute; right: 8px; top: 8px; background: #eee; border: none; padding: 6px 8px; border-radius: 4px; cursor: pointer; }
+    @media (prefers-reduced-motion:reduce) { * { transition:none !important; } }
   </style>
 </head>
 <body>
-  <!-- 按鈕放在最上方 -->
-  <div class="btn-group">
-    <span class="btn-wrap">
-      <button onclick="cleanText()">🧹 清理格式</button>
-      <span class="help-icon" tabindex="0" aria-label="清理格式 說明" id="tipClean1">?</span>
-    </span>
-    <span class="btn-wrap">
-      <button onclick="cleanText2()">🧹 清理格式2</button>
-      <span class="help-icon" tabindex="0" aria-label="清理格式2 說明" id="tipClean2">?</span>
-    </span>
-    <span class="btn-wrap">
-      <button onclick="cleanTextPreserveMarkdown()">🧹 保留 Markdown</button>
-      <span class="help-icon" tabindex="0" aria-label="保留 Markdown 說明" id="tipPreserve">?</span>
-    </span>
-    <button onclick="cleanAndCopy()">⚡ 清理並複製</button>
-    <button onclick="copyOutput()">📋 複製結果</button>
-  </div>
+  <main class="app">
+    <header class="page-header">
+      <div>
+        <h1>Markdown 清理工具</h1>
+        <p>整理多餘空白，保留內容結構。</p>
+      </div>
+      <div class="utility-actions" aria-label="工具設定與說明">
+        <button class="button" type="button" aria-expanded="false" aria-controls="optionsPanel" id="optionsToggle">
+          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 17h16M8 4v6M16 14v6"/></svg>清理選項
+        </button>
+        <button class="button" type="button" aria-expanded="false" aria-controls="helpPanel" id="helpToggle">
+          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2.5 0 0 1 5 0c0 2-2.5 2-2.5 4M12 17h.01"/></svg>使用說明
+        </button>
+      </div>
+    </header>
+    <section class="controls" aria-labelledby="modeHeading">
+      <div class="mode-selector">
+        <h2 id="modeHeading">清理模式</h2>
+        <div class="mode-grid" role="group" aria-labelledby="modeHeading">
+          <button class="mode-button" id="modeClean1" type="button" aria-pressed="true" onclick="cleanText()">清理格式</button>
+          <button class="mode-button" id="modeClean2" type="button" aria-pressed="false" onclick="cleanText2()">清理格式2</button>
+          <button class="mode-button" id="modePreserve" type="button" aria-pressed="false" onclick="cleanTextPreserveMarkdown()">保留 Markdown</button>
+        </div>
+      </div>
+      <div class="action-buttons">
+        <button class="button button-primary" type="button" onclick="cleanAndCopy()">
+          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m13 2-9 12h7l-1 8 10-12h-7l1-8Z"/></svg>清理並複製
+        </button>
+        <button class="button" type="button" onclick="copyOutput()">
+          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="8" width="12" height="13" rx="2"/><path d="M16 8V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h3"/></svg>複製結果
+        </button>
+      </div>
+      <p class="sr-only" aria-live="polite">目前模式：<strong id="currentMode">清理格式</strong></p>
+    </section>
 
-  <!-- Help panel toggle on right -->
-  <button class="help-toggle" aria-expanded="false" id="helpToggle">❓ Help</button>
-  <button class="options-toggle" aria-expanded="false" id="optionsToggle">⚙ Options</button>
   <aside class="help-panel" id="helpPanel" role="dialog" aria-modal="false" aria-labelledby="helpTitle">
-    <button class="close" aria-label="Close help" id="helpClose">✕</button>
-    <h3 id="helpTitle">Tool Help (說明)</h3>
+    <button class="close" type="button" aria-label="關閉使用說明" id="helpClose">✕</button>
+    <h3 id="helpTitle">使用說明</h3>
     <div class="section">
-      <strong>🧹 Clean 1: 清理格式</strong>
+      <strong>清理格式｜筆記整理</strong>
       <p id="helpClean1"></p>
     </div>
     <div class="section">
-      <strong>🧹 Clean 2: 清理格式2</strong>
+      <strong>清理格式2｜文字化輸出</strong>
       <p id="helpClean2"></p>
     </div>
     <div class="section">
-      <strong>🧹 Preserve Markdown: 保留 Markdown</strong>
+      <strong>保留 Markdown</strong>
       <p id="helpPreserve"></p>
     </div>
     <div class="section">
-      <strong>⚙ Tips / 小提示</strong>
+      <strong>操作提示</strong>
       <ul>
-        <li>滑鼠移到按鈕旁的「?」可看提示；也可用 Tab 聚焦「?」顯示提示。</li>
-        <li>按右上角 Help 可打開/關閉說明面板（Esc 也可關閉）。</li>
+        <li>點選任一模式會立即清理；選取中的模式會以藍色標示。滑鼠停留在模式按鈕可查看詳細說明。</li>
+        <li>「清理並複製」會依目前模式重新清理；「複製結果」只複製輸出內容。清理選項與使用說明可用 Esc 關閉。</li>
       </ul>
     </div>
   </aside>
 
   <aside class="options-panel" id="optionsPanel" role="dialog" aria-modal="false" aria-labelledby="optionsTitle">
-    <button class="close" aria-label="Close options" id="optionsClose">✕</button>
-    <h3 id="optionsTitle">Options (清理格式選項)</h3>
+    <button class="close" type="button" aria-label="關閉清理選項" id="optionsClose">✕</button>
+    <h3 id="optionsTitle">清理選項</h3>
     <div class="summary" id="optionsModeLabel"></div>
 
     <div id="optionsGroupClean1">
@@ -240,18 +146,18 @@
       </div>
       <div class="row">
         <input type="checkbox" id="optNormalizeLists" checked>
-        <label for="optNormalizeLists">列表縮排整理 + 符號統一（• / * / - → -）</label>
+        <label for="optNormalizeLists">列表符號統一（• / * / + → -；保留原縮排）</label>
       </div>
       <div class="row">
         <input type="checkbox" id="optTableSpacing" checked>
-        <label for="optTableSpacing">表格前自動補一行空白</label>
+        <label for="optTableSpacing">表格前保留一行必要空白（結尾間距自動保護）</label>
       </div>
       <div class="row">
         <input type="checkbox" id="optHrSpacing" checked>
-        <label for="optHrSpacing">分隔線 <code>---</code>（非接標題）前自動補空白行</label>
+        <label for="optHrSpacing">保留 <code>---</code> 必要間距，避免誤判為標題</label>
       </div>
       <div class="row">
-        <input type="checkbox" id="optRemoveBold">
+        <input type="checkbox" id="optRemoveBold" checked>
         <label for="optRemoveBold">移除 <code>**</code>（粗體標記）</label>
       </div>
     </div>
@@ -259,22 +165,22 @@
     <div id="optionsGroupClean2" style="display:none">
       <div class="row">
         <input type="checkbox" id="opt2RemoveBlankLines" checked>
-        <label for="opt2RemoveBlankLines">移除原始空白行（必要的 Markdown 區塊間距仍會保留）</label>
+        <label for="opt2RemoveBlankLines">盡量移除空白行（只保留必要的 Markdown 間距）</label>
       </div>
       <div class="row">
         <input type="checkbox" id="opt2NormalizeLists" checked>
-        <label for="opt2NormalizeLists">列表縮排整理 + 符號統一（• / * / - → -）</label>
+        <label for="opt2NormalizeLists">列表符號統一（• / * / + → -；保留原縮排）</label>
       </div>
       <div class="row">
         <input type="checkbox" id="opt2TableSpacing" checked>
-        <label for="opt2TableSpacing">表格前自動補一行空白</label>
+        <label for="opt2TableSpacing">表格前保留一行必要空白（結尾間距自動保護）</label>
       </div>
       <div class="row">
         <input type="checkbox" id="opt2HrToSymbol" checked>
         <label for="opt2HrToSymbol">將分隔線 <code>---</code> 轉為 <code>⸻</code></label>
       </div>
       <div class="row">
-        <input type="checkbox" id="opt2RemoveBold">
+        <input type="checkbox" id="opt2RemoveBold" checked>
         <label for="opt2RemoveBold">移除 <code>**</code>（粗體標記）</label>
       </div>
     </div>
@@ -282,41 +188,53 @@
     <div id="optionsGroupPreserve" style="display:none">
       <div class="row">
         <input type="checkbox" id="optPreserveRemoveBlankLines" checked>
-        <label for="optPreserveRemoveBlankLines">比照清理格式1移除空白行</label>
+        <label for="optPreserveRemoveBlankLines">盡量移除空白行（只保留必要的 Markdown 間距）</label>
+      </div>
+      <div class="row">
+        <input type="checkbox" id="optPreserveRemoveBold" checked>
+        <label for="optPreserveRemoveBold">移除 <code>**</code>（粗體標記）</label>
       </div>
     </div>
 
     <div class="summary" id="optionsSummary"></div>
   </aside>
 
-  <div class="section">
-    <label for="inputText">輸入 Markdown 文字：</label>
-    <textarea id="inputText"></textarea>
-  </div>
-
-  <div class="section">
-    <label for="outputText">輸出清理後文字：</label>
-    <textarea id="outputText" readonly></textarea>
-  </div>
+    <section class="editor-grid" aria-label="Markdown 輸入與輸出">
+      <div class="editor">
+        <div class="editor-header">
+          <label for="inputText">輸入內容</label>
+          <span class="editor-tag" aria-hidden="true">INPUT</span>
+        </div>
+        <textarea id="inputText" placeholder="在這裡貼上 Markdown 內容…" spellcheck="false"></textarea>
+      </div>
+      <div class="editor">
+        <div class="editor-header">
+          <label for="outputText">清理結果</label>
+          <span class="editor-tag" aria-hidden="true">OUTPUT · 唯讀</span>
+        </div>
+        <textarea id="outputText" placeholder="清理後的內容會顯示在這裡" readonly spellcheck="false"></textarea>
+      </div>
+    </section>
+  </main>
 
   <script>
     const HELP_TEXT = {
-      clean1: "筆記預設：移除 GPT/Gemini 常見多餘空行與不可見空白；保留 Markdown 結構；標題、表格、分隔線與 code block 前只補必要 1 行空白；表格行會確保 | 在行首。",
-      clean2: "文字化輸出：預設移除原始空白行，可在 Options 取消；移除 H1–H3 的 # 標記但保留文字；保留表格；整理列表縮排；將 --- 分隔線改成 ⸻。",
-      preserve: "比照清理格式1清掉多餘空白行，但不提升標題、不移除 #、不整理列表縮排，也不改表格與 code block 結構。"
+      clean1: "預設盡量移除空白行與 ** 粗體標記；表格前保留一行空白，其餘只保留避免 Markdown 解析錯誤的間距。提升標題層級、統一列表符號。程式碼內容、雙空格換行與 emoji 保留。",
+      clean2: "預設盡量移除空白行與 ** 粗體標記，可在清理選項取消；移除 H1–H3 的 #，將 --- 分隔線改成 ⸻。表格前保留一行空白，保護程式碼與 Setext 標題底線。",
+      preserve: "保留標題與列表縮排，預設盡量移除空白行與 ** 粗體標記，可在清理選項取消；不保留一般段落間距。表格前與必要的區塊邊界仍保留空行。程式碼、HTML、YAML frontmatter 與數學區塊內部內容保留。"
     };
 
     function syncHelpText() {
-      const tip1 = document.getElementById('tipClean1');
-      const tip2 = document.getElementById('tipClean2');
-      const tipPreserve = document.getElementById('tipPreserve');
+      const tip1 = document.getElementById('modeClean1');
+      const tip2 = document.getElementById('modeClean2');
+      const tipPreserve = document.getElementById('modePreserve');
       const h1 = document.getElementById('helpClean1');
       const h2 = document.getElementById('helpClean2');
       const hPreserve = document.getElementById('helpPreserve');
 
-      if (tip1) tip1.dataset.tooltip = HELP_TEXT.clean1;
-      if (tip2) tip2.dataset.tooltip = HELP_TEXT.clean2;
-      if (tipPreserve) tipPreserve.dataset.tooltip = HELP_TEXT.preserve;
+      if (tip1) tip1.title = HELP_TEXT.clean1;
+      if (tip2) tip2.title = HELP_TEXT.clean2;
+      if (tipPreserve) tipPreserve.title = HELP_TEXT.preserve;
       if (h1) h1.textContent = HELP_TEXT.clean1;
       if (h2) h2.textContent = HELP_TEXT.clean2;
       if (hPreserve) hPreserve.textContent = HELP_TEXT.preserve;
@@ -325,368 +243,308 @@
 
     let activeFormat = 'clean1';
 
-    function getLeadingWhitespaceWidth(str) {
-      let width = 0;
-      for (let i = 0; i < str.length; i++) {
-        const ch = str[i];
-        if (ch === ' ') width += 1;
-        else if (ch === '\t') width += 2;
-        else break;
-      }
-      return width;
-    }
-
-    function isFenceLine(trimmedLine) {
-      return /^```/.test(trimmedLine);
-    }
-
-    function stripLeadingMarkdownWhitespace(line) {
-      // Includes normal space/tab, NBSP, full-width space, and BOM.
-      return line.replace(/^[ \t\u00A0\u3000\uFEFF]+/, '');
-    }
-
-    function isTableRowLine(rawLine) {
-      return stripLeadingMarkdownWhitespace(rawLine).startsWith('|');
-    }
-
-    function escapeHtmlCommentsForMarkdown(text) {
-      // Prevent markdown renderers from treating it as an actual HTML comment (content disappears in preview).
-      // ZWSP is invisible in most editors but breaks the "<!--" token.
-      return text.replace(/<!--/g, '<\u200b!--').replace(/-->/g, '--\u200b>');
-    }
-
     function normalizeInputText(text) {
-      return text
-        .replace(/\r\n?/g, '\n')
-        .replace(/^\uFEFF/, '');
+      return text.replace(/\r\n?/g, '\n').replace(/^\uFEFF/, '');
     }
 
-    function cleanOutsideCodeLine(rawLine) {
-      return rawLine
-        .replace(/\uFEFF/g, '')
-        .replace(/[\u200B\u200C\u200D]/g, '')
-        .replace(/\u00A0/g, ' ')
-        .replace(/\u3000/g, ' ')
-        .replace(/[ \t]+$/g, '');
-    }
-
-    function isHeadingLine(line) {
-      return /^#{1,6}\s+\S/.test(line.trim());
-    }
-
-    function isHrLine(line) {
-      return /^-{3,}$/.test(line.trim()) || line.trim() === '⸻';
-    }
-
-    function isBlockquoteLine(line) {
-      return /^>\s?/.test(line.trim());
-    }
-
-    function isListLine(line) {
-      return Boolean(matchListLine(line));
-    }
-
-    function collapseExtraBlankLines(text, maxBlankLines = 1) {
-      const lines = text.split(/\r?\n/);
-      const output = [];
-      let blankCount = 0;
-      let inCodeFence = false;
-
-      for (const rawLine of lines) {
-        const trimmed = rawLine.trim();
-        if (isFenceLine(trimmed)) {
-          blankCount = 0;
-          output.push(rawLine);
-          inCodeFence = !inCodeFence;
-          continue;
-        }
-
-        if (inCodeFence) {
-          output.push(rawLine);
-          continue;
-        }
-
-        const line = /^[\s\u200b]*$/.test(rawLine) ? '' : rawLine;
-        if (line.trim() === '') {
-          blankCount += 1;
-          if (blankCount <= maxBlankLines && output.length > 0) output.push('');
-          continue;
-        }
-        blankCount = 0;
-        output.push(line);
-      }
-
-      while (output.length && output[0] === '') output.shift();
-      while (output.length && output[output.length - 1] === '') output.pop();
-      return output.join('\n');
-    }
-
-    function finalizeCleanedText(text) {
-      return collapseExtraBlankLines(text, 1);
-    }
-
-    function computeHeadingShift(lines) {
-      let inCodeFence = false;
-      const levels = [];
-      for (const rawLine of lines) {
-        const trimmed = rawLine.trim();
-        if (isFenceLine(trimmed)) {
-          inCodeFence = !inCodeFence;
-          continue;
-        }
-        if (inCodeFence) continue;
-        const m = trimmed.match(/^(#{1,6})\s+/);
-        if (m) levels.push(m[1].length);
-      }
-      if (!levels.length) return 0;
-      const minLevel = Math.min(...levels);
-      return Math.max(0, minLevel - 1);
-    }
-
-    function applyHeadingShift(line, headingShift) {
-      const trimmed = line.trim();
-      const m = trimmed.match(/^(#{1,6})\s+(.*)$/);
-      if (!m) return line;
-      const level = m[1].length;
-      const newLevel = Math.max(1, level - headingShift);
-      return '#'.repeat(newLevel) + ' ' + m[2];
+    function cleanOutsideCodeLine(line) {
+      // ZWJ / ZWNJ may be meaningful text; two trailing spaces mean a hard break.
+      const hardBreak = / {2,}$/.test(line) && line.trim() !== '';
+      return line
+        .replace(/[\uFEFF\u200B]/g, '')
+        .replace(/[\u00A0\u3000]/g, ' ')
+        .replace(/[ \t]+$/, hardBreak ? '  ' : '');
     }
 
     function matchListLine(line) {
-      // Support common unordered markers: -, *, •
-      return line.match(/^(\s*)(\d+\.|[-\*\u2022])\s+(.*)$/);
+      return line.match(/^( {0,3})(\d{1,9}[.)]|[-*+\u2022])[ \t]+(.*)$/);
     }
 
-    function normalizeListLine(line) {
-      const m = matchListLine(line);
-      if (!m) return line;
-
-      const depth = Math.floor(getLeadingWhitespaceWidth(m[1]) / 2);
-      const leadingWhitespace = '  '.repeat(depth);
-      const marker = m[2];
-      const content = m[3];
-
-      if (/^\d+\.$/.test(marker)) return leadingWhitespace + marker + ' ' + content;
-      return leadingWhitespace + '- ' + content;
+    function isHeadingLine(line) {
+      return /^ {0,3}#{1,6}(?:[ \t]+|$)/.test(line);
     }
 
-    function mergeSplitListMarker(lines, index) {
-      const markerMatch = cleanOutsideCodeLine(lines[index]).match(/^(\s*)([-*\u2022])\s*$/);
-      if (!markerMatch) return null;
+    function isHrLine(line) {
+      return /^ {0,3}(?:(?:\*[ \t]*){3,}|(?:-[ \t]*){3,}|(?:_[ \t]*){3,})$/.test(line) ||
+        line.trim() === '⸻';
+    }
 
-      const contentIndex = index + 1;
-      if (contentIndex >= lines.length) return null;
-
-      const contentLine = cleanOutsideCodeLine(lines[contentIndex]);
-      const trimmedContent = contentLine.trim();
-      if (
-        trimmedContent === '' ||
-        isFenceLine(trimmedContent) ||
-        isHeadingLine(contentLine) ||
-        isHrLine(contentLine) ||
-        isTableRowLine(contentLine) ||
-        isBlockquoteLine(contentLine) ||
-        isListLine(contentLine)
-      ) {
-        return null;
-      }
-
+    function openingFence(line) {
+      const quote = line.match(/^ {0,3}(?:>[ \t]?)+/);
+      let content = quote ? line.slice(quote[0].length) : line;
+      const list = content.match(/^ {0,3}(?:[-*+]|\d{1,9}[.)])[ \t]+/);
+      if (list) content = content.slice(list[0].length);
+      const match = content.match(/^ {0,3}(\x60{3,}|~{3,})(.*)$/);
+      if (!match || (match[1][0] === '\x60' && match[2].includes('\x60'))) return null;
       return {
-        line: markerMatch[1] + markerMatch[2] + ' ' + trimmedContent,
-        contentIndex
+        marker: match[1][0], length: match[1].length,
+        quoteDepth: quote ? (quote[0].match(/>/g) || []).length : 0,
+        listIndent: list ? list[0].length : 0
       };
     }
 
-    function findPrevNonEmptyLine(output) {
-      for (let k = output.length - 1; k >= 0; k--) {
-        if (output[k].trim() !== '') return output[k];
+    function closingFence(line, fence) {
+      let content = line;
+      for (let i = 0; i < fence.quoteDepth; i++) {
+        const quote = content.match(/^ {0,3}>[ \t]?/);
+        if (!quote) return false;
+        content = content.slice(quote[0].length);
       }
+      if (fence.listIndent) {
+        if (!content.startsWith(' '.repeat(fence.listIndent))) return false;
+        content = content.slice(fence.listIndent);
+      }
+      const match = content.match(/^ {0,3}(\x60+|~+)[ \t]*$/);
+      return Boolean(match && match[1][0] === fence.marker && match[1].length >= fence.length);
+    }
+
+    function tableCells(line) {
+      let text = line.trim();
+      if (!text.includes('|')) return null;
+      if (text.startsWith('|')) text = text.slice(1);
+      // Only unescaped trailing pipes are optional table borders.
+      if (/(?<!\\)(?:\\\\)*\|$/.test(text)) text = text.slice(0, -1);
+      const cells = [];
+      let cell = '';
+      for (let i = 0; i < text.length; i++) {
+        if (text[i] === '\\' && i + 1 < text.length) {
+          cell += text[i] + text[++i];
+        } else if (text[i] === '|') {
+          cells.push(cell.trim());
+          cell = '';
+        } else {
+          cell += text[i];
+        }
+      }
+      cells.push(cell.trim());
+      return cells;
+    }
+
+    function isTableStart(lines, index) {
+      if (!lines[index + 1] || /^ {4}|^\t/.test(lines[index])) return false;
+      const header = tableCells(lines[index]);
+      const delimiter = tableCells(cleanOutsideCodeLine(lines[index + 1]));
+      return Boolean(header && delimiter && header.length === delimiter.length &&
+        delimiter.every(cell => /^:?-+:?$/.test(cell)));
+    }
+
+    function htmlBlockEnd(line) {
+      const trimmed = line.trimStart();
+      if (trimmed.startsWith('<!--')) return /-->/;
+      const rawTag = trimmed.match(/^<(script|pre|style|textarea)(?:\s|>|$)/i);
+      if (rawTag) return new RegExp('</' + rawTag[1] + '\\s*>', 'i');
+      if (/^<\?/.test(trimmed)) return /\?>/;
+      if (/^<!\[CDATA\[/.test(trimmed)) return /\]\]>/;
+      if (/^<![A-Z]/.test(trimmed)) return />/;
+      // These HTML blocks end at a blank line in Markdown.
+      if (/^<\/?(?:address|article|aside|base|blockquote|body|caption|center|col|colgroup|dd|details|dialog|dir|div|dl|dt|fieldset|figcaption|figure|footer|form|frame|frameset|h[1-6]|head|header|hr|html|iframe|legend|li|link|main|menu|menuitem|nav|ol|optgroup|option|p|param|search|section|summary|table|tbody|td|tfoot|th|thead|title|tr|track|ul)(?:\s|\/?>|$)/i.test(trimmed)) return 'blank';
       return null;
     }
 
-    function cleanCore(options) {
-      const input = normalizeInputText(document.getElementById('inputText').value);
-      const lines = input.split('\n');
-      const output = [];
-
-      const headingShift = options.promoteHeadings ? computeHeadingShift(lines) : 0;
-
-      let inTable = false;
-      let inCodeFence = false;
-      let fenceBuffer = [];
-
-      function pushUserBlank() {
-        if (options.removeBlankLines) return;
-        if (output.length === 0) return;
-        if (output[output.length - 1] !== '') output.push('');
-      }
-
-      function pushSpacingBlank() {
-        if (output.length === 0) return;
-        if (output[output.length - 1] !== '') output.push('');
-      }
-
-      function ensureMarkdownBlockSpacing(line) {
-        if (!options.markdownBlockSpacing) return;
-
-        const prev = findPrevNonEmptyLine(output);
-        if (!prev) return;
-
-        const isOpeningFence = isFenceLine(line.trim()) && !inCodeFence;
-        const blockNeedsSpacing =
-          isHeadingLine(line) ||
-          isOpeningFence ||
-          (isHrLine(line) && (options.hrAddSpacing || options.hrToSymbol)) ||
-          (isTableRowLine(line) && options.tableSpacing);
-
-        if (!blockNeedsSpacing) return;
-        if (isListLine(prev) && isListLine(line)) return;
-        if (isTableRowLine(prev) && isTableRowLine(line)) return;
-        if (isBlockquoteLine(prev) && isBlockquoteLine(line)) return;
-        if (isHrLine(prev)) return;
-
-        pushSpacingBlank();
-      }
-
+    function scanMarkdownBlocks(lines) {
+      const blocks = [];
       for (let i = 0; i < lines.length; i++) {
-        let line = lines[i];
-        let trimmed = line.trim();
-
-        if (!inCodeFence && options.normalizeLists) {
-          const mergedListItem = mergeSplitListMarker(lines, i);
-          if (mergedListItem) {
-            line = mergedListItem.line;
-            trimmed = line.trim();
-            i = mergedListItem.contentIndex;
-          }
-        }
-
-        if (isFenceLine(trimmed)) {
-          const fenceLine = cleanOutsideCodeLine(line);
-          if (options.removeEmptyCodeFences) {
-            if (!inCodeFence) {
-              inCodeFence = true;
-              fenceBuffer = [fenceLine];
-              continue;
-            }
-            fenceBuffer.push(fenceLine);
-            inCodeFence = false;
-            const contentLines = fenceBuffer.slice(1, -1).filter(l => l.trim() !== '');
-            if (contentLines.length > 0) {
-              ensureMarkdownBlockSpacing(fenceBuffer[0]);
-              output.push(...fenceBuffer);
-            }
-            fenceBuffer = [];
+        const start = i;
+        // Normalize only the current unprotected line before classifying it.
+        // Once a protected block opens, its remaining source lines stay untouched.
+        const line = cleanOutsideCodeLine(lines[i]);
+        const fence = openingFence(line);
+        if (i === 0 && line === '---') {
+          const end = lines.findIndex((value, index) => index > 0 && /^(---|\.\.\.)$/.test(value));
+          if (end > 0) {
+            blocks.push({ kind: 'protected', lines: lines.slice(0, end + 1) });
+            i = end;
             continue;
           }
-
-          ensureMarkdownBlockSpacing(fenceLine);
-          inCodeFence = !inCodeFence;
-          output.push(fenceLine);
+        }
+        if (fence) {
+          while (++i < lines.length && !closingFence(lines[i], fence)) {}
+          blocks.push({ kind: 'protected', lines: lines.slice(start, Math.min(i + 1, lines.length)) });
           continue;
         }
-
-        if (inCodeFence) {
-          if (options.removeEmptyCodeFences) fenceBuffer.push(line);
-          else output.push(line);
+        // Common math extensions use standalone $$ delimiters; keep their content intact.
+        if (/^ {0,3}\$\$[ \t]*$/.test(line)) {
+          while (++i < lines.length && !/^ {0,3}\$\$[ \t]*$/.test(lines[i])) {}
+          blocks.push({ kind: 'protected', lines: lines.slice(start, Math.min(i + 1, lines.length)) });
           continue;
         }
-
-        line = cleanOutsideCodeLine(line);
-        trimmed = line.trim();
-
-        if (trimmed === '') {
-          if (options.removeBlankLines) continue;
-          pushUserBlank();
-          continue;
-        }
-
-        if (options.removeHeadingsUpTo && new RegExp(`^#{1,${options.removeHeadingsUpTo}}\\s+`).test(trimmed)) {
-          continue;
-        }
-
-        if (options.hrToSymbol && /^---+$/.test(trimmed)) {
-          ensureMarkdownBlockSpacing('⸻');
-          output.push('⸻');
-          let j = i + 1;
-          while (j < lines.length && lines[j].trim() === "") j++;
-          if (j < lines.length && isTableRowLine(lines[j])) pushSpacingBlank();
-          continue;
-        }
-
-        if (options.hrAddSpacing && /^---+$/.test(trimmed)) {
-          pushSpacingBlank();
-        }
-
-        // Ensure hr has no leading whitespace (avoid being parsed as code/text)
-        if (/^---+$/.test(trimmed)) {
-          line = trimmed;
-          trimmed = line.trim();
-        }
-
-        if (options.promoteHeadings) {
-          const shiftedHeading = applyHeadingShift(line, headingShift);
-          if (shiftedHeading !== line) {
-            line = shiftedHeading;
-            trimmed = line.trim();
+        // Indented content may be code or a nested list continuation. Do not rewrite it.
+        if (/^( {4}|\t)/.test(line)) {
+          while (i + 1 < lines.length) {
+            if (/^( {4}|\t)/.test(lines[i + 1])) {
+              i++;
+              continue;
+            }
+            let next = i + 1;
+            while (next < lines.length && lines[next].trim() === '') next++;
+            if (next > i + 1 && /^( {4}|\t)/.test(lines[next] || '')) i = next;
+            else break;
           }
+          blocks.push({ kind: 'indented', lines: lines.slice(start, i + 1) });
+          continue;
         }
-
-        if (options.stripHeadingMarkersUpTo) {
-          const m = trimmed.match(new RegExp(`^(#{1,${options.stripHeadingMarkersUpTo}})\\s+(.*)$`));
-          if (m) {
-            line = m[2];
-            trimmed = line.trim();
-          }
-        }
-
-        if (options.normalizeLists && matchListLine(line)) {
-          line = normalizeListLine(line);
-          trimmed = line.trim();
-        }
-
-        if (options.removeBoldMarkers) {
-          line = line.replace(/\*\*/g, "");
-          trimmed = line.trim();
-        }
-
-        if (options.escapeAngles) {
-          line = line.replace(/([<>])/g, "\\$1");
-          trimmed = line.trim();
-        }
-
-        const isTableRow = isTableRowLine(line);
-        if (isTableRow && options.normalizeTableRows) {
-          // Remove leading whitespace so | is truly at line start (avoid tables becoming code blocks/text)
-          line = stripLeadingMarkdownWhitespace(line);
-          // Escape HTML comments inside table cells to avoid disappearing text in preview
-          line = escapeHtmlCommentsForMarkdown(line);
-          trimmed = line.trim();
-        }
-
-        if (options.tableSpacing) {
-          if (isTableRow) {
-            if (!inTable) pushSpacingBlank();
-            inTable = true;
+        const htmlEnd = htmlBlockEnd(line);
+        if (htmlEnd) {
+          if (htmlEnd === 'blank') {
+            while (i + 1 < lines.length && lines[i + 1].trim() !== '') i++;
           } else {
-            inTable = false;
+            while (!htmlEnd.test(lines[i]) && i + 1 < lines.length) i++;
+          }
+          blocks.push({ kind: 'protected', htmlNeedsBlank: htmlEnd === 'blank', lines: lines.slice(start, i + 1) });
+          continue;
+        }
+        lines[i] = line;
+        if (isTableStart(lines, i)) {
+          i++;
+          while (i + 1 < lines.length && lines[i + 1].trim() !== '' &&
+            tableCells(lines[i + 1]) && !isHeadingLine(lines[i + 1]) &&
+            !matchListLine(lines[i + 1]) && !/^ {0,3}>/.test(lines[i + 1]) &&
+            !openingFence(lines[i + 1]) && !isHrLine(lines[i + 1])) i++;
+          blocks.push({ kind: 'table', lines: lines.slice(start, i + 1) });
+          continue;
+        }
+        if (line.trim() === '') {
+          blocks.push({ kind: 'blank', lines: [''] });
+          continue;
+        }
+        const kind = isHeadingLine(line) ? 'heading' :
+          isHrLine(line) ? 'hr' :
+          matchListLine(line) ? 'list' :
+          /^ {0,3}>/.test(line) ? 'quote' : 'paragraph';
+        // Setext heading underlines must not become thematic breaks.
+        if (kind === 'paragraph' && /^ {0,3}(?:=+|-+)[ \t]*$/.test(lines[i + 1] || '')) {
+          const preceding = [];
+          while (blocks.length && blocks[blocks.length - 1].kind === 'paragraph') {
+            preceding.push(blocks.pop().lines[0]);
+          }
+          blocks.push({ kind: 'setext', lines: preceding.reverse().concat(lines.slice(i, i + 2)) });
+          i++;
+        } else {
+          blocks.push({ kind, lines: [line] });
+        }
+      }
+      return blocks;
+    }
+
+    function cleanCore(options, source = document.getElementById('inputText').value) {
+      const blocks = scanMarkdownBlocks(normalizeInputText(source).split('\n'));
+      let headingShift = 0;
+      if (options.promoteHeadings) {
+        const levels = blocks.filter(block => block.kind === 'heading')
+          .map(block => block.lines[0].trimStart().match(/^#+/)[0].length);
+        if (levels.length) headingShift = Math.max(0, levels.reduce((min, level) => Math.min(min, level), 6) - 1);
+      }
+      const output = [];
+      let previous = null;
+      let pendingBlanks = 0;
+      function addBlank() {
+        if (output.length && output[output.length - 1] !== '') output.push('');
+      }
+      for (const block of blocks) {
+        if (block.kind === 'blank') {
+          pendingBlanks++;
+          continue;
+        }
+        if (block.kind === 'paragraph' && options.removeBoldMarkers &&
+            removeBoldOutsideCode(cleanOutsideCodeLine(block.lines[0])).trim() === '') continue;
+        if (previous) {
+          // Compression deliberately joins ordinary paragraphs and tightens loose lists.
+          if (pendingBlanks && !options.removeBlankLines) {
+            for (let j = 0; j < pendingBlanks; j++) output.push('');
+          }
+          if (options.markdownBlockSpacing) {
+            const previousIsText = previous.kind === 'paragraph' ||
+              (previous.kind === 'heading' && options.stripHeadingMarkersUpTo &&
+                previous.lines[0].trimStart().match(/^#+/)[0].length <= options.stripHeadingMarkersUpTo);
+            const hyphenHr = block.kind === 'hr' && /^ {0,3}-{3,}[ \t]*$/.test(block.lines[0]);
+            const ordered = block.kind === 'list' && block.lines[0].trimStart().match(/^(\d+)[.)]/);
+            const previousIndented = /^(?: +|\t)\S/.test(previous.lines[previous.lines.length - 1]);
+            const nextIndented = /^(?: +|\t)\S/.test(block.lines[0]);
+            const needed =
+              (block.kind === 'table' && options.tableSpacing) ||
+              // Even text without pipes can become an extra table row in GFM renderers.
+              previous.kind === 'table' ||
+              // Without a blank, --- and preceding text become a Setext heading.
+              (hyphenHr && !options.hrToSymbol && previousIsText && options.hrAddSpacing) ||
+              (block.kind === 'setext' && previousIsText) ||
+              // An ordered list starting above 1 cannot interrupt a paragraph.
+              (ordered && ordered[1] !== '1' && previousIsText) ||
+              previous.htmlNeedsBlank ||
+              (pendingBlanks > 0 && (
+                block.kind === 'indented' || previous.kind === 'indented' ||
+                (block.kind === 'paragraph' && nextIndented) ||
+                (block.kind === 'paragraph' && previous.kind !== 'list' &&
+                  (previous.kind === 'quote' || previousIndented)) ||
+                (block.kind === 'quote' && previous.kind === 'quote')
+              ));
+            if (needed) addBlank();
           }
         }
-
-        ensureMarkdownBlockSpacing(line);
-        output.push(line);
+        pendingBlanks = 0;
+        let rendered = block.lines;
+        if (!['protected', 'indented'].includes(block.kind)) {
+          rendered = block.lines.map(line => {
+            let result = cleanOutsideCodeLine(line);
+            if (block.kind === 'heading') {
+              const match = result.match(/^( {0,3})(#{1,6})(?:[ \t]+(.*)|$)/);
+              if (match && options.stripHeadingMarkersUpTo && match[2].length <= options.stripHeadingMarkersUpTo) {
+                result = match[1] + (match[3] || '');
+              } else if (match && options.promoteHeadings) {
+                result = match[1] + '#'.repeat(Math.max(1, match[2].length - headingShift)) + ' ' + (match[3] || '');
+              }
+            }
+            if (block.kind === 'list' && options.normalizeLists) {
+              result = result.replace(/^( {0,3})[*+\u2022]([ \t]+)/, '$1-$2');
+            }
+            if (block.kind === 'hr' && options.hrToSymbol && /^ {0,3}-{3,}[ \t]*$/.test(result)) result = '⸻';
+            // Bold formatting is removed by default, including cells; inline code stays literal.
+            if (options.removeBoldMarkers) {
+              result = removeBoldOutsideCode(result);
+            }
+            return result;
+          });
+        }
+        output.push(...rendered);
+        previous = block;
       }
+      return output.join('\n');
+    }
 
-      if (inCodeFence && options.removeEmptyCodeFences && fenceBuffer.length > 0) {
-        const contentLines = fenceBuffer.slice(1).filter(l => l.trim() !== '');
-        if (contentLines.length > 0) output.push(...fenceBuffer);
+    function removeBoldOutsideCode(line) {
+      let result = '';
+      for (let i = 0; i < line.length;) {
+        if (line[i] === '\\' && i + 1 < line.length) {
+          result += line.slice(i, i + 2);
+          i += 2;
+        } else if (line[i] === '\x60') {
+          const marker = line.slice(i).match(/^\x60+/)[0];
+          let end = i + marker.length;
+          while ((end = line.indexOf(marker, end)) !== -1 &&
+            (line[end - 1] === '\x60' || line[end + marker.length] === '\x60')) end += marker.length;
+          if (end === -1) {
+            result += marker;
+            i += marker.length;
+          } else {
+            result += line.slice(i, end + marker.length);
+            i = end + marker.length;
+          }
+        } else if (line.slice(i, i + 2) === '**') {
+          i += 2;
+        } else {
+          result += line[i++];
+        }
       }
-
-      return finalizeCleanedText(output.join('\n'));
+      return result;
     }
 
     function setActiveFormat(format) {
       activeFormat = format;
+      for (const [id, value] of [['modeClean1', 'clean1'], ['modeClean2', 'clean2'], ['modePreserve', 'preserve']]) {
+        document.getElementById(id)?.setAttribute('aria-pressed', String(format === value));
+      }
+      const currentMode = document.getElementById('currentMode');
+      if (currentMode) currentMode.textContent =
+        format === 'clean1' ? '清理格式' : format === 'clean2' ? '清理格式2' : '保留 Markdown';
 
       const label = document.getElementById('optionsModeLabel');
       const groupClean1 = document.getElementById('optionsGroupClean1');
@@ -713,16 +571,12 @@
         return {
           promoteHeadings: false,
           normalizeLists: false,
-          normalizeTableRows: false,
-          tableSpacing: false,
-          hrAddSpacing: false,
+          tableSpacing: true,
+          hrAddSpacing: true,
           hrToSymbol: false,
-          removeHeadingsUpTo: 0,
           stripHeadingMarkersUpTo: 0,
           removeBlankLines: document.getElementById('optPreserveRemoveBlankLines')?.checked ?? true,
-          removeEmptyCodeFences: false,
-          escapeAngles: false,
-          removeBoldMarkers: false,
+          removeBoldMarkers: document.getElementById('optPreserveRemoveBold')?.checked ?? true,
           markdownBlockSpacing: document.getElementById('optPreserveRemoveBlankLines')?.checked ?? true
         };
       }
@@ -732,20 +586,16 @@
         const normalizeLists = document.getElementById('opt2NormalizeLists')?.checked ?? true;
         const tableSpacing = document.getElementById('opt2TableSpacing')?.checked ?? true;
         const hrToSymbol = document.getElementById('opt2HrToSymbol')?.checked ?? true;
-        const removeBoldMarkers = document.getElementById('opt2RemoveBold')?.checked ?? false;
+        const removeBoldMarkers = document.getElementById('opt2RemoveBold')?.checked ?? true;
 
         return {
           promoteHeadings: false,
           normalizeLists,
-          normalizeTableRows: true,
           tableSpacing,
           hrAddSpacing: false,
           hrToSymbol,
-          removeHeadingsUpTo: 0,
           stripHeadingMarkersUpTo: 3,
           removeBlankLines,
-          removeEmptyCodeFences: false,
-          escapeAngles: false,
           removeBoldMarkers,
           markdownBlockSpacing: true
         };
@@ -755,20 +605,16 @@
       const normalizeLists = document.getElementById('optNormalizeLists')?.checked ?? true;
       const tableSpacing = document.getElementById('optTableSpacing')?.checked ?? true;
       const hrAddSpacing = document.getElementById('optHrSpacing')?.checked ?? true;
-      const removeBoldMarkers = document.getElementById('optRemoveBold')?.checked ?? false;
+      const removeBoldMarkers = document.getElementById('optRemoveBold')?.checked ?? true;
 
       return {
         promoteHeadings,
         normalizeLists,
-        normalizeTableRows: true,
         tableSpacing,
         hrAddSpacing,
         hrToSymbol: false,
-        removeHeadingsUpTo: 0,
         stripHeadingMarkersUpTo: 0,
         removeBlankLines: true,
-        removeEmptyCodeFences: false,
-        escapeAngles: false,
         removeBoldMarkers,
         markdownBlockSpacing: true
       };
@@ -780,23 +626,25 @@
 
       const enabled = [];
       if (activeFormat === 'clean1') {
+        enabled.push('盡量移除空白行');
         if (document.getElementById('optPromoteHeadings')?.checked) enabled.push('標題提升到 H1');
-        if (document.getElementById('optNormalizeLists')?.checked) enabled.push('列表整理 + 符號統一');
-        if (document.getElementById('optTableSpacing')?.checked) enabled.push('表格前補空白行');
+        if (document.getElementById('optNormalizeLists')?.checked) enabled.push('列表符號統一（保留縮排）');
+        if (document.getElementById('optTableSpacing')?.checked) enabled.push('表格前保留必要空行');
         if (document.getElementById('optHrSpacing')?.checked) enabled.push('分隔線前補空白行');
         if (document.getElementById('optRemoveBold')?.checked) enabled.push('移除 **');
       } else if (activeFormat === 'clean2') {
         enabled.push('H1–H3 去除 #（保留文字）');
-        if (document.getElementById('opt2RemoveBlankLines')?.checked) enabled.push('移除原始空白行');
-        if (document.getElementById('opt2NormalizeLists')?.checked) enabled.push('列表整理 + 符號統一');
-        if (document.getElementById('opt2TableSpacing')?.checked) enabled.push('表格前補空白行');
+        if (document.getElementById('opt2RemoveBlankLines')?.checked) enabled.push('盡量移除空白行');
+        if (document.getElementById('opt2NormalizeLists')?.checked) enabled.push('列表符號統一（保留縮排）');
+        if (document.getElementById('opt2TableSpacing')?.checked) enabled.push('表格前保留必要空行');
         if (document.getElementById('opt2HrToSymbol')?.checked) enabled.push('--- → ⸻');
         if (document.getElementById('opt2RemoveBold')?.checked) enabled.push('移除 **');
       } else if (activeFormat === 'preserve') {
         enabled.push('保留 markdown 結構');
-        if (document.getElementById('optPreserveRemoveBlankLines')?.checked) enabled.push('比照清理格式1移除空白行');
+        if (document.getElementById('optPreserveRemoveBlankLines')?.checked) enabled.push('盡量移除空白行');
+        if (document.getElementById('optPreserveRemoveBold')?.checked) enabled.push('移除 **');
         enabled.push('不改 H1/H2/# 標記');
-        enabled.push('不改表格 / code block / 列表縮排');
+        enabled.push('保留表格結構 / code block / 列表縮排');
       }
 
       summary.innerHTML = `<strong>目前勾選：</strong><br>${enabled.length ? enabled.map(s => `• ${s}`).join('<br>') : '（無）'}`;
@@ -823,6 +671,7 @@
     function showToast(message) {
       const toast = document.createElement("div");
       toast.className = "toast";
+      toast.setAttribute("role", "status");
       toast.textContent = message;
       document.body.appendChild(toast);
       setTimeout(() => toast.remove(), 1500);
@@ -838,13 +687,17 @@
           await navigator.clipboard.writeText(text);
         } else {
           outputText.select();
-          document.execCommand("copy");
+          if (!document.execCommand("copy")) throw new Error("Copy failed");
         }
         showToast("✅ 已複製！");
       } catch (err) {
-        outputText.select();
-        document.execCommand("copy");
-        showToast("✅ 已複製！");
+        try {
+          outputText.select();
+          if (!document.execCommand("copy")) throw new Error("Copy failed");
+          showToast("✅ 已複製！");
+        } catch (fallbackError) {
+          showToast("複製失敗，請選取結果後手動複製。");
+        }
       }
     }
 
@@ -877,8 +730,8 @@
       optionsToggle.setAttribute('aria-expanded', String(isOpen));
       if (isOpen && helpPanel.classList.contains('open')) toggleHelp(false);
     }
-    helpToggle.addEventListener('click', toggleHelp);
-    helpClose.addEventListener('click', toggleHelp);
+    helpToggle.addEventListener('click', () => toggleHelp());
+    helpClose.addEventListener('click', () => toggleHelp(false));
     optionsToggle.addEventListener('click', () => toggleOptions());
     optionsClose.addEventListener('click', () => toggleOptions());
     document.getElementById('optPromoteHeadings')?.addEventListener('change', updateOptionsSummary);
@@ -892,6 +745,7 @@
     document.getElementById('opt2HrToSymbol')?.addEventListener('change', updateOptionsSummary);
     document.getElementById('opt2RemoveBold')?.addEventListener('change', updateOptionsSummary);
     document.getElementById('optPreserveRemoveBlankLines')?.addEventListener('change', updateOptionsSummary);
+    document.getElementById('optPreserveRemoveBold')?.addEventListener('change', updateOptionsSummary);
     // Close on Escape
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape' && helpPanel.classList.contains('open')) {
